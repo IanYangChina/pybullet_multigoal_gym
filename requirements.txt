@@ -1,0 +1,5 @@
+setuptools~=50.3.0
+pybullet~=3.0.6
+gym~=0.17.3
+numpy~=1.19.2
+pybulletgym~=0.1
