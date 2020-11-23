@@ -100,23 +100,13 @@ while i < (25*50):
                                     velocityGains=[1, 1, 1, 1, 1, 1, 1])
 
         p.setJointMotorControlArray(bodyUniqueId=kukaId,
-                                    jointIndices=[10, 12, 14, 15, 16, 17],
+                                    jointIndices=[10, 12, 14, 15, 17, 18],
                                     controlMode=p.POSITION_CONTROL,
                                     targetPositions=np.array([g, g, g, -g, g, -g]),
                                     targetVelocities=np.zeros((6,)),
                                     forces=np.ones((6,))*500,
                                     positionGains=np.ones((6,))*0.03,
                                     velocityGains=np.ones((6,)))
-
-        # for i in range(numJoints):
-        #     p.setJointMotorControl2(bodyIndex=kukaId,
-        #                             jointIndex=i+1,
-        #                             controlMode=p.POSITION_CONTROL,
-        #                             targetPosition=jointPoses[i],
-        #                             targetVelocity=0,
-        #                             force=500,
-        #                             positionGain=0.03,
-        #                             velocityGain=1)
 
     ls = p.getLinkState(kukaId, kukaEndEffectorIndex)
     if (hasPrevPose):
