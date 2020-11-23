@@ -1,4 +1,4 @@
-import pybullet
+import pybullet, pybullet_data
 import gym, gym.spaces, gym.utils
 import numpy as np
 import os, inspect
@@ -34,20 +34,14 @@ class XmlBasedRobot:
     def addToScene(self, bullet_client, bodies):
         self._p = bullet_client
 
-        if self.parts is not None:
-            parts = self.parts
-        else:
-            parts = {}
+        if self.parts is None:
+            self.parts = {}
 
-        if self.jdict is not None:
-            joints = self.jdict
-        else:
-            joints = {}
+        if self.jdict is None:
+            self.jdict = {}
 
-        if self.ordered_joints is not None:
-            ordered_joints = self.ordered_joints
-        else:
-            ordered_joints = []
+        if self.ordered_joints is None:
+            self.ordered_joints = []
 
         if np.isscalar(bodies):  # streamline the case where bodies is actually just one body
             bodies = [bodies]
@@ -58,10 +52,10 @@ class XmlBasedRobot:
                 part_name, robot_name = self._p.getBodyInfo(bodies[i])
                 self.robot_name = robot_name.decode("utf8")
                 part_name = part_name.decode("utf8")
-                parts[part_name] = BodyPart(self._p, part_name, bodies, i, -1)
+                self.parts[part_name] = BodyPart(self._p, part_name, bodies, i, -1)
             for j in range(self._p.getNumJoints(bodies[i])):
-                self._p.setJointMotorControl2(bodies[i], j, pybullet.POSITION_CONTROL, positionGain=0.1,
-                                              velocityGain=0.1, force=0)
+                # self._p.setJointMotorControl2(bodies[i], j, pybullet.POSITION_CONTROL, positionGain=0.1,
+                #                               velocityGain=0.1, force=0)
                 jointInfo = self._p.getJointInfo(bodies[i], j)
                 joint_name = jointInfo[1]
                 part_name = jointInfo[12]
@@ -73,41 +67,38 @@ class XmlBasedRobot:
                 if dump: print(
                     "ROBOT JOINT '%s'" % joint_name)  # limits = %+0.2f..%+0.2f effort=%0.3f speed=%0.3f" % ((joint_name,) + j.limits()) )
 
-                parts[part_name] = BodyPart(self._p, part_name, bodies, i, j)
+                self.parts[part_name] = BodyPart(self._p, part_name, bodies, i, j)
 
                 if part_name == self.robot_name:
-                    self.robot_body = parts[part_name]
+                    self.robot_body = self.parts[part_name]
 
                 if i == 0 and j == 0 and self.robot_body is None:  # if nothing else works, we take this as robot_body
-                    parts[self.robot_name] = BodyPart(self._p, self.robot_name, bodies, 0, -1)
-                    self.robot_body = parts[self.robot_name]
+                    self.parts[self.robot_name] = BodyPart(self._p, self.robot_name, bodies, 0, -1)
+                    self.robot_body = self.parts[self.robot_name]
 
                 if joint_name[:6] == "ignore":
                     ignored_joint = Joint(self._p, joint_name, bodies, i, j)
                     ignored_joint.disable_motor()
                     if self.add_ignored_joints:  # some of the robots (Hopper, Walker2D and HalfCheetah in mujoco) require read-access to these joints
-                        joints[joint_name] = ignored_joint
-                        ordered_joints.append(ignored_joint)
-                        joints[joint_name].power_coef = 0.0
+                        self.jdict[joint_name] = ignored_joint
+                        self.ordered_joints.append(ignored_joint)
+                        self.jdict[joint_name].power_coef = 0.0
                     continue
 
                 if joint_name[:8] != "jointfix":
-                    joints[joint_name] = Joint(self._p, joint_name, bodies, i, j)
-                    ordered_joints.append(joints[joint_name])
+                    self.jdict[joint_name] = Joint(self._p, joint_name, bodies, i, j)
+                    self.ordered_joints.append(self.jdict[joint_name])
 
-                    joints[joint_name].power_coef = 100.0
+                    self.jdict[joint_name].power_coef = 100.0
 
-        return parts, joints, ordered_joints, self.robot_body
+        return self.parts, self.jdict, self.ordered_joints, self.robot_body
 
     def reset_pose(self, position, orientation):
         self.parts[self.robot_name].reset_pose(position, orientation)
 
 
 class MJCFBasedRobot(XmlBasedRobot):
-    """
-	Base class for mujoco .xml based agents.
-	"""
-
+    """Base class for mujoco .xml based agents."""
     def __init__(self, model_xml, robot_name, action_dim, obs_dim, self_collision=True, add_ignored_joints=False):
         XmlBasedRobot.__init__(self, robot_name, action_dim, obs_dim, self_collision, add_ignored_joints)
         self.model_xml = model_xml
@@ -115,7 +106,7 @@ class MJCFBasedRobot(XmlBasedRobot):
 
     def reset(self, bullet_client):
 
-        full_path = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "mjcf", self.model_xml)
+        full_path = os.path.join(os.path.dirname(__file__), "..", "assets", "mjcf", self.model_xml)
 
         self._p = bullet_client
         # print("Created bullet_client with id=", self._p._client)
@@ -140,10 +131,7 @@ class MJCFBasedRobot(XmlBasedRobot):
 
 
 class URDFBasedRobot(XmlBasedRobot):
-    """
-	Base class for URDF .xml based robots.
-	"""
-
+    """Base class for URDF .xml based robots."""
     def __init__(self, model_urdf, robot_name, action_dim, obs_dim, basePosition=[0, 0, 0],
                  baseOrientation=[0, 0, 0, 1], fixed_base=False, self_collision=False):
         XmlBasedRobot.__init__(self, robot_name, action_dim, obs_dim, self_collision)
@@ -152,27 +140,27 @@ class URDFBasedRobot(XmlBasedRobot):
         self.basePosition = basePosition
         self.baseOrientation = baseOrientation
         self.fixed_base = fixed_base
+        self.doneLoading = 0
 
     def reset(self, bullet_client):
         self._p = bullet_client
-        self.ordered_joints = []
-
-        full_path = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "robots", self.model_urdf)
-        print(full_path)
-
-        if self.self_collision:
-            self.parts, self.jdict, self.ordered_joints, self.robot_body = self.addToScene(self._p,
-                                                                                           self._p.loadURDF(full_path,
-                                                                                                            basePosition=self.basePosition,
-                                                                                                            baseOrientation=self.baseOrientation,
-                                                                                                            useFixedBase=self.fixed_base,
-                                                                                                            flags=pybullet.URDF_USE_SELF_COLLISION))
-        else:
-            self.parts, self.jdict, self.ordered_joints, self.robot_body = self.addToScene(self._p,
-                                                                                           self._p.loadURDF(full_path,
-                                                                                                            basePosition=self.basePosition,
-                                                                                                            baseOrientation=self.baseOrientation,
-                                                                                                            useFixedBase=self.fixed_base))
+        if self.doneLoading == 0:
+            self._p.setAdditionalSearchPath(pybullet_data.getDataPath())
+            full_path = os.path.join(os.path.dirname(__file__), "..", "assets", "robots", self.model_urdf)
+            self.doneLoading = 1
+            if self.self_collision:
+                self.addToScene(self._p, self._p.loadURDF("plane.urdf", [0, 0, 0]))
+                self.addToScene(self._p, self._p.loadURDF(full_path,
+                                                          basePosition=self.basePosition,
+                                                          baseOrientation=self.baseOrientation,
+                                                          useFixedBase=self.fixed_base,
+                                                          flags=pybullet.URDF_USE_SELF_COLLISION))
+            else:
+                self.addToScene(self._p, self._p.loadURDF("plane.urdf", [0, 0, 0]))
+                self.addToScene(self._p, self._p.loadURDF(full_path,
+                                                          basePosition=self.basePosition,
+                                                          baseOrientation=self.baseOrientation,
+                                                          useFixedBase=self.fixed_base))
 
         self.robot_specific_reset(self._p)
 

@@ -70,7 +70,7 @@ class World:
     def clean_everything(self):
         # p.resetSimulation()
         self._p.setGravity(0, 0, -self.gravity)
-        self._p.setDefaultContactERP(0.9)
+        # self._p.setDefaultContactERP(0.9)
         # print("self.numSolverIterations=",self.numSolverIterations)
         self._p.setPhysicsEngineParameter(fixedTimeStep=self.timestep*self.frame_skip, numSolverIterations=self.numSolverIterations, numSubSteps=self.frame_skip)
 

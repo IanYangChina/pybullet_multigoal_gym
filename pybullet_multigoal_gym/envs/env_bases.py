@@ -6,7 +6,7 @@ from pybullet_utils import bullet_client
 from pkg_resources import parse_version
 
 
-class BaseBulletEnv(gym.Env):
+class BaseBulletMGEnv(gym.Env):
 	"""
 	Base class for Bullet physics simulation environments in a Scene.
 	These environments create single-player scenes and behave like normal Gym environments, if
@@ -18,16 +18,15 @@ class BaseBulletEnv(gym.Env):
 		'video.frames_per_second': 60
 		}
 
-	def __init__(self, robot, render=False):
+	def __init__(self, robot, render=False, seed=0):
 		self.scene = None
 		self.physicsClientId = -1
 		self.ownsPhysicsClient = 0
-		self.camera = Camera()
 		self.isRender = render
 		self.robot = robot
-		self._seed()
-		self._cam_dist = 3
-		self._cam_yaw = 90
+		self.seed(seed=seed)
+		self._cam_dist = 1.2
+		self._cam_yaw = -90
 		self._cam_pitch = -30
 		self._render_width = 320
 		self._render_height = 240
@@ -38,12 +37,12 @@ class BaseBulletEnv(gym.Env):
 	def configure(self, args):
 		self.robot.args = args
 
-	def _seed(self, seed=None):
+	def seed(self, seed=None):
 		self.np_random, seed = gym.utils.seeding.np_random(seed)
 		self.robot.np_random = self.np_random # use the same np_randomizer for robot as for env
 		return [seed]
 
-	def _reset(self):
+	def reset(self):
 		if self.physicsClientId < 0:
 			self.ownsPhysicsClient = True
 
@@ -53,7 +52,8 @@ class BaseBulletEnv(gym.Env):
 				self._p = bullet_client.BulletClient()
 
 			self.physicsClientId = self._p._client
-			self._p.configureDebugVisualizer(pybullet.COV_ENABLE_GUI,0)
+			self._p.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0)
+			self._p.resetDebugVisualizerCamera(self._cam_dist+0.2, self._cam_yaw-30, self._cam_pitch, [0, 0, 0.4])
 
 		if self.scene is None:
 			self.scene = self.create_single_player_scene(self._p)
@@ -70,13 +70,13 @@ class BaseBulletEnv(gym.Env):
 		self.potential = self.robot.calc_potential()
 		return s
 
-	def _render(self, mode, close=False):
+	def render(self, mode="human"):
 		if mode == "human":
 			self.isRender = True
 		if mode != "rgb_array":
 			return np.array([])
 
-		base_pos = [0, 0, 0]
+		base_pos = [0, 0, 0.4]
 		if hasattr(self,'robot'):
 			if hasattr(self.robot,'body_xyz'):
 				base_pos = self.robot.body_xyz
@@ -100,7 +100,7 @@ class BaseBulletEnv(gym.Env):
 		rgb_array = rgb_array[:, :, :3]
 		return rgb_array
 
-	def _close(self):
+	def close(self):
 		if self.ownsPhysicsClient:
 			if self.physicsClientId >= 0:
 				self._p.disconnect()
@@ -108,25 +108,3 @@ class BaseBulletEnv(gym.Env):
 
 	def HUD(self, state, a, done):
 		pass
-
-	# backwards compatibility for gym >= v0.9.x
-	# for extension of this class.
-	def step(self, *args, **kwargs):
-		return self._step(*args, **kwargs)
-
-	if parse_version(gym.__version__)>=parse_version('0.9.6'):
-		close = _close
-		render = _render
-		reset = _reset
-		seed = _seed
-
-
-class Camera:
-	def __init__(self):
-		pass
-
-	def move_and_look_at(self,i,j,k,x,y,z):
-		lookat = [x,y,z]
-		distance = 10
-		yaw = 10
-		self._p.resetDebugVisualizerCamera(distance, yaw, -20, lookat)

@@ -277,6 +277,18 @@
       <material name="Grey"/>
     </collision>
   </link>
+  <joint name="iiwa_gripper_tip_joint" type="fixed">
+    <parent link="iiwa_link_7"/>
+    <child link="iiwa_gripper_tip"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.18"/>
+  </joint>
+  <link name="iiwa_gripper_tip">
+     <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+       <mass value="0.0"/>
+       <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+    </inertial>
+  </link>
 <!--  <joint name="iiwa_joint_ee" type="fixed">-->
 <!--    <parent link="iiwa_link_7"/>-->
 <!--    <child link="iiwa_link_ee"/>-->
@@ -308,6 +320,7 @@
       <inertia ixx="0.000380" ixy="0.000000" ixz="0.000000" iyx="0.000000" iyy="0.001110" iyz="0.000000" izx="0.000000" izy="0.000000" izz="0.001171"/>
     </inertial>
   </link>
+
   <joint name="iiwa_gripper_finger1_joint" type="revolute">
     <parent link="iiwa_gripper_base_link"/>
     <child link="iiwa_gripper_finger1_knuckle_link"/>
@@ -320,8 +333,8 @@
     <child link="iiwa_gripper_finger2_knuckle_link"/>
     <axis xyz="0 0 1"/>
     <origin rpy="0.0 0.0 0.0" xyz="0.05490451627 -0.03060114443 0.0"/>
-    <limit effort="1000" lower="-3.14" upper="3.14" velocity="100.0"/>
-    <mimic joint="iiwa_gripper_finger1_joint"/>
+    <limit effort="1000" lower="0.0" upper="0.804" velocity="2.0"/>
+<!--    <mimic joint="iiwa_gripper_finger1_joint"/>-->
   </joint>
   <link name="iiwa_gripper_finger1_knuckle_link">
     <visual>
@@ -357,6 +370,7 @@
       <inertia ixx="0.000009" ixy="-0.000001" ixz="0.000000" iyx="-0.000001" iyy="0.000001" iyz="0.000000" izx="0.000000" izy="0.000000" izz="0.000010"/>
     </inertial>
   </link>
+
   <joint name="iiwa_gripper_finger1_finger_joint" type="fixed">
     <parent link="iiwa_gripper_finger1_knuckle_link"/>
     <child link="iiwa_gripper_finger1_finger_link"/>
@@ -367,11 +381,13 @@
     <child link="iiwa_gripper_finger2_finger_link"/>
     <origin rpy="0 0 0" xyz="-0.00408552455 -0.03148604435 0.0"/>
   </joint>
+  <!-- Black -->
   <link name="iiwa_gripper_finger1_finger_link">
     <visual>
       <geometry>
         <mesh filename="meshes/robotiq_2f_85/visual/robotiq_85_finger_link.dae"/>
       </geometry>
+      <material name="Black"/>
     </visual>
     <collision>
       <geometry>
@@ -389,6 +405,7 @@
       <geometry>
         <mesh filename="meshes/robotiq_2f_85/visual/robotiq_85_finger_link.dae"/>
       </geometry>
+      <material name="Black"/>
     </visual>
     <collision>
       <geometry>
@@ -401,27 +418,30 @@
       <inertia ixx="0.000003" ixy="-0.000002" ixz="0.000000" iyx="-0.000002" iyy="0.000021" iyz="0.000000" izx="0.000000" izy="0.000000" izz="0.000020"/>
     </inertial>
   </link>
+
   <joint name="iiwa_gripper_finger1_inner_knuckle_joint" type="continuous">
     <parent link="iiwa_gripper_base_link"/>
     <child link="iiwa_gripper_finger1_inner_knuckle_link"/>
     <axis xyz="0 0 1"/>
     <origin rpy="3.14159265359 0.0 0.0" xyz="0.06142 0.0127 0"/>
-    <limit effort="0.1" lower="-3.14" upper="3.14" velocity="100.0"/>
-    <mimic joint="iiwa_gripper_finger1_joint" offset="0"/>
+    <limit effort="1000" lower="0.0" upper="0.804" velocity="2.0"/>
+<!--    <mimic joint="iiwa_gripper_finger1_joint" offset="0"/>-->
   </joint>
   <joint name="iiwa_gripper_finger2_inner_knuckle_joint" type="continuous">
     <parent link="iiwa_gripper_base_link"/>
     <child link="iiwa_gripper_finger2_inner_knuckle_link"/>
     <axis xyz="0 0 1"/>
     <origin rpy="0 0 0" xyz="0.06142 -0.0127 0"/>
-    <limit effort="0.1" lower="-3.14" upper="3.14" velocity="100.0"/>
-    <mimic joint="iiwa_gripper_finger1_joint" offset="0"/>
+    <limit effort="1000" lower="0.0" upper="0.804" velocity="2.0"/>
+<!--    <mimic joint="iiwa_gripper_finger1_joint" offset="0"/>-->
   </joint>
+  <!-- Orange -->
   <link name="iiwa_gripper_finger1_inner_knuckle_link">
     <visual>
       <geometry>
         <mesh filename="meshes/robotiq_2f_85/visual/robotiq_85_inner_knuckle_link.dae"/>
       </geometry>
+      <material name="Orange"/>
     </visual>
     <collision>
       <geometry>
@@ -439,6 +459,7 @@
       <geometry>
         <mesh filename="meshes/robotiq_2f_85/visual/robotiq_85_inner_knuckle_link.dae"/>
       </geometry>
+      <material name="Orange"/>
     </visual>
     <collision>
       <geometry>
@@ -451,21 +472,23 @@
       <inertia ixx="0.000039" ixy="0.000000" ixz="0.000000" iyx="0.000000" iyy="0.000005" iyz="0.000000" izx="0.000000" izy="0.000000" izz="0.000035"/>
     </inertial>
   </link>
+
   <joint name="iiwa_gripper_finger1_finger_tip_joint" type="continuous">
     <parent link="iiwa_gripper_finger1_inner_knuckle_link"/>
     <child link="iiwa_gripper_finger1_finger_tip_link"/>
     <axis xyz="0 0 1"/>
     <origin rpy="0.0 0.0 0.0" xyz="0.04303959807 -0.03759940821 0.0"/>
-    <limit effort="0.1" lower="-3.14" upper="3.14" velocity="100.0"/>
-    <mimic joint="iiwa_gripper_finger1_joint" multiplier="-1"/>
+    <limit effort="1000" lower="-0.804" upper="0.804" velocity="2.0"/>
+<!--    <mimic joint="iiwa_gripper_finger1_joint" multiplier="-1"/>-->
   </joint>
   <joint name="iiwa_gripper_finger2_finger_tip_joint" type="continuous">
     <parent link="iiwa_gripper_finger2_inner_knuckle_link"/>
     <child link="iiwa_gripper_finger2_finger_tip_link"/>
     <axis xyz="0 0 1"/>
     <origin rpy="0.0 0.0 0.0" xyz="0.04303959807 -0.03759940821  0.0"/>
-    <limit effort="0.1" lower="-3.14" upper="3.14" velocity="100.0"/>
-    <mimic joint="iiwa_gripper_finger1_joint" multiplier="-1"/>
+<!--    <limit effort="0.1" lower="-3.14" upper="3.14" velocity="100.0"/>-->
+    <limit effort="1000" lower="-0.804" upper="0.804" velocity="2.0"/>
+<!--    <mimic joint="iiwa_gripper_finger1_joint" multiplier="-1"/>-->
   </joint>
   <link name="iiwa_gripper_finger1_finger_tip_link">
     <visual>
@@ -503,84 +526,78 @@
   </link>
 
   <!-- table & objects tags -->
-  <joint name="world_table_joint" type="fixed">
-    <parent link="world"/>
-    <child link="table"/>
-    <origin xyz="-0.5 0 0"/>
-  </joint>
-  <link name="table">
-    <inertial>
-      <origin rpy="0 0 0" xyz="0 0 0.44"/>
-       <mass value="0"/>
-       <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
-    </inertial>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0.44"/>
-      <geometry>
-	    <mesh filename="../../scenes/table/table.obj" scale="0.6 0.6 0.08"/>
-      </geometry>
-      <material name="White"/>
-    </visual>
-    <visual>
-      <origin rpy="0 0 0" xyz="-0.25 -0.25 0.20"/>
-      <geometry>
-        <box size="0.05 0.05 0.40"/>
-      </geometry>
-	  <material name="White"/>
-    </visual>
-    <visual>
-      <origin rpy="0 0 0" xyz="-0.25 0.25 0.20"/>
-      <geometry>
-        <box size="0.05 0.05 0.40"/>
-      </geometry>
-	  <material name="White"/>
-	  </visual>
-    <visual>
-      <origin rpy="0 0 0" xyz="0.25 -0.25 0.20"/>
-      <geometry>
-        <box size="0.05 0.05 0.40"/>
-      </geometry>
-	  <material name="White"/>
-	  </visual>
-    <visual>
-      <origin rpy="0 0 0" xyz="0.25 0.25 0.20"/>
-      <geometry>
-        <box size="0.05 0.05 0.40"/>
-      </geometry>
-      <material name="White"/>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0.44"/>
-      <geometry>
-      <box size="0.6 0.6 0.08"/>
-      </geometry>
-    </collision>
-  </link>
+<!--  <joint name="world_table_joint" type="fixed">-->
+<!--    <parent link="world"/>-->
+<!--    <child link="table"/>-->
+<!--    <origin xyz="-0.5 0 0"/>-->
+<!--  </joint>-->
+<!--  <link name="table">-->
+<!--    <inertial>-->
+<!--      <origin rpy="0 0 0" xyz="0 0 0.44"/>-->
+<!--       <mass value="0"/>-->
+<!--       <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>-->
+<!--    </inertial>-->
+<!--    <visual>-->
+<!--      <origin rpy="0 0 0" xyz="0 0 0.44"/>-->
+<!--      <geometry>-->
+<!--	    <mesh filename="../../scenes/table/table.obj" scale="0.6 0.6 0.08"/>-->
+<!--      </geometry>-->
+<!--      <material name="White"/>-->
+<!--    </visual>-->
+<!--    <visual>-->
+<!--      <origin rpy="0 0 0" xyz="-0.25 -0.25 0.20"/>-->
+<!--      <geometry>-->
+<!--        <box size="0.05 0.05 0.40"/>-->
+<!--      </geometry>-->
+<!--	  <material name="White"/>-->
+<!--    </visual>-->
+<!--    <visual>-->
+<!--      <origin rpy="0 0 0" xyz="-0.25 0.25 0.20"/>-->
+<!--      <geometry>-->
+<!--        <box size="0.05 0.05 0.40"/>-->
+<!--      </geometry>-->
+<!--	  <material name="White"/>-->
+<!--	  </visual>-->
+<!--    <visual>-->
+<!--      <origin rpy="0 0 0" xyz="0.25 -0.25 0.20"/>-->
+<!--      <geometry>-->
+<!--        <box size="0.05 0.05 0.40"/>-->
+<!--      </geometry>-->
+<!--	  <material name="White"/>-->
+<!--	  </visual>-->
+<!--    <visual>-->
+<!--      <origin rpy="0 0 0" xyz="0.25 0.25 0.20"/>-->
+<!--      <geometry>-->
+<!--        <box size="0.05 0.05 0.40"/>-->
+<!--      </geometry>-->
+<!--      <material name="White"/>-->
+<!--    </visual>-->
+<!--    <collision>-->
+<!--      <origin rpy="0 0 0" xyz="0 0 0.44"/>-->
+<!--      <geometry>-->
+<!--      <box size="0.6 0.6 0.08"/>-->
+<!--      </geometry>-->
+<!--    </collision>-->
+<!--  </link>-->
 
-  <joint name="table_block_0_joint" type="floating">
-    <parent link="table"/>
-    <child link="block_0"/>
-    <origin xyz="0 0 0.5"/>
-  </joint>
-  <link name="block_0">
-    <inertial>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="50"/>
-      <inertia ixx="0.02" ixy="0" ixz="0" iyy="0.02" iyz="0" izz="0.02"/>
-    </inertial>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <box size="0.05 0.05 0.05"/>
-      </geometry>
-      <material name="Red"/>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-      <box size="0.05 0.05 0.05"/>
-      </geometry>
-    </collision>
-  </link>
+<!--  <joint name="world_target_joint" type="fixed">-->
+<!--    <parent link="world"/>-->
+<!--    <child link="target"/>-->
+<!--    <origin xyz="0 0 0"/>-->
+<!--  </joint>-->
+<!--  <link name="target">-->
+<!--    <inertial>-->
+<!--      <origin rpy="0 0 0" xyz="0 0 0"/>-->
+<!--      <mass value="0.0"/>-->
+<!--      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>-->
+<!--    </inertial>-->
+<!--    <visual>-->
+<!--      <origin rpy="0 0 0" xyz="0 0 0"/>-->
+<!--      <geometry>-->
+<!--        <box size="0.005 0.005 0.005"/>-->
+<!--      </geometry>-->
+<!--      <material name="Red"/>-->
+<!--    </visual>-->
+<!--  </link>-->
 
 </robot>
