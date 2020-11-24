@@ -46,14 +46,14 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <box size="10 10 0.002"/>
+        <box size="5 5 0.002"/>
       </geometry>
-      <material name="Transparent"/>
+      <material name="Grey"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 -5"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <box size="10 10 0.002"/>
+        <box size="5 5 0.002"/>
       </geometry>
     </collision>
   </link>
@@ -311,7 +311,7 @@
   <joint name="iiwa_gripper_tip_joint" type="fixed">
     <parent link="iiwa_link_7"/>
     <child link="iiwa_gripper_tip"/>
-    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.2"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.18"/>
   </joint>
   <link name="iiwa_gripper_tip">
      <inertial>
@@ -519,6 +519,13 @@
     <mimic joint="iiwa_gripper_finger1_joint" multiplier="-1"/>
   </joint>
   <link name="iiwa_gripper_finger1_finger_tip_link">
+    <contact>
+      <lateral_friction value="1.0"/>
+      <rolling_friction value="0.0"/>
+      <inertia_scaling value="3.0"/>
+      <contact_cfm value="0.0"/>
+      <contact_erp value="1.0"/>
+    </contact>
     <visual>
       <geometry>
         <mesh filename="meshes/robotiq_2f_85/visual/robotiq_85_finger_tip_link.dae"/>
@@ -537,6 +544,13 @@
     </inertial>
   </link>
   <link name="iiwa_gripper_finger2_finger_tip_link">
+    <contact>
+      <lateral_friction value="1.0"/>
+      <rolling_friction value="0.0"/>
+      <inertia_scaling value="3.0"/>
+      <contact_cfm value="0.0"/>
+      <contact_erp value="1.0"/>
+    </contact>
     <visual>
       <geometry>
         <mesh filename="meshes/robotiq_2f_85/visual/robotiq_85_finger_tip_link.dae"/>
@@ -594,59 +608,4 @@
       <material name="Transparent"/>
     </visual>
   </link>
-  <!-- table & objects tags -->
-<!--  <joint name="world_table_joint" type="fixed">-->
-<!--    <parent link="world"/>-->
-<!--    <child link="table"/>-->
-<!--    <origin xyz="-0.5 0 0"/>-->
-<!--  </joint>-->
-<!--  <link name="table">-->
-<!--    <inertial>-->
-<!--      <origin rpy="0 0 0" xyz="0 0 0.44"/>-->
-<!--       <mass value="0"/>-->
-<!--       <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>-->
-<!--    </inertial>-->
-<!--    <visual>-->
-<!--      <origin rpy="0 0 0" xyz="0 0 0.44"/>-->
-<!--      <geometry>-->
-<!--	    <mesh filename="../../objects/table/table.obj" scale="0.6 0.6 0.08"/>-->
-<!--      </geometry>-->
-<!--      <material name="White"/>-->
-<!--    </visual>-->
-<!--    <visual>-->
-<!--      <origin rpy="0 0 0" xyz="-0.25 -0.25 0.20"/>-->
-<!--      <geometry>-->
-<!--        <box size="0.05 0.05 0.40"/>-->
-<!--      </geometry>-->
-<!--	  <material name="White"/>-->
-<!--    </visual>-->
-<!--    <visual>-->
-<!--      <origin rpy="0 0 0" xyz="-0.25 0.25 0.20"/>-->
-<!--      <geometry>-->
-<!--        <box size="0.05 0.05 0.40"/>-->
-<!--      </geometry>-->
-<!--	  <material name="White"/>-->
-<!--	  </visual>-->
-<!--    <visual>-->
-<!--      <origin rpy="0 0 0" xyz="0.25 -0.25 0.20"/>-->
-<!--      <geometry>-->
-<!--        <box size="0.05 0.05 0.40"/>-->
-<!--      </geometry>-->
-<!--	  <material name="White"/>-->
-<!--	  </visual>-->
-<!--    <visual>-->
-<!--      <origin rpy="0 0 0" xyz="0.25 0.25 0.20"/>-->
-<!--      <geometry>-->
-<!--        <box size="0.05 0.05 0.40"/>-->
-<!--      </geometry>-->
-<!--      <material name="White"/>-->
-<!--    </visual>-->
-<!--    <collision>-->
-<!--      <origin rpy="0 0 0" xyz="0 0 0.44"/>-->
-<!--      <geometry>-->
-<!--      <box size="0.6 0.6 0.08"/>-->
-<!--      </geometry>-->
-<!--    </collision>-->
-<!--  </link>-->
-
 </robot>

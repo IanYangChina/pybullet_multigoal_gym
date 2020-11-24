@@ -16,8 +16,8 @@ p.setAdditionalSearchPath(pybullet_data.getDataPath())
 
 model_path = '/home/xintong/Documents/PyProjects/pybullet_multigoal_gym/pybullet_multigoal_gym/assets/robots/kuka/iiwa14_robotiq85.urdf'
 
-p.loadURDF("plane.urdf", [0, 0, -0.3])
 kukaId = p.loadURDF(model_path, [0, 0, 0])
+p.loadURDF("random_urdfs/001/001.urdf", [0, 0.3, 0.3])
 p.resetBasePositionAndOrientation(kukaId, [0, 0, 0], [0, 0, 0, 1])
 jointIndex = [1, 2, 3, 4, 5, 6, 7]
 kukaEndEffectorIndex = 8
@@ -90,23 +90,23 @@ while i < (25*50):
         jointPoses = p.calculateInverseKinematics(kukaId, kukaEndEffectorIndex,
                                                   pos, orn, ll, ul, jr, rp)
 
-        p.setJointMotorControlArray(bodyUniqueId=kukaId,
-                                    jointIndices=[1, 2, 3, 4, 5, 6, 7],
-                                    controlMode=p.POSITION_CONTROL,
-                                    targetPositions=jointPoses[:7],
-                                    targetVelocities=[0, 0, 0, 0, 0, 0, 0],
-                                    forces=[500, 500, 500, 500, 500, 500, 500],
-                                    positionGains=[0.03, 0.03, 0.03, 0.03, 0.03, 0.03, 0.03],
-                                    velocityGains=[1, 1, 1, 1, 1, 1, 1])
-
-        p.setJointMotorControlArray(bodyUniqueId=kukaId,
-                                    jointIndices=[10, 12, 14, 15, 17, 18],
-                                    controlMode=p.POSITION_CONTROL,
-                                    targetPositions=np.array([g, g, g, -g, g, -g]),
-                                    targetVelocities=np.zeros((6,)),
-                                    forces=np.ones((6,))*500,
-                                    positionGains=np.ones((6,))*0.03,
-                                    velocityGains=np.ones((6,)))
+        # p.setJointMotorControlArray(bodyUniqueId=kukaId,
+        #                             jointIndices=[1, 2, 3, 4, 5, 6, 7],
+        #                             controlMode=p.POSITION_CONTROL,
+        #                             targetPositions=jointPoses[:7],
+        #                             targetVelocities=[0, 0, 0, 0, 0, 0, 0],
+        #                             forces=[500, 500, 500, 500, 500, 500, 500],
+        #                             positionGains=[0.03, 0.03, 0.03, 0.03, 0.03, 0.03, 0.03],
+        #                             velocityGains=[1, 1, 1, 1, 1, 1, 1])
+        #
+        # p.setJointMotorControlArray(bodyUniqueId=kukaId,
+        #                             jointIndices=[10, 12, 14, 15, 17, 18],
+        #                             controlMode=p.POSITION_CONTROL,
+        #                             targetPositions=np.array([g, g, g, -g, g, -g]),
+        #                             targetVelocities=np.zeros((6,)),
+        #                             forces=np.ones((6,))*500,
+        #                             positionGains=np.ones((6,))*0.03,
+        #                             velocityGains=np.ones((6,)))
 
     ls = p.getLinkState(kukaId, kukaEndEffectorIndex)
     if (hasPrevPose):

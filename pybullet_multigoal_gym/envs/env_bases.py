@@ -1,6 +1,8 @@
-import gym, gym.spaces, gym.utils, gym.utils.seeding
+import gym
 import numpy as np
 import pybullet
+from gym.utils import seeding
+from gym import spaces
 from pybullet_utils import bullet_client
 
 
@@ -12,10 +14,6 @@ class BaseBulletMGEnv(gym.Env):
                  robot, render=False, seed=0,
                  use_real_time_simulation=False,
                  gravity=9.81, timestep=0.002, frame_skip=20, num_solver_iterations=5):
-        self.metadata = {
-            'render.modes': ['human', 'rgb_array'],
-            'video.frames_per_second': int(np.round(1.0 / self.dt))
-        }
         self.physicsClientId = -1
         self.ownsPhysicsClient = 0
         self.isRender = render
@@ -32,10 +30,21 @@ class BaseBulletMGEnv(gym.Env):
         self._frame_skip = frame_skip
         self._num_solver_iterations = num_solver_iterations
         self._use_real_time_simulation = use_real_time_simulation
+        self.configure_bullet_client()
 
+        self.metadata = {
+            'render.modes': ['human', 'rgb_array'],
+            'video.frames_per_second': int(np.round(1.0 / self.dt))
+        }
+
+        obs = self.reset()
+        print(obs)
         self.action_space = robot.action_space
-        # todo: need to rewrite the observation space definition
-        self.observation_space = robot.observation_space
+        self.observation_space = spaces.Dict(dict(
+            state=spaces.Box(-np.inf, np.inf, shape=obs['state'].shape, dtype='float32'),
+            achieved_goal=spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
+            desired_goal=spaces.Box(-np.inf, np.inf, shape=obs['desired_goal'].shape, dtype='float32'),
+        ))
 
     @property
     def dt(self):
@@ -46,32 +55,25 @@ class BaseBulletMGEnv(gym.Env):
         return self._timestep * self._frame_skip
 
     def seed(self, seed=None):
-        self.np_random, seed = gym.utils.seeding.np_random(seed)
-        self.robot.np_random = self.np_random  # use the same np_randomizer for robot as for env
+        self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
     def reset(self):
-        self.configure_bullet_client()
-        state = self.robot.reset(self._p)
-        self._reset_callback()
-        return state
-
-    def _reset_callback(self):
-        # method to override, purposed to configure task-specific parameters,
-        #   e.g., goal generations
-        raise NotImplementedError
+        self.robot.reset(self._p)
+        self.task_reset()
+        obs = self._get_obs()
+        return obs
 
     def step(self, action):
         self.robot.apply_action(action, self._p)
         self._p.stepSimulation()
-        state = self.robot.calc_state()
-        reward = self.robot.calc_reward()
+        obs = self._get_obs()
+        reward, goal_achieved = self._compute_reward(obs['achieved_goal'], obs['desired_goal'])
         self._step_callback()
-        return state, reward, False, {}
-
-    def _step_callback(self):
-        # method to override, purposed to some task-specific computations
-        raise NotImplementedError
+        info = {
+            'goal_achieved': goal_achieved
+        }
+        return obs, reward, False, info
 
     def render(self, mode="human"):
         if mode == "human":
@@ -118,10 +120,29 @@ class BaseBulletMGEnv(gym.Env):
                 self._p = bullet_client.BulletClient()
             self.physicsClientId = self._p._client
             self._p.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0)
-            self._p.resetDebugVisualizerCamera(self._cam_dist + 0.2, self._cam_yaw - 30, self._cam_pitch, [0, 0, 0.4])
+            self._p.resetDebugVisualizerCamera(self._cam_dist, self._cam_yaw - 30, self._cam_pitch+10, [0, 0, 0.3])
             self._p.setGravity(0, 0, -self._gravity)
             self._p.setDefaultContactERP(0.9)
             self._p.setPhysicsEngineParameter(fixedTimeStep=self._timestep * self._frame_skip,
                                               numSolverIterations=self._num_solver_iterations,
                                               numSubSteps=self._frame_skip)
             self._p.setRealTimeSimulation(self._use_real_time_simulation)
+
+    def task_reset(self):
+        # method to override, purposed to task specific reset
+        #   e.g., object random spawn
+        raise NotImplementedError
+
+    def _step_callback(self):
+        # method to override, purposed to some task-specific computations
+        #   e.g., update goals
+        raise NotImplementedError
+
+    def _get_obs(self):
+        # method to override, purposed to configure task-specific parameters,
+        #   e.g., goal generations
+        raise NotImplementedError
+
+    def _compute_reward(self, achieved_goal, desired_goal):
+        # method to override, purposed to compute goal-conditioned task-specific reward
+        raise NotImplementedError
