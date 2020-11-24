@@ -11,12 +11,12 @@ for i in range(2):
         tag = ''
     for j in range(2):
         if sparse[j]:
-            tag += 'Sparse'
+            tag_ = 'Sparse'
         else:
-            tag += 'Dense'
-        ids.append('KukaReach'+tag+'Env-v0')
+            tag_ = 'Dense'
+        ids.append('KukaReach'+tag+tag_+'Env-v0')
         register(
-            id='KukaReach'+tag+'Env-v0',
+            id='KukaReach'+tag+tag_+'Env-v0',
             entry_point='pybullet_multigoal_gym.envs.kuka.kuka_reach:KukaReachEnv',
             kwargs={
                 'render': renders[i],
@@ -25,9 +25,9 @@ for i in range(2):
             max_episode_steps=100,
         )
 
-        ids.append('KukaPush'+tag+'Env-v0')
+        ids.append('KukaPush'+tag+tag_+'Env-v0')
         register(
-            id='KukaPush'+tag+'Env-v0',
+            id='KukaPush'+tag+tag_+'Env-v0',
             entry_point='pybullet_multigoal_gym.envs.kuka.kuka_push:KukaPushEnv',
             kwargs={
                 'render': renders[i],
@@ -36,9 +36,9 @@ for i in range(2):
             max_episode_steps=100,
         )
 
-        ids.append('KukaPickAndPlace'+tag+'Env-v0')
+        ids.append('KukaPickAndPlace'+tag+tag_+'Env-v0')
         register(
-            id='KukaPickAndPlace'+tag+'Env-v0',
+            id='KukaPickAndPlace'+tag+tag_+'Env-v0',
             entry_point='pybullet_multigoal_gym.envs.kuka.kuka_pick_and_place:KukaPickAndPlaceEnv',
             kwargs={
                 'render': renders[i],
@@ -47,9 +47,9 @@ for i in range(2):
             max_episode_steps=100,
         )
 
-        ids.append('KukaSlide'+tag+'Env-v0')
+        ids.append('KukaSlide'+tag+tag_+'Env-v0')
         register(
-            id='KukaSlide'+tag+'Env-v0',
+            id='KukaSlide'+tag+tag_+'Env-v0',
             entry_point='pybullet_multigoal_gym.envs.kuka.kuka_slide:KukaSlideEnv',
             kwargs={
                 'render': renders[i],

@@ -5,7 +5,7 @@ import pybullet_multigoal_gym
 import matplotlib.pyplot as plt
 print(pybullet_multigoal_gym.envs.get_id())
 
-env = gym.make('KukaPickAndPlaceRenderSparseEnv-v0')
+env = gym.make('KukaSlideRenderSparseEnv-v0')
 obs = env.reset()
 t = 0
 while True:
