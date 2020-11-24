@@ -2,10 +2,38 @@
 
 This version uses a kuka iiwa14 7DoF arm, equipped with a robotiq85 two finger gripper.
 
-The four tasks are basically the same as the ones in the OpenAI Gym: Reach, Push, Pick and Place, Slide.
-However, it may looks funny when the robot picks up a block with the robotiq85 gripper,
-since it's under-actuated and thus hard to fine-tune the simulation. 
+The four tasks are basically the same as the ones in the OpenAI Gym: **Reach, Push, Pick and Place, Slide**.
+However, it may look funny when the robot picks up a block with the robotiq85 gripper,
+since it's under-actuated and thus makes it hard to fine-tune the simulation. 
 I will make a parallel-jaw gripper ASAP if I have time.
+
+I have implemented some goal-conditioned RL algos in my another repo, using the 
+original Gym environment. There are DDPG-HER, SAC-HER, and others.
+<a href="https://github.com/IanYangChina/DRL_Implementation.git" target="_blank">DRL_Implementation.</a>
+Expired mujoco license got me here. I will also 
+retrain those agents and pose performance ASAP.
+
+### Installation
+
+```
+git clone https://github.com/IanYangChina/pybullet_multigoal_gym.git
+cd pybullet_multigoal_gym
+pip install -r requirements.txt
+pip install .
+```
+
+### Some info
+
+Observation is a dictionary, the same with OpenAI Gym.
+
+Since no rotation is involved, states contain the end-effector Cartesian position 
+and block Cartesian position (if the task involves a block).
+
+Goals are either EE or block Cartesian positions, in the world frame.
+
+Rewards are set to negatively proportional to the goal distance. For sparse, 
+it's -1 and 0 rewards, where 0 stands for goal being achieved. For dense reward,
+it equals to the negative goal distance (achieved & desired goals).
 
 Due to backend differences, the `render()` method should only be called when you need an image observation. To run experiment headless, make environment without the word `'Render'` in the id.
 
@@ -30,14 +58,6 @@ print(pmg.envs.get_id())
 >>Dense reward, headless
 'KukaReachDenseEnv-v0', 'KukaPushDenseEnv-v0', 
 'KukaPickAndPlaceDenseEnv-v0', 'KukaSlideDenseEnv-v0'
-```
-### Installation
-
-```
-git clone https://github.com/IanYangChina/pybullet_multigoal_gym.git
-cd pybullet_multigoal_gym
-pip install -r requirements.txt
-pip install .
 ```
 
 ### Try it out
