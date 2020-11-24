@@ -1,11 +1,11 @@
 <?xml version="1.0" ?>
 
-<robot name="blue_block">
-    <material name="Blue">
-        <color rgba="0 0 1 1"/>
+<robot name="block">
+    <material name="Black">
+        <color rgba="0 0 0 1"/>
     </material>
     <!-- table -->
-    <link name="blue_block">
+    <link name="block">
         <contact>
             <lateral_friction value="1.0"/>
             <rolling_friction value="0.0"/>
@@ -23,7 +23,7 @@
             <geometry>
                 <box size="0.03 0.03 0.03"/>
             </geometry>
-            <material name="Blue"/>
+            <material name="Black"/>
         </visual>
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>

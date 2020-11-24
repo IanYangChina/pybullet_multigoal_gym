@@ -38,7 +38,6 @@ class BaseBulletMGEnv(gym.Env):
         }
 
         obs = self.reset()
-        print(obs)
         self.action_space = robot.action_space
         self.observation_space = spaces.Dict(dict(
             state=spaces.Box(-np.inf, np.inf, shape=obs['state'].shape, dtype='float32'),

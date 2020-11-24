@@ -1,14 +1,14 @@
 from pybullet_multigoal_gym.robots.robot_bases import URDFBasedRobot
+from gym import spaces
 import numpy as np
 import math
 
 
 class Kuka(URDFBasedRobot):
-    def __init__(self):
+    def __init__(self, grasping=False):
         URDFBasedRobot.__init__(self,
                                 model_urdf='kuka/iiwa14_robotiq85.urdf',
                                 robot_name='iiwa14',
-                                action_dim=4,
                                 self_collision=False)
         self.kuka_body_index = None
         self.kuka_joint_index = None
@@ -16,10 +16,15 @@ class Kuka(URDFBasedRobot):
         self.kuka_rest_pose = [0, -0.1 * math.pi, 0, 0.5 * math.pi, 0, -math.pi * 0.4, 0]
         self.end_effector_tip_joint_index = None
         self.end_effector_target = None
-        self.end_effector_tip_initial_position = np.array([-0.42, 0.0, 0.186])
+        self.end_effector_tip_initial_position = np.array([-0.42, 0.0, 0.40])
         self.end_effector_fixed_quaternion = [0, -1, 0, 0]
         self.robotiq_85_joint_index = None
         self.robotiq_85_abs_joint_limit = 0.804
+        self.grasping = grasping
+        if self.grasping:
+            self.action_space = spaces.Box(-np.ones([4]), np.ones([4]))
+        else:
+            self.action_space = spaces.Box(-np.ones([3]), np.ones([3]))
 
     def robot_specific_reset(self, bullet_client):
         if self.kuka_body_index is None:
@@ -52,32 +57,35 @@ class Kuka(URDFBasedRobot):
         initial_joint_poses = self.compute_ik(bullet_client=bullet_client,
                                               target_ee_pos=self.end_effector_tip_initial_position)
         self.move_arm(bullet_client=bullet_client, joint_poses=initial_joint_poses)
-        self.move_finger(bullet_client=bullet_client, grip_ctrl=0)
-        for _ in range(10):
+        self.move_finger(bullet_client=bullet_client, grip_ctrl=self.robotiq_85_abs_joint_limit)
+        for _ in range(20):
             bullet_client.stepSimulation()
         # obtain initial end effector coordinates in the world frame
         self.end_effector_target = self.parts['iiwa_gripper_tip'].get_position()
 
     def apply_action(self, a, bullet_client):
-        assert a.shape == (4,)
-        self.end_effector_target += (a[:-1] * 0.01)
+        if self.grasping:
+            assert a.shape == (4,)
+            grip_ctrl = (a[-1] + 1.0) * (self.robotiq_85_abs_joint_limit / 2)
+            self.move_finger(bullet_client=bullet_client,
+                             grip_ctrl=grip_ctrl)
+        self.end_effector_target += (a[:3] * 0.01)
         joint_poses = self.compute_ik(bullet_client=bullet_client,
                                       target_ee_pos=self.end_effector_target)
         self.move_arm(bullet_client=bullet_client,
                       joint_poses=joint_poses)
-        grip_ctrl = (a[-1] + 1.0) * (self.robotiq_85_abs_joint_limit / 2)
-        self.move_finger(bullet_client=bullet_client,
-                         grip_ctrl=grip_ctrl)
 
     def calc_robot_state(self):
         # gripper tip coordinates in the world frame
-        gripper_tip_xyz = self.parts['iiwa_gripper_tip'].get_position()
-        # calculate distance between the gripper finger tabs
-        gripper_finger1_tab_xyz = np.array(self.parts['iiwa_gripper_finger1_finger_tab_link'].get_position())
-        gripper_finger2_tab_xyz = np.array(self.parts['iiwa_gripper_finger2_finger_tab_link'].get_position())
-        gripper_finger_closeness = np.sqrt(
-            np.square(np.sum(gripper_finger1_tab_xyz - gripper_finger2_tab_xyz))).reshape(1, )
-        return np.concatenate((gripper_tip_xyz, gripper_finger_closeness), axis=0)
+        robot_state = self.parts['iiwa_gripper_tip'].get_pose()
+        if self.grasping:
+            # calculate distance between the gripper finger tabs
+            gripper_finger1_tab_xyz = np.array(self.parts['iiwa_gripper_finger1_finger_tab_link'].get_position())
+            gripper_finger2_tab_xyz = np.array(self.parts['iiwa_gripper_finger2_finger_tab_link'].get_position())
+            gripper_finger_closeness = np.sqrt(
+                np.square(np.sum(gripper_finger1_tab_xyz - gripper_finger2_tab_xyz))).reshape(1, )
+            robot_state = np.concatenate((robot_state, gripper_finger_closeness), axis=0)
+        return robot_state
 
     def compute_ik(self, bullet_client, target_ee_pos, target_ee_quat=None):
         assert target_ee_pos.shape == (3,)

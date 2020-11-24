@@ -6,6 +6,9 @@
     </material>
     <!-- table -->
     <link name="table">
+        <contact>
+            <lateral_friction value="0.01"/>
+        </contact>
         <inertial>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <mass value="0"/>
@@ -14,7 +17,7 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <box size="0.4 0.4 0.16"/>
+                <box size="0.4 0.6 0.16"/>
             </geometry>
             <material name="White"/>
         </visual>

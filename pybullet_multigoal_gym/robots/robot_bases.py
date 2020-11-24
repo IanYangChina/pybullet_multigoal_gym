@@ -1,5 +1,3 @@
-import pybullet, pybullet_data
-import gym, gym.spaces, gym.utils
 import numpy as np
 import os
 
@@ -7,14 +5,13 @@ import os
 class XmlBasedRobot:
     """Base class for .xml based agents."""
 
-    def __init__(self, robot_name, action_dim, self_collision=True):
+    def __init__(self, robot_name, self_collision=True):
         self.robot_name = robot_name
         self.objects = None
         self.parts = {}
         self.jdict = {}
         self.ordered_joint_names = []
         self.self_collision = self_collision
-        self.action_space = gym.spaces.Box(-np.ones([action_dim]), np.ones([action_dim]))
 
     def addToScene(self, bullet_client, bodies):
         p = bullet_client
@@ -32,11 +29,10 @@ class XmlBasedRobot:
 
 class URDFBasedRobot(XmlBasedRobot):
     """Base class for URDF .xml based robots."""
-    def __init__(self, model_urdf, robot_name, action_dim, base_position=None,
+    def __init__(self, model_urdf, robot_name, base_position=None,
                  base_orientation=None, fixed_base=False, self_collision=False):
         XmlBasedRobot.__init__(self,
                                robot_name=robot_name,
-                               action_dim=action_dim,
                                self_collision=self_collision)
         if base_position is None:
             base_position = [0, 0, 0]
@@ -59,7 +55,7 @@ class URDFBasedRobot(XmlBasedRobot):
                                               basePosition=self.base_position,
                                               baseOrientation=self.base_orientation,
                                               useFixedBase=self.fixed_base,
-                                              flags=pybullet.URDF_USE_SELF_COLLISION))
+                                              flags=p.URDF_USE_SELF_COLLISION))
             else:
                 self.addToScene(p, p.loadURDF(full_path,
                                               basePosition=self.base_position,
@@ -79,6 +75,7 @@ class URDFBasedRobot(XmlBasedRobot):
     def apply_action(self, action, bullet_client):
         # method to override, purposed to apply robot-specific actions
         raise NotImplementedError
+
 
 class BodyPart:
     def __init__(self, bullet_client, body_name, bodies, bodyIndex, bodyPartIndex):
@@ -201,16 +198,16 @@ class Joint:
         return vx
 
     def set_position(self, position):
-        self._p.setJointMotorControl2(self.bodies[self.bodyIndex], self.jointIndex, pybullet.POSITION_CONTROL,
+        self._p.setJointMotorControl2(self.bodies[self.bodyIndex], self.jointIndex, self._p.POSITION_CONTROL,
                                       targetPosition=position)
 
     def set_velocity(self, velocity):
-        self._p.setJointMotorControl2(self.bodies[self.bodyIndex], self.jointIndex, pybullet.VELOCITY_CONTROL,
+        self._p.setJointMotorControl2(self.bodies[self.bodyIndex], self.jointIndex, self._p.VELOCITY_CONTROL,
                                       targetVelocity=velocity)
 
     def set_torque(self, torque):
         self._p.setJointMotorControl2(bodyIndex=self.bodies[self.bodyIndex], jointIndex=self.jointIndex,
-                                      controlMode=pybullet.TORQUE_CONTROL,
+                                      controlMode=self._p.TORQUE_CONTROL,
                                       force=torque)  # , positionGain=0.1, velocityGain=0.1)
 
     def reset_position(self, position, velocity):
@@ -220,5 +217,5 @@ class Joint:
 
     def disable_motor(self):
         self._p.setJointMotorControl2(self.bodies[self.bodyIndex], self.jointIndex,
-                                      controlMode=pybullet.POSITION_CONTROL, targetPosition=0, targetVelocity=0,
+                                      controlMode=self._p.POSITION_CONTROL, targetPosition=0, targetVelocity=0,
                                       positionGain=0.1, velocityGain=0.1, force=0)

@@ -1,1 +1,0 @@
-recursive-include pybulletgym/envs/assets/ *.xml *.stl *.png *.gif *.jpg *.urdf *.sdf *.obj *.mtl *.dae *.off *.STL
