@@ -22,7 +22,7 @@ for i in range(2):
                 'render': renders[i],
                 'binary_reward': sparse[j]
             },
-            max_episode_steps=100,
+            max_episode_steps=50,
         )
 
         ids.append('KukaPush'+tag+tag_+'Env-v0')
@@ -33,7 +33,7 @@ for i in range(2):
                 'render': renders[i],
                 'binary_reward': sparse[j]
             },
-            max_episode_steps=100,
+            max_episode_steps=50,
         )
 
         ids.append('KukaPickAndPlace'+tag+tag_+'Env-v0')
@@ -44,7 +44,7 @@ for i in range(2):
                 'render': renders[i],
                 'binary_reward': sparse[j]
             },
-            max_episode_steps=100,
+            max_episode_steps=50,
         )
 
         ids.append('KukaSlide'+tag+tag_+'Env-v0')
@@ -55,7 +55,7 @@ for i in range(2):
                 'render': renders[i],
                 'binary_reward': sparse[j]
             },
-            max_episode_steps=100,
+            max_episode_steps=50,
         )
 
 
