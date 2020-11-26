@@ -77,7 +77,9 @@ class Kuka(URDFBasedRobot):
 
     def calc_robot_state(self):
         # gripper tip coordinates in the world frame
-        robot_state = self.parts['iiwa_gripper_tip'].get_pose()
+        gripper_xyz = self.parts['iiwa_gripper_tip'].get_position()
+        gripper_vel_xyz = self.parts['iiwa_gripper_tip'].get_linear_velocity()
+        robot_state = np.concatenate((gripper_xyz, gripper_vel_xyz))
         if self.grasping:
             # calculate distance between the gripper finger tabs
             gripper_finger1_tab_xyz = np.array(self.parts['iiwa_gripper_finger1_finger_tab_link'].get_position())

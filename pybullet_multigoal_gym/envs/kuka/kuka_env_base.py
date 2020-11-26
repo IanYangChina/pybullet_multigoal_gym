@@ -97,7 +97,8 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
         assert self.desired_goal is not None
         if self.has_obj:
             block_pos, block_quat = self._p.getBasePositionAndOrientation(self.object_bodies['block'])
-            state = np.concatenate((state, block_pos, block_quat))
+            block_linear_vel, block_angular_vel = self._p.getBaseVelocity(self.object_bodies['block'])
+            state = np.concatenate((state, block_pos, block_quat, block_linear_vel, block_angular_vel))
             achieved_goal = np.array(block_pos).copy()
         else:
             achieved_goal = state[:3].copy()
