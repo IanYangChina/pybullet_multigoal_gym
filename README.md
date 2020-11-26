@@ -24,12 +24,19 @@ pip install .
 
 ### Some info
 
-Observation is a dictionary, the same with OpenAI Gym.
+Observation, state, action, goal and reward are all setup to be the same as the original environment.
 
-Since no rotation is involved, states contain the end-effector Cartesian position 
-and block Cartesian position (if the task involves a block).
+Observation is a dictionary, containing the state, desired goal and achieved goal.
+
+Since no rotation is involved, states contain the end-effector Cartesian position, 
+linear and angular velocities; and block Cartesian position, linear and angular velocities 
+(if the task involves a block).
 
 Goals are either EE or block Cartesian positions, in the world frame.
+
+Actions are 3 dimensional for the Reach, Push and Slide tasks, which are xyz movements in the 
+EE space. For the Pick and Place task, there is an extra dimension related to the closing and opening
+of the gripper fingers. All of them are within [-1, 1].
 
 Rewards are set to negatively proportional to the goal distance. For sparse, 
 it's -1 and 0 rewards, where 0 stands for goal being achieved. For dense reward,
@@ -73,6 +80,10 @@ while True:
     t += 1
     action = env.action_space.sample()
     obs, reward, done, info = env.step(action)
+    print('state: ', obs['state'], '\n',
+          'desired_goal: ', obs['desired_goal'], '\n',
+          'achieved_goal: ', obs['achieved_goal'], '\n',
+          'reward: ', reward, '\n')       
     if done:
         env.reset()
 ```
