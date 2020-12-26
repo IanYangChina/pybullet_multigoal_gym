@@ -96,7 +96,9 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
         self.desired_sub_goal_image = self.goal_images[key].copy()
         self.desired_final_goal = self.final_goal_space['place'].copy()
         self.desired_final_goal_image = self.goal_images['place'].copy()
+        self._update_target_objects()
 
+    def _update_target_objects(self):
         # set target poses
         self.set_object_pose(self.object_bodies['block_target'],
                              self.desired_sub_goal[-3:],
@@ -104,6 +106,15 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
         self.set_object_pose(self.object_bodies['grip_target'],
                              self.desired_sub_goal[:3],
                              self.object_initial_pos['grip_target'][3:])
+
+    def set_sub_goal(self, sub_goal, index=True):
+        if index:
+            key = list(self.sub_goal_space.keys())[sub_goal]
+            self.desired_sub_goal = self.sub_goal_space[key].copy()
+            self.desired_sub_goal_image = self.goal_images[key].copy()
+        else:
+            self.desired_sub_goal = sub_goal
+        self._update_target_objects()
 
     def _step_callback(self):
         pass

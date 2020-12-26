@@ -49,27 +49,11 @@ Here's how you view all the env ids:
 import pybullet_multigoal_gym as pmg
 print(pmg.envs.get_id())
 ```
-```commandline
->>Sparse reward, render
-'KukaReachRenderSparseEnv-v0', 'KukaPushRenderSparseEnv-v0', 
-'KukaPickAndPlaceRenderSparseEnv-v0', 'KukaSlideRenderSparseEnv-v0', 
-
->>Dense reward, render
-'KukaReachRenderDenseEnv-v0', 'KukaPushRenderDenseEnv-v0', 
-'KukaPickAndPlaceRenderDenseEnv-v0', 'KukaSlideRenderDenseEnv-v0', 
-
->>Sparse reward, headless
-'KukaReachSparseEnv-v0', 'KukaPushSparseEnv-v0', 
-'KukaPickAndPlaceSparseEnv-v0', 'KukaSlideSparseEnv-v0', 
-
->>Dense reward, headless
-'KukaReachDenseEnv-v0', 'KukaPushDenseEnv-v0', 
-'KukaPickAndPlaceDenseEnv-v0', 'KukaSlideDenseEnv-v0'
-```
 
 ### Try it out
 
 ```python
+# Non hierarchical environments
 import pybullet_multigoal_gym as pmg
 
 
@@ -88,8 +72,43 @@ while True:
         env.reset()
 ```
 
+```python
+# Hierarchical environments
+import pybullet_multigoal_gym as pmg
+# Install matplotlib if you want to use imshow to view the goal images
+import matplotlib.pyplot as plt
+
+
+env = pmg.make('KukaHierPickAndPlaceSparseEnv-v0')
+obs = env.reset()
+time_done = False
+while True:
+    high_level_action = env.high_level_action_space.sample()
+    env.set_sub_goal(high_level_action)
+    sub_goal_done = False
+    while not sub_goal_done and not time_done:
+        action = env.low_level_action_space.sample()
+        obs, reward, time_done, info = env.step(action)
+        sub_goal_done = info['sub_goal_achieved']
+        print('state: ', obs['state'], '\n',
+              'desired_sub_goal: ', obs['desired_sub_goal'], '\n',
+              'achieved_sub_goal: ', obs['achieved_sub_goal'], '\n',
+              'sub_reward: ', reward['sub_reward'], '\n',
+              'final_reward: ', reward['final_reward'], '\n',)       
+        plt.imshow(obs['desired_sub_goal_image'])
+        plt.pause(0.00001)
+        plt.imshow(obs['achieved_sub_goal_image'])
+        plt.pause(0.00001)
+    if time_done:
+        env.reset()
+```
+
 ### Scenes
 
 <img src="src/01.jpeg" width="300"/>
 
 <img src="src/02.jpeg" width="300"/>
+
+### Updates
+
+2020.12.26 --- Add hierarchical goal-conditioned environments for a pick and place task, with image observation and goal supported. See the above example.

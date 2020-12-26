@@ -38,7 +38,8 @@ class HierarchicalBaseBulletMGEnv(gym.Env):
         }
 
         obs = self.reset()
-        self.action_space = robot.action_space
+        self.low_level_action_space = robot.action_space
+        self.high_level_action_space = spaces.Discrete(len(list(self.sub_goal_space.keys())))
         self.observation_space = spaces.Dict(dict(
             observation=spaces.Box(-np.inf, np.inf, shape=obs['observation'].shape, dtype='float32'),
             state=spaces.Box(-np.inf, np.inf, shape=obs['state'].shape, dtype='float32'),
