@@ -65,7 +65,7 @@ trailDuration = 15
 
 i = 0
 mp = 1
-g = 0
+g = 0.5
 start_time = time.process_time()
 # 25 simulation_steps = 1 seconds
 while i < (25*50):
@@ -73,9 +73,6 @@ while i < (25*50):
     t = t + 0.04
     p.stepSimulation()
 
-    g += 0.08 * mp
-    if i % 10 == 0:
-        mp = -mp
     # grip_ctrl_bound = 1.0
     # normalized action
     # a = np.random.uniform(-grip_ctrl_bound, grip_ctrl_bound)
@@ -99,14 +96,14 @@ while i < (25*50):
         #                             positionGains=[0.03, 0.03, 0.03, 0.03, 0.03, 0.03, 0.03],
         #                             velocityGains=[1, 1, 1, 1, 1, 1, 1])
         #
-        # p.setJointMotorControlArray(bodyUniqueId=kukaId,
-        #                             jointIndices=[10, 12, 14, 15, 17, 18],
-        #                             controlMode=p.POSITION_CONTROL,
-        #                             targetPositions=np.array([g, g, g, -g, g, -g]),
-        #                             targetVelocities=np.zeros((6,)),
-        #                             forces=np.ones((6,))*500,
-        #                             positionGains=np.ones((6,))*0.03,
-        #                             velocityGains=np.ones((6,)))
+        p.setJointMotorControlArray(bodyUniqueId=kukaId,
+                                    jointIndices=[10, 12, 14, 15, 17, 18],
+                                    controlMode=p.POSITION_CONTROL,
+                                    targetPositions=np.array([g, g, g, -g, g, -g]),
+                                    targetVelocities=np.zeros((6,)),
+                                    forces=np.ones((6,))*500,
+                                    positionGains=np.ones((6,))*0.03,
+                                    velocityGains=np.ones((6,)))
 
     ls = p.getLinkState(kukaId, kukaEndEffectorIndex)
     if (hasPrevPose):

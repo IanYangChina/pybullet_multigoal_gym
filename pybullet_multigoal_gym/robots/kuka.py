@@ -19,7 +19,16 @@ class Kuka(URDFBasedRobot):
         self.end_effector_tip_initial_position = np.array([-0.42, 0.0, 0.40])
         self.end_effector_fixed_quaternion = [0, -1, 0, 0]
         self.robotiq_85_joint_index = None
+        self.robotiq_85_joint_name = [
+            'iiwa_gripper_finger1_joint',
+            'iiwa_gripper_finger2_joint',
+            'iiwa_gripper_finger1_inner_knuckle_joint',
+            'iiwa_gripper_finger1_finger_tip_joint',
+            'iiwa_gripper_finger2_inner_knuckle_joint',
+            'iiwa_gripper_finger2_finger_tip_joint'
+        ]
         self.robotiq_85_abs_joint_limit = 0.804
+        self.robotiq_85_mimic_joint_multiplier = np.array([1.0, 1.0, 1.0, -1.0, 1.0, -1.0])
         self.grasping = grasping
         if self.grasping:
             self.action_space = spaces.Box(-np.ones([4]), np.ones([4]))
@@ -85,7 +94,7 @@ class Kuka(URDFBasedRobot):
             gripper_finger1_tab_xyz = np.array(self.parts['iiwa_gripper_finger1_finger_tab_link'].get_position())
             gripper_finger2_tab_xyz = np.array(self.parts['iiwa_gripper_finger2_finger_tab_link'].get_position())
             gripper_finger_closeness = np.sqrt(
-                np.square(np.sum(gripper_finger1_tab_xyz - gripper_finger2_tab_xyz))).reshape(1, )
+                np.sum(np.square(gripper_finger1_tab_xyz - gripper_finger2_tab_xyz))).reshape(1, )
             robot_state = np.concatenate((robot_state, gripper_finger_closeness), axis=0)
         return robot_state
 
@@ -122,7 +131,7 @@ class Kuka(URDFBasedRobot):
                                                 velocityGains=np.ones((7,)))
 
     def move_finger(self, bullet_client, grip_ctrl):
-        target_joint_poses = np.array([grip_ctrl, grip_ctrl, grip_ctrl, -grip_ctrl, grip_ctrl, -grip_ctrl])
+        target_joint_poses = self.robotiq_85_mimic_joint_multiplier * grip_ctrl
         bullet_client.setJointMotorControlArray(bodyUniqueId=self.kuka_body_index,
                                                 jointIndices=self.robotiq_85_joint_index,
                                                 controlMode=bullet_client.POSITION_CONTROL,
@@ -131,3 +140,33 @@ class Kuka(URDFBasedRobot):
                                                 forces=np.ones((6,)) * 50,
                                                 positionGains=np.ones((6,)) * 0.03,
                                                 velocityGains=np.ones((6,)))
+
+    def get_kuka_joint_state(self):
+        kuka_joint_pos = []
+        kuka_joint_vel = []
+        for i in range(len(self.kuka_joint_index)):
+            x, vx = self.jdict['iiwa_joint_' + str(self.kuka_joint_index[i])].get_state()
+            kuka_joint_pos.append(x)
+            kuka_joint_vel.append(vx)
+        return kuka_joint_pos, kuka_joint_vel
+
+    def set_kuka_joint_state(self, pos, vel):
+        assert len(pos) == len(vel) == len(self.kuka_joint_index)
+        for i in range(len(pos)):
+            self.jdict['iiwa_joint_' + str(self.kuka_joint_index[i])].reset_position(pos[i], vel[i])
+
+    def get_finger_joint_state(self):
+        finger_joint_pos = []
+        finger_joint_vel = []
+        for name in self.robotiq_85_joint_name:
+            x, vx = self.jdict[name].get_state()
+            finger_joint_pos.append(x)
+            finger_joint_vel.append(vx)
+        return finger_joint_pos, finger_joint_vel
+
+    def set_finger_joint_state(self, pos, vel=None):
+        pos *= self.robotiq_85_mimic_joint_multiplier
+        if vel is None:
+            vel = np.zeros(pos.shape[0])
+        for i in range(len(pos)):
+            self.jdict[self.robotiq_85_joint_name[i]].reset_position(pos[i], vel[i])

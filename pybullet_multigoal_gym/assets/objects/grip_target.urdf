@@ -1,11 +1,11 @@
 <?xml version="1.0" ?>
 
-<robot name="block_target">
-    <material name="Red">
-        <color rgba="1 0 0 0.5"/>
+<robot name="grip_target">
+    <material name="Grey">
+        <color rgba="0 0 1 0.5"/>
     </material>
     <!-- table -->
-    <link name="block_target">
+    <link name="grip_target">
         <inertial>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <mass value="0.0"/>
@@ -16,7 +16,7 @@
             <geometry>
                 <sphere radius="0.01"/>
             </geometry>
-            <material name="Red"/>
+            <material name="Grey"/>
         </visual>
     </link>
 </robot>
