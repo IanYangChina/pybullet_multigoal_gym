@@ -17,6 +17,7 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
         self.desired_final_goal = None
         self.desired_final_goal_image = None
         self.sub_goal_space, self.final_goal_space, self.goal_images = None, None, None
+        self.sub_goal_strings, self.final_goal_strings = None, None
         self.grasping = grasping
         self.gripper_tip_offset = 0.015
         self.has_obj = has_obj
@@ -84,6 +85,8 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
 
         # Generate goal spaces
         self.sub_goal_space, self.final_goal_space, self.goal_images = self._generate_goal()
+        self.sub_goal_strings = list(self.sub_goal_space.keys())
+        self.final_goal_strings = list(self.final_goal_space.keys())
         self._sample_goal()
 
     def _generate_goal(self):
@@ -91,7 +94,7 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
 
     def _sample_goal(self):
         sub_goal_ind = self.np_random.random_integers(0, len(self.sub_goal_space) - 1)
-        key = list(self.sub_goal_space.keys())[sub_goal_ind]
+        key = self.sub_goal_strings[sub_goal_ind]
         self.desired_sub_goal = self.sub_goal_space[key].copy()
         self.desired_sub_goal_image = self.goal_images[key].copy()
         self.desired_final_goal = self.final_goal_space['place'].copy()
@@ -109,12 +112,24 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
 
     def set_sub_goal(self, sub_goal, index=True):
         if index:
-            key = list(self.sub_goal_space.keys())[sub_goal]
+            key = self.sub_goal_strings[sub_goal]
             self.desired_sub_goal = self.sub_goal_space[key].copy()
             self.desired_sub_goal_image = self.goal_images[key].copy()
         else:
-            self.desired_sub_goal = sub_goal
+            assert sub_goal.shape == self.observation_space['desired_sub_goal'].shape
+            self.desired_sub_goal = sub_goal.copy()
         self._update_target_objects()
+        return self.desired_sub_goal
+
+    def set_final_goal(self, final_goal, index=True):
+        if index:
+            key = self.final_goal_strings[final_goal]
+            self.desired_final_goal = self.final_goal_space[key].copy()
+            self.desired_final_goal_image = self.goal_images[key].copy()
+        else:
+            assert final_goal.shape == self.observation_space['desired_final_goal'].shape
+            self.desired_final_goal = final_goal.copy()
+        return self.desired_final_goal
 
     def _step_callback(self):
         pass
