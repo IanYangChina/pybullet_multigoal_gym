@@ -3,7 +3,7 @@
 <robot name="iiwa14">
   <!-- Custom materials (colours) -->
   <material name="Black">
-    <color rgba="0.0 0.0 0.0 1.0"/>
+    <color rgba="0.2 0.2 0.2 1.0"/>
   </material>
   <material name="Blue">
     <color rgba="0.0 0.0 0.8 1.0"/>
@@ -20,8 +20,8 @@
   <material name="Orange">
     <color rgba="1.0 0.423529411765 0.0392156862745 1.0"/>
   </material>
-  <material name="Brown">
-    <color rgba="0.870588235294 0.811764705882 0.764705882353 1.0"/>
+  <material name="Floor">
+    <color rgba="0.5 0.5 0.5 1.0"/>
   </material>
   <material name="Red">
     <color rgba="0.8 0.0 0.0 1.0"/>
@@ -48,7 +48,7 @@
       <geometry>
         <box size="5 5 0.002"/>
       </geometry>
-      <material name="Grey"/>
+      <material name="Floor"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -530,7 +530,7 @@
       <geometry>
         <mesh filename="meshes/robotiq_2f_85/visual/robotiq_85_finger_tip_link.dae"/>
       </geometry>
-      <material name="White"/>
+      <material name="Black"/>
     </visual>
     <collision>
       <geometry>
@@ -555,7 +555,7 @@
       <geometry>
         <mesh filename="meshes/robotiq_2f_85/visual/robotiq_85_finger_tip_link.dae"/>
       </geometry>
-      <material name="White"/>
+      <material name="Black"/>
     </visual>
     <collision>
       <geometry>

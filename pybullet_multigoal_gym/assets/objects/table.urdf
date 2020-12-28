@@ -2,7 +2,7 @@
 
 <robot name="table">
     <material name="White">
-        <color rgba="1 1 1 1"/>
+        <color rgba="0.93 0.93 0.93 1"/>
     </material>
     <!-- table -->
     <link name="table">
@@ -17,14 +17,14 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <box size="0.4 0.6 0.16"/>
+                <box size="0.5 0.7 0.16"/>
             </geometry>
             <material name="White"/>
         </visual>
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <box size="0.4 0.4 0.16"/>
+                <box size="0.5 0.7 0.16"/>
             </geometry>
         </collision>
     </link>

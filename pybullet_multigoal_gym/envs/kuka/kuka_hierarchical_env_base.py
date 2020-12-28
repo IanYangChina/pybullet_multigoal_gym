@@ -5,24 +5,26 @@ from pybullet_multigoal_gym.robots.kuka import Kuka
 
 
 class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
-    def __init__(self, render=True,
-                 binary_reward=True, distance_threshold=0.02, table_type='table', target_on_table=False,
-                 grasping=False, has_obj=False, randomized_obj_pos=True, obj_range=0.15):
-        self.object_assets_path = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "objects")
-        self.objects_urdf_loaded = False
+    """
+    Base class for hierarchical multi-goal RL task with a Kuka iiwa 14 robot
+    """
+    def __init__(self, render=True, binary_reward=True, image_observation=False,
+                 table_type='table', target_on_table=False,
+                 distance_threshold=0.02, grasping=False, has_obj=False, randomized_obj_pos=True, obj_range=0.15):
         self.binary_reward = binary_reward
+        self.image_observation = image_observation
+
+        self.table_type = table_type
+        assert self.table_type == 'table', 'currently only support normal table'
+        self.target_one_table = target_on_table
         self.distance_threshold = distance_threshold
-        self.desired_sub_goal = None
-        self.desired_sub_goal_image = None
-        self.desired_final_goal = None
-        self.desired_final_goal_image = None
-        self.sub_goal_space, self.final_goal_space, self.goal_images = None, None, None
-        self.sub_goal_strings, self.final_goal_strings = None, None
         self.grasping = grasping
-        self.gripper_tip_offset = 0.015
         self.has_obj = has_obj
         self.randomized_obj_pos = randomized_obj_pos
         self.obj_range = obj_range
+
+        self.object_assets_path = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "objects")
+        self.objects_urdf_loaded = False
         self.object_bodies = {
             'table': None,
             'block': None,
@@ -35,13 +37,17 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
             'block_target': [-0.42, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
             'grip_target': [-0.42, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
         }
-        self.table_type = table_type
-        assert self.table_type == 'table', 'currently only support normal table'
-        self.target_one_table = target_on_table
+        self.gripper_tip_offset = 0.015
 
-        HierarchicalBaseBulletMGEnv.__init__(self, robot=Kuka(grasping=grasping), render=render, seed=0,
-                                             use_real_time_simulation=False,
-                                             gravity=9.81, timestep=0.002, frame_skip=20, num_solver_iterations=5)
+        self.sub_goal_space, self.final_goal_space, self.goal_images = None, None, None
+        self.sub_goal_strings, self.final_goal_strings = None, None
+        self.desired_sub_goal = None
+        self.desired_sub_goal_image = None
+        self.desired_final_goal = None
+        self.desired_final_goal_image = None
+        HierarchicalBaseBulletMGEnv.__init__(self, robot=Kuka(grasping=grasping),
+                                             render=render, image_observation=image_observation,
+                                             seed=0, gravity=9.81, timestep=0.002, frame_skip=20)
 
     def task_reset(self):
         # Load objects
@@ -187,7 +193,7 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
         # set system to target states
         target_kuka_joint_pos = self.robot.compute_ik(self._p, gripper_target_pos)
         self.robot.set_finger_joint_state(target_finger_status)
-        self.robot.set_kuka_joint_state(target_kuka_joint_pos, np.zeros(len(target_kuka_joint_pos)))
+        self.robot.set_kuka_joint_state(target_kuka_joint_pos)
         self.set_object_pose(self.object_bodies['block'], block_target_pos)
 
         # codes for testing reward function

@@ -17,7 +17,7 @@ for i in range(2):
         ids.append('KukaReach' + tag + tag_ + 'Env-v0')
         register(
             id='KukaReach' + tag + tag_ + 'Env-v0',
-            entry_point='pybullet_multigoal_gym.envs.kuka.kuka_reach:KukaReachEnv',
+            entry_point='pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaReachEnv',
             kwargs={
                 'render': renders[i],
                 'binary_reward': sparse[j]
@@ -28,7 +28,7 @@ for i in range(2):
         ids.append('KukaPush' + tag + tag_ + 'Env-v0')
         register(
             id='KukaPush' + tag + tag_ + 'Env-v0',
-            entry_point='pybullet_multigoal_gym.envs.kuka.kuka_push:KukaPushEnv',
+            entry_point='pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaPushEnv',
             kwargs={
                 'render': renders[i],
                 'binary_reward': sparse[j]
@@ -39,7 +39,7 @@ for i in range(2):
         ids.append('KukaPickAndPlace' + tag + tag_ + 'Env-v0')
         register(
             id='KukaPickAndPlace' + tag + tag_ + 'Env-v0',
-            entry_point='pybullet_multigoal_gym.envs.kuka.kuka_pick_and_place:KukaPickAndPlaceEnv',
+            entry_point='pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaPickAndPlaceEnv',
             kwargs={
                 'render': renders[i],
                 'binary_reward': sparse[j]
@@ -50,7 +50,7 @@ for i in range(2):
         ids.append('KukaSlide' + tag + tag_ + 'Env-v0')
         register(
             id='KukaSlide' + tag + tag_ + 'Env-v0',
-            entry_point='pybullet_multigoal_gym.envs.kuka.kuka_slide:KukaSlideEnv',
+            entry_point='pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaSlideEnv',
             kwargs={
                 'render': renders[i],
                 'binary_reward': sparse[j]
@@ -58,27 +58,40 @@ for i in range(2):
             max_episode_steps=50,
         )
 
-ids.append('KukaHierPickAndPlaceRenderSparseEnv-v0')
-register(
-    id='KukaHierPickAndPlaceRenderSparseEnv-v0',
-    entry_point='pybullet_multigoal_gym.envs.kuka.kuka_hierarchical_pick_and_place:HierarchicalKukaPickAndPlaceEnv',
-    kwargs={
-        'render': True,
-        'binary_reward': True
-    },
-    max_episode_steps=50,
-)
+    ids.append('KukaReach' + tag + 'Env-v0')
+    register(
+        id='KukaReach' + tag + 'DenseImageObsEnv-v0',
+        entry_point='pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaReachEnv',
+        kwargs={
+            'render': renders[i],
+            'binary_reward': False,
+            'image_observation': True
+        },
+        max_episode_steps=50,
+    )
 
-ids.append('KukaHierPickAndPlaceSparseEnv-v0')
-register(
-    id='KukaHierPickAndPlaceSparseEnv-v0',
-    entry_point='pybullet_multigoal_gym.envs.kuka.kuka_hierarchical_pick_and_place:HierarchicalKukaPickAndPlaceEnv',
-    kwargs={
-        'render': False,
-        'binary_reward': True
-    },
-    max_episode_steps=50,
-)
+    ids.append('KukaReach' + tag + 'Env-v0')
+    register(
+        id='KukaPickAndPlace' + tag + 'DenseImageObsEnv-v0',
+        entry_point='pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaPickAndPlaceEnv',
+        kwargs={
+            'render': renders[i],
+            'binary_reward': False,
+            'image_observation': True
+        },
+        max_episode_steps=50,
+    )
+
+    ids.append('KukaHierPickAndPlace' + tag + 'SparseEnv-v0')
+    register(
+        id='KukaHierPickAndPlace' + tag + 'SparseEnv-v0',
+        entry_point='pybullet_multigoal_gym.envs.kuka.kuka_hierarchical_pick_and_place:HierarchicalKukaPickAndPlaceEnv',
+        kwargs={
+            'render': tag,
+            'binary_reward': True
+        },
+        max_episode_steps=50,
+    )
 
 
 def get_id():

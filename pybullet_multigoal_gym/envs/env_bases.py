@@ -8,28 +8,31 @@ from pybullet_utils import bullet_client
 
 class BaseBulletMGEnv(gym.Env):
     """
-    Base class for multi-goal RL task, based on PyBullet and Gym.
+    Base class for non-hierarchical multi-goal RL task, based on PyBullet and Gym.
     """
-    def __init__(self,
-                 robot, render=False, seed=0,
-                 use_real_time_simulation=False,
-                 gravity=9.81, timestep=0.002, frame_skip=20, num_solver_iterations=5):
+    def __init__(self, robot,
+                 render=False, image_observation=False,
+                 seed=0, gravity=9.81, timestep=0.002, frame_skip=20):
+        self.robot = robot
+
+        self.isRender = render
+        self.image_observation = image_observation
+
+        self.seed(seed=seed)
+        self._gravity = gravity
+        self._timestep = timestep
+        self._frame_skip = frame_skip
+
         self.physicsClientId = -1
         self.ownsPhysicsClient = 0
-        self.isRender = render
-        self.robot = robot
-        self.seed(seed=seed)
         self._p = None
         self._cam_dist = 1.2
         self._cam_yaw = -90
         self._cam_pitch = -30
-        self._render_width = 320
-        self._render_height = 240
-        self._gravity = gravity
-        self._timestep = timestep
-        self._frame_skip = frame_skip
-        self._num_solver_iterations = num_solver_iterations
-        self._use_real_time_simulation = use_real_time_simulation
+        self._render_width = 100
+        self._render_height = 100
+        self._num_solver_iterations = 5
+        self._use_real_time_simulation = False
         self.configure_bullet_client()
 
         self.metadata = {
@@ -39,11 +42,19 @@ class BaseBulletMGEnv(gym.Env):
 
         obs = self.reset()
         self.action_space = robot.action_space
-        self.observation_space = spaces.Dict(dict(
-            state=spaces.Box(-np.inf, np.inf, shape=obs['state'].shape, dtype='float32'),
-            achieved_goal=spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
-            desired_goal=spaces.Box(-np.inf, np.inf, shape=obs['desired_goal'].shape, dtype='float32'),
-        ))
+        if not self.image_observation:
+            self.observation_space = spaces.Dict(dict(
+                state=spaces.Box(-np.inf, np.inf, shape=obs['state'].shape, dtype='float32'),
+                achieved_goal=spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
+                desired_goal=spaces.Box(-np.inf, np.inf, shape=obs['desired_goal'].shape, dtype='float32'),
+            ))
+        else:
+            self.observation_space = spaces.Dict(dict(
+                observation=spaces.Box(-np.inf, np.inf, shape=obs['observation'].shape, dtype='float32'),
+                state=spaces.Box(-np.inf, np.inf, shape=obs['state'].shape, dtype='float32'),
+                achieved_goal=spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
+                desired_goal=spaces.Box(-np.inf, np.inf, shape=obs['desired_goal'].shape, dtype='float32'),
+            ))
 
     @property
     def dt(self):
@@ -80,18 +91,10 @@ class BaseBulletMGEnv(gym.Env):
         if mode != "rgb_array":
             return np.array([])
 
-        base_pos = [0, 0, 0.4]
-        if hasattr(self, 'robot'):
-            if hasattr(self.robot, 'body_xyz'):
-                base_pos = self.robot.body_xyz
-
-        view_matrix = self._p.computeViewMatrixFromYawPitchRoll(
-            cameraTargetPosition=base_pos,
-            distance=self._cam_dist,
-            yaw=self._cam_yaw,
-            pitch=self._cam_pitch,
-            roll=0,
-            upAxisIndex=2)
+        view_matrix = self._p.computeViewMatrix(
+            cameraEyePosition=[-1.0, 0.4, 0.8],
+            cameraTargetPosition=[-0.6, 0.05, 0.2],
+            cameraUpVector=[0, 0, 1])
         proj_matrix = self._p.computeProjectionMatrixFOV(
             fov=60, aspect=float(self._render_width) / self._render_height,
             nearVal=0.1, farVal=100.0)
@@ -118,7 +121,7 @@ class BaseBulletMGEnv(gym.Env):
             else:
                 self._p = bullet_client.BulletClient()
             self.physicsClientId = self._p._client
-            self._p.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0)
+            self._p.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0, lightPosition=[0.0, 0.0, 4])
             self._p.resetDebugVisualizerCamera(self._cam_dist, self._cam_yaw - 30, self._cam_pitch+10, [0, 0, 0.3])
             self._p.setGravity(0, 0, -self._gravity)
             self._p.setDefaultContactERP(0.9)

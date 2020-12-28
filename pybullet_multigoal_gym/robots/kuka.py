@@ -13,10 +13,10 @@ class Kuka(URDFBasedRobot):
         self.kuka_body_index = None
         self.kuka_joint_index = None
         # rest poses for null space, setting the end effector to point downward
-        self.kuka_rest_pose = [0, -0.1 * math.pi, 0, 0.5 * math.pi, 0, -math.pi * 0.4, 0]
+        self.kuka_rest_pose = [0, -0.53, 0, 1.32, 0, -1.28, 0]
         self.end_effector_tip_joint_index = None
         self.end_effector_target = None
-        self.end_effector_tip_initial_position = np.array([-0.42, 0.0, 0.40])
+        self.end_effector_tip_initial_position = np.array([-0.6, 0.0, 0.35])
         self.end_effector_fixed_quaternion = [0, -1, 0, 0]
         self.robotiq_85_joint_index = None
         self.robotiq_85_joint_name = [
@@ -61,15 +61,10 @@ class Kuka(URDFBasedRobot):
                 self.jdict['iiwa_gripper_finger2_finger_tip_joint'].jointIndex,
             ]
         # reset arm poses
-        for i in range(len(self.kuka_joint_index)):
-            self.jdict['iiwa_joint_' + str(self.kuka_joint_index[i])].reset_position(self.kuka_rest_pose[i], 0)
-        initial_joint_poses = self.compute_ik(bullet_client=bullet_client,
-                                              target_ee_pos=self.end_effector_tip_initial_position)
-        self.move_arm(bullet_client=bullet_client, joint_poses=initial_joint_poses)
+        self.set_kuka_joint_state(self.kuka_rest_pose, np.zeros(len(self.kuka_rest_pose)))
+        self.set_finger_joint_state(self.robotiq_85_abs_joint_limit)
         self.move_finger(bullet_client=bullet_client, grip_ctrl=self.robotiq_85_abs_joint_limit)
-        for _ in range(20):
-            bullet_client.stepSimulation()
-        # obtain initial end effector coordinates in the world frame
+        bullet_client.stepSimulation()
         self.end_effector_target = self.parts['iiwa_gripper_tip'].get_position()
 
     def apply_action(self, a, bullet_client):
@@ -150,8 +145,10 @@ class Kuka(URDFBasedRobot):
             kuka_joint_vel.append(vx)
         return kuka_joint_pos, kuka_joint_vel
 
-    def set_kuka_joint_state(self, pos, vel):
+    def set_kuka_joint_state(self, pos, vel=None):
         assert len(pos) == len(vel) == len(self.kuka_joint_index)
+        if vel is None:
+            vel = np.zeros(pos.shape[0])
         for i in range(len(pos)):
             self.jdict['iiwa_joint_' + str(self.kuka_joint_index[i])].reset_position(pos[i], vel[i])
 
@@ -165,8 +162,8 @@ class Kuka(URDFBasedRobot):
         return finger_joint_pos, finger_joint_vel
 
     def set_finger_joint_state(self, pos, vel=None):
-        pos *= self.robotiq_85_mimic_joint_multiplier
+        pos = pos * self.robotiq_85_mimic_joint_multiplier
         if vel is None:
             vel = np.zeros(pos.shape[0])
-        for i in range(len(pos)):
+        for i in range(pos.shape[0]):
             self.jdict[self.robotiq_85_joint_name[i]].reset_position(pos[i], vel[i])

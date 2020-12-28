@@ -2,7 +2,7 @@
 
 <robot name="table">
     <material name="White">
-        <color rgba="1 1 1 1"/>
+        <color rgba="0.93 0.93 0.93 1"/>
     </material>
     <!-- table -->
     <link name="table">
