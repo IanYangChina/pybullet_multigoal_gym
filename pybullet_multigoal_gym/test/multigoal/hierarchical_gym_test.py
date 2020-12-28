@@ -1,11 +1,10 @@
 import os
-import gym
 import numpy as np
-import pybullet_multigoal_gym
+import pybullet_multigoal_gym as pmg
 import matplotlib.pyplot as plt
-# print(pybullet_multigoal_gym.envs.get_id())
+# pmg.envs.print_id()
 
-env = gym.make('KukaHierPickAndPlaceSparseEnv-v0')
+env = pmg.make('KukaHierPickAndPlaceSparseEnv-v0')
 obs = env.reset()
 time_done = False
 while True:

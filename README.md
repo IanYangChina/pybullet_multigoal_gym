@@ -42,12 +42,15 @@ Rewards are set to negatively proportional to the goal distance. For sparse,
 it's -1 and 0 rewards, where 0 stands for goal being achieved. For dense reward,
 it equals to the negative goal distance (achieved & desired goals).
 
-Due to backend differences, the `render()` method should only be called when you need an image observation. To run experiment headless, make environment without the word `'Render'` in the id.
+Due to backend differences, the `render()` method should not need to be called by users. To run experiment 
+headless, make environment without the word `'Render'` in the id. To run experiment with image observations,
+make environments with the word `'ImageObs'` in the id. Only the Reach, PickAndPlace and Push envs support
+image observation.
 
 Here's how you view all the env ids:
 ```python
 import pybullet_multigoal_gym as pmg
-print(pmg.envs.get_id())
+pmg.envs.print_id()
 ```
 
 ### Try it out
@@ -55,7 +58,8 @@ print(pmg.envs.get_id())
 ```python
 # Non hierarchical environments
 import pybullet_multigoal_gym as pmg
-
+# Install matplotlib if you want to use imshow to view the goal images
+import matplotlib.pyplot as plt
 
 env = pmg.make('KukaPickAndPlaceRenderSparseEnv-v0')
 obs = env.reset()
@@ -67,7 +71,9 @@ while True:
     print('state: ', obs['state'], '\n',
           'desired_goal: ', obs['desired_goal'], '\n',
           'achieved_goal: ', obs['achieved_goal'], '\n',
-          'reward: ', reward, '\n')       
+          'reward: ', reward, '\n')
+    plt.imshow(obs['observation']) # only works for environments with image observation
+    plt.pause(0.00001)      
     if done:
         env.reset()
 ```
@@ -111,4 +117,5 @@ while True:
 
 ### Updates
 
-2020.12.26 --- Add hierarchical goal-conditioned environments for a pick and place task, with image observation and goal supported. See the above example.
+2020.12.26 --- Add hierarchical environments for a pick and place task, with image observation and goal supported. See the above example.
+2020.12.28 --- Add image observation to non-hierarchical environments
