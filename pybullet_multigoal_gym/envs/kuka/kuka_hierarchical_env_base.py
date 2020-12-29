@@ -32,10 +32,10 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
             'grip_target': None,
         }
         self.object_initial_pos = {
-            'table': [-0.42, 0.0, 0.08, 0.0, 0.0, 0.0, 1.0],
-            'block': [-0.42, 0.0, 0.175, 0.0, 0.0, 0.0, 1.0],
-            'block_target': [-0.42, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
-            'grip_target': [-0.42, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
+            'table': [-0.6, 0.0, 0.08, 0.0, 0.0, 0.0, 1.0],
+            'block': [-0.6, 0.0, 0.175, 0.0, 0.0, 0.0, 1.0],
+            'block_target': [-0.6, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
+            'grip_target': [-0.6, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
         }
         self.gripper_tip_offset = 0.015
 
