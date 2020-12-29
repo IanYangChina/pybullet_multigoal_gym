@@ -113,9 +113,9 @@ while True:
 
 <img src="src/01.jpeg" width="300"/>
 
-<img src="src/02.jpeg" width="300"/>
-
 ### Updates
 
-2020.12.26 --- Add hierarchical environments for a pick and place task, with image observation and goal supported. See the above example.
+2020.12.26 --- Add hierarchical environments for a pick and place task, with image observation and goal supported. 
+See the above example.
+
 2020.12.28 --- Add image observation to non-hierarchical environments
