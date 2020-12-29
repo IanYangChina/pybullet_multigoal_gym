@@ -111,7 +111,7 @@ while True:
 
 ### Scenes
 
-<img src="src/01.jpeg" width="300"/>
+<img src="src/01.jpeg" width="800"/>
 
 ### Updates
 
