@@ -146,7 +146,7 @@ class Kuka(URDFBasedRobot):
         return kuka_joint_pos, kuka_joint_vel
 
     def set_kuka_joint_state(self, pos, vel=None):
-        assert len(pos) == len(vel) == len(self.kuka_joint_index)
+        pos = np.array(pos)
         if vel is None:
             vel = np.zeros(pos.shape[0])
         for i in range(len(pos)):
