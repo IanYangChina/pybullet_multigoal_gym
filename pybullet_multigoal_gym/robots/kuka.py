@@ -13,10 +13,10 @@ class Kuka(URDFBasedRobot):
         self.kuka_body_index = None
         self.kuka_joint_index = None
         # rest poses for null space, setting the end effector to point downward
-        self.kuka_rest_pose = [0, -0.53, 0, 1.32, 0, -1.28, 0]
+        self.kuka_rest_pose = [0, -0.227, 0, 1.726, 0, -1.193, 0]
         self.end_effector_tip_joint_index = None
         self.end_effector_target = None
-        self.end_effector_tip_initial_position = np.array([-0.6, 0.0, 0.35])
+        self.end_effector_tip_initial_position = np.array([-0.45, 0.0, 0.35])
         self.end_effector_fixed_quaternion = [0, -1, 0, 0]
         self.robotiq_85_joint_index = None
         self.robotiq_85_joint_name = [
@@ -64,7 +64,11 @@ class Kuka(URDFBasedRobot):
         self.set_kuka_joint_state(self.kuka_rest_pose, np.zeros(len(self.kuka_rest_pose)))
         self.set_finger_joint_state(self.robotiq_85_abs_joint_limit)
         self.move_finger(bullet_client=bullet_client, grip_ctrl=self.robotiq_85_abs_joint_limit)
-        bullet_client.stepSimulation()
+        # pos = self.compute_ik(bullet_client, self.end_effector_tip_initial_position)
+        # self.move_arm(bullet_client, pos)
+        # for _ in range(20):
+        #     bullet_client.stepSimulation()
+        # joint = self.get_kuka_joint_state()
         self.end_effector_target = self.parts['iiwa_gripper_tip'].get_position()
 
     def apply_action(self, a, bullet_client):
@@ -121,7 +125,7 @@ class Kuka(URDFBasedRobot):
                                                 controlMode=bullet_client.POSITION_CONTROL,
                                                 targetPositions=joint_poses,
                                                 targetVelocities=np.zeros((7,)),
-                                                forces=np.ones((7,)) * 500,
+                                                forces=np.ones((7,)) * 100,
                                                 positionGains=np.ones((7,)) * 0.03,
                                                 velocityGains=np.ones((7,)))
 
@@ -132,7 +136,7 @@ class Kuka(URDFBasedRobot):
                                                 controlMode=bullet_client.POSITION_CONTROL,
                                                 targetPositions=target_joint_poses,
                                                 targetVelocities=np.zeros((6,)),
-                                                forces=np.ones((6,)) * 50,
+                                                forces=np.ones((6,)) * 500,
                                                 positionGains=np.ones((6,)) * 0.03,
                                                 velocityGains=np.ones((6,)))
 

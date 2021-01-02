@@ -92,8 +92,8 @@ class BaseBulletMGEnv(gym.Env):
             return np.array([])
 
         view_matrix = self._p.computeViewMatrix(
-            cameraEyePosition=[-1.0, 0.4, 0.8],
-            cameraTargetPosition=[-0.6, 0.05, 0.2],
+            cameraEyePosition=[-1.0, 0.25, 0.8],
+            cameraTargetPosition=[-0.45, 0.0, 0.2],
             cameraUpVector=[0, 0, 1])
         proj_matrix = self._p.computeProjectionMatrixFOV(
             fov=60, aspect=float(self._render_width) / self._render_height,

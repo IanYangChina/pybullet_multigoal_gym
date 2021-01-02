@@ -31,9 +31,9 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             'target': None
         }
         self.object_initial_pos = {
-            'table': [-0.6, 0.0, 0.08, 0.0, 0.0, 0.0, 1.0],
-            'block': [-0.6, 0.0, 0.175, 0.0, 0.0, 0.0, 1.0],
-            'target': [-0.6, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0]
+            'table': [-0.45, 0.0, 0.08, 0.0, 0.0, 0.0, 1.0],
+            'block': [-0.45, 0.0, 0.175, 0.0, 0.0, 0.0, 1.0],
+            'target': [-0.45, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0]
         }
         if self.table_type == 'long_table':
             self.object_initial_pos['table'][0] = -0.90
