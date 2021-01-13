@@ -5,12 +5,16 @@ from pybullet_multigoal_gym.envs.kuka.kuka_hierarchical_env_base import Hierarch
 
 
 class HierarchicalKukaPickAndPlaceEnv(HierarchicalKukaBulletMGEnv):
-    def __init__(self, render=True, binary_reward=True):
+    def __init__(self, render=True, binary_reward=True, image_observation=False):
         self.step_demonstrator = StepDemonstrator([
             [0],
             [0, 1]
         ])
-        HierarchicalKukaBulletMGEnv.__init__(self, render=render, binary_reward=binary_reward,
+        HierarchicalKukaBulletMGEnv.__init__(self,
+                                             render=render,
+                                             binary_reward=binary_reward,
+                                             image_observation=image_observation,
+                                             num_steps=self.step_demonstrator.demon_num,
                                              distance_threshold=0.02,
                                              grasping=True, has_obj=True, randomized_obj_pos=True, obj_range=0.15)
 
@@ -42,9 +46,45 @@ class HierarchicalKukaPickAndPlaceEnv(HierarchicalKukaBulletMGEnv):
             ]),
         }
         final_goals = dcp(sub_goals)
-        goal_images = {
-            "pick": self._generate_goal_image(0.55, picking_grip_pos, block_pos),
-            "place": self._generate_goal_image(0.55, placing_grip_pos, block_target_position),
-        }
+        if not self.image_observation:
+            return sub_goals, final_goals, None
+        else:
+            goal_images = {
+                "pick": self._generate_goal_image(0.55, picking_grip_pos, block_pos),
+                "place": self._generate_goal_image(0.55, placing_grip_pos, block_target_position),
+            }
+            return sub_goals, final_goals, goal_images
 
-        return sub_goals, final_goals, goal_images
+    def _generate_goal_image(self, target_finger_status, gripper_target_pos, block_target_pos):
+        # set target poses
+        self._set_object_pose(self.object_bodies['block_target'],
+                              block_target_pos,
+                              self.object_initial_pos['block_target'][3:])
+        self._set_object_pose(self.object_bodies['grip_target'],
+                              gripper_target_pos,
+                              self.object_initial_pos['grip_target'][3:])
+        # record current poses
+        kuka_joint_pos, kuka_joint_vel = self.robot.get_kuka_joint_state()
+        finger_joint_pos, finger_joint_vel = self.robot.get_finger_joint_state()
+        block_pos, block_quat = self._p.getBasePositionAndOrientation(self.object_bodies['block'])
+        # set system to target states
+        target_kuka_joint_pos = self.robot.compute_ik(self._p, gripper_target_pos)
+        self.robot.set_finger_joint_state(target_finger_status)
+        self.robot.set_kuka_joint_state(target_kuka_joint_pos)
+        self._set_object_pose(self.object_bodies['block'], block_target_pos)
+
+        # codes for testing reward function
+        # block_pos_, _ = self._p.getBasePositionAndOrientation(self.object_bodies['block'])
+        # state = self.robot.calc_robot_state()
+        # achieved_goal = np.concatenate((state[:3].copy(), [state[-1].copy()], np.array(block_pos_).copy()))
+        # desired_goal = np.concatenate((gripper_target_pos, [0.03], block_target_pos))
+        # sub_reward, sub_goal_achieved = self._compute_reward(achieved_goal, desired_goal)
+
+        # render an image
+        goal_img = self.render(mode='rgb_array')
+        # set system state back
+        self.robot.set_finger_joint_state(finger_joint_pos[0], finger_joint_vel)
+        self.robot.set_kuka_joint_state(kuka_joint_pos, kuka_joint_vel)
+        self._set_object_pose(self.object_bodies['block'], block_pos, block_quat)
+
+        return goal_img

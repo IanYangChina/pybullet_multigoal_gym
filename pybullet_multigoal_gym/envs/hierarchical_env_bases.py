@@ -11,7 +11,7 @@ class HierarchicalBaseBulletMGEnv(gym.Env):
     Base class for hierarchical multi-goal RL task, based on PyBullet and Gym.
     """
     def __init__(self, robot,
-                 render=False, image_observation=False,
+                 render=False, image_observation=False, num_steps=2,
                  seed=0, gravity=9.81, timestep=0.002, frame_skip=20):
         self.robot = robot
 
@@ -42,18 +42,31 @@ class HierarchicalBaseBulletMGEnv(gym.Env):
 
         obs = self.reset()
         self.low_level_action_space = robot.action_space
-        self.high_level_action_space = spaces.Discrete(len(list(self.sub_goal_space.keys())))
-        self.observation_space = spaces.Dict(dict(
-            observation=spaces.Box(-np.inf, np.inf, shape=obs['observation'].shape, dtype='float32'),
-            state=spaces.Box(-np.inf, np.inf, shape=obs['state'].shape, dtype='float32'),
-            achieved_sub_goal=spaces.Box(-np.inf, np.inf, shape=obs['achieved_sub_goal'].shape, dtype='float32'),
-            achieved_sub_goal_image=spaces.Box(-np.inf, np.inf, shape=obs['achieved_sub_goal_image'].shape, dtype='float32'),
-            desired_sub_goal=spaces.Box(-np.inf, np.inf, shape=obs['desired_sub_goal'].shape, dtype='float32'),
-            desired_sub_goal_image=spaces.Box(-np.inf, np.inf, shape=obs['desired_sub_goal_image'].shape, dtype='float32'),
-            achieved_final_goal=spaces.Box(-np.inf, np.inf, shape=obs['achieved_final_goal'].shape, dtype='float32'),
-            desired_final_goal=spaces.Box(-np.inf, np.inf, shape=obs['desired_final_goal'].shape, dtype='float32'),
-            desired_final_goal_image=spaces.Box(-np.inf, np.inf, shape=obs['desired_final_goal_image'].shape, dtype='float32'),
-        ))
+        self.high_level_action_space = spaces.Discrete(n=num_steps)
+        if self.image_observation:
+            self.observation_space = spaces.Dict(dict(
+                observation=spaces.Box(-np.inf, np.inf, shape=obs['observation'].shape, dtype='float32'),
+                state=spaces.Box(-np.inf, np.inf, shape=obs['state'].shape, dtype='float32'),
+                achieved_sub_goal=spaces.Box(-np.inf, np.inf, shape=obs['achieved_sub_goal'].shape, dtype='float32'),
+                achieved_sub_goal_image=spaces.Box(-np.inf, np.inf, shape=obs['achieved_sub_goal_image'].shape, dtype='float32'),
+                desired_sub_goal=spaces.Box(-np.inf, np.inf, shape=obs['desired_sub_goal'].shape, dtype='float32'),
+                desired_sub_goal_ind=spaces.Discrete(n=num_steps),
+                desired_sub_goal_image=spaces.Box(-np.inf, np.inf, shape=obs['desired_sub_goal_image'].shape, dtype='float32'),
+                achieved_final_goal=spaces.Box(-np.inf, np.inf, shape=obs['achieved_final_goal'].shape, dtype='float32'),
+                desired_final_goal=spaces.Box(-np.inf, np.inf, shape=obs['desired_final_goal'].shape, dtype='float32'),
+                desired_final_goal_ind=spaces.Discrete(n=num_steps),
+                desired_final_goal_image=spaces.Box(-np.inf, np.inf, shape=obs['desired_final_goal_image'].shape, dtype='float32'),
+            ))
+        else:
+            self.observation_space = spaces.Dict(dict(
+                state=spaces.Box(-np.inf, np.inf, shape=obs['state'].shape, dtype='float32'),
+                achieved_sub_goal=spaces.Box(-np.inf, np.inf, shape=obs['achieved_sub_goal'].shape, dtype='float32'),
+                desired_sub_goal=spaces.Box(-np.inf, np.inf, shape=obs['desired_sub_goal'].shape, dtype='float32'),
+                desired_sub_goal_ind=spaces.Discrete(n=num_steps),
+                achieved_final_goal=spaces.Box(-np.inf, np.inf, shape=obs['achieved_final_goal'].shape, dtype='float32'),
+                desired_final_goal=spaces.Box(-np.inf, np.inf, shape=obs['desired_final_goal'].shape, dtype='float32'),
+                desired_final_goal_ind=spaces.Discrete(n=num_steps),
+            ))
 
     @property
     def dt(self):

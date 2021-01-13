@@ -74,7 +74,20 @@ for i in range(2):
         entry_point='pybullet_multigoal_gym.envs.kuka.kuka_hierarchical_pick_and_place:HierarchicalKukaPickAndPlaceEnv',
         kwargs={
             'render': tag,
-            'binary_reward': True
+            'binary_reward': True,
+            'image_observation': False
+        },
+        max_episode_steps=50,
+    )
+
+    ids.append('KukaHierPickAndPlace' + tag + 'SparseImageObsEnv-v0')
+    register(
+        id='KukaHierPickAndPlace' + tag + 'SparseImageObsEnv-v0',
+        entry_point='pybullet_multigoal_gym.envs.kuka.kuka_hierarchical_pick_and_place:HierarchicalKukaPickAndPlaceEnv',
+        kwargs={
+            'render': tag,
+            'binary_reward': True,
+            'image_observation': True
         },
         max_episode_steps=50,
     )

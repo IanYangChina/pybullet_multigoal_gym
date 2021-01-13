@@ -1,9 +1,5 @@
-import random as R
-
-
 class StepDemonstrator(object):
-    def __init__(self, demonstrations, stick_with_final_goal=True, seed=0):
-        R.seed(seed)
+    def __init__(self, demonstrations, stick_with_final_goal=True):
         self.demonstrations = demonstrations
         self.demon_num = len(self.demonstrations)
         self.demon_ind = 0
