@@ -113,8 +113,6 @@ while True:
 
 <img src="src/01.jpeg" width="800"/>
 
-<img src="/src/sac_demo.gif" width="600"/>
-
 ![sac_demo](src/sac_demo.gif)
 
 ### Updates
