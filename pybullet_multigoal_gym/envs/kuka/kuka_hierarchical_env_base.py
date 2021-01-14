@@ -113,6 +113,14 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
             self.desired_final_goal_image = self.goal_images[key].copy()
         self._update_target_objects()
 
+    def _update_goal(self):
+        self.sub_goal_space, self.final_goal_space, self.goal_images = self._generate_goal()
+        sub_goal_key = self.sub_goal_strings[self.desired_sub_goal_ind]
+        self.desired_sub_goal = self.sub_goal_space[sub_goal_key].copy()
+        final_goal_key = self.final_goal_strings[self.desired_final_goal_ind]
+        self.desired_final_goal = self.final_goal_space[final_goal_key].copy()
+        self._update_target_objects()
+
     def _update_target_objects(self):
         # set target poses
         self._set_object_pose(self.object_bodies['block_target'],
@@ -151,6 +159,8 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
         pass
 
     def _get_obs(self):
+        # update goal vectors
+        self._update_goal()
         # robot state, shape=(7,), contains gripper xyz coordinates, orientation (and finger width)
         gripper_xyz, gripper_rpy, gripper_finger_closeness = self.robot.calc_robot_state()
         assert self.desired_sub_goal is not None
