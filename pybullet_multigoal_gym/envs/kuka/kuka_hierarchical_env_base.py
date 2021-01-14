@@ -102,15 +102,15 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
         self._sample_goal()
 
     def _sample_goal(self):
-        sub_goal_ind = self.np_random.random_integers(0, len(self.sub_goal_space) - 1)
-        key = self.sub_goal_strings[sub_goal_ind]
+        goal_ind = self.np_random.random_integers(0, len(self.sub_goal_space) - 1)
+        key = self.sub_goal_strings[goal_ind]
         self.desired_sub_goal = self.sub_goal_space[key].copy()
-        self.desired_sub_goal_ind = sub_goal_ind
-        self.desired_final_goal = self.final_goal_space['place'].copy()
-        self.desired_final_goal_ind = self.final_goal_strings.index(self.final_goal_strings[-1])
+        self.desired_sub_goal_ind = goal_ind
+        self.desired_final_goal = self.final_goal_space[key].copy()
+        self.desired_final_goal_ind = goal_ind
         if self.image_observation:
             self.desired_sub_goal_image = self.goal_images[key].copy()
-            self.desired_final_goal_image = self.goal_images['place'].copy()
+            self.desired_final_goal_image = self.goal_images[key].copy()
         self._update_target_objects()
 
     def _update_target_objects(self):

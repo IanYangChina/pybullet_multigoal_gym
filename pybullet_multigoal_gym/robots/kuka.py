@@ -104,6 +104,9 @@ class Kuka(URDFBasedRobot):
                              grip_ctrl=grip_ctrl)
         # actions alter the ee target pose
         self.end_effector_target += (a[:3] * 0.01)
+        z = np.clip(self.end_effector_target[-1], 0.175, 0.55)
+        self.end_effector_target[-1] = z
+
         joint_poses = self.compute_ik(bullet_client=bullet_client,
                                       target_ee_pos=self.end_effector_target)
         self.move_arm(bullet_client=bullet_client,

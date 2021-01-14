@@ -9,6 +9,7 @@ obs = env.reset()
 time_done = False
 while True:
     action = env.action_space.sample()
+    action[2] = 1
     obs, reward, time_done, info = env.step(action)
     plt.imshow(obs['observation'])
     plt.pause(0.00001)

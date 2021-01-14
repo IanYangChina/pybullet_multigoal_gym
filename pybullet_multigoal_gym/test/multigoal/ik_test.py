@@ -99,7 +99,8 @@ while z < 0.8:
     # g = (a+grip_ctrl_bound) * 0.4
     z += 0.001 * i
     pos = [-0.4, 0.0, z]
-    state, _ = get_state(p, kukaId, [1, 2, 3, 4, 5, 6, 7])
+    state, _ = get_state(p, kukaId, [1, 2, 3, 4, 5, 6, 7, 8])
+    (x, y, z), (a, b, c, d), _, _, _, _ = p.getLinkState(kukaId, 8)
     i += 1
     # end effector points down, not up (in case useOrientation==1)
     orn = p.getQuaternionFromEuler([0, -math.pi, 0])
