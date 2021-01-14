@@ -34,13 +34,13 @@ class HierarchicalKukaPickAndPlaceEnv(HierarchicalKukaBulletMGEnv):
         placing_grip_pos[-1] += self.robot.gripper_tip_offset
         sub_goals = {
             "pick": np.concatenate([
-                # gripper state & position
+                # gripper xyz & finger width
                 picking_grip_pos, [0.03],
                 # absolute positions of blocks
                 block_pos,
             ]),
             "place": np.concatenate([
-                # gripper state & position
+                # gripper xyz & finger width
                 placing_grip_pos, [0.03],
                 # absolute positions of blocks
                 block_target_position,

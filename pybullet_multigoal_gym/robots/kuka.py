@@ -21,6 +21,8 @@ class Kuka(URDFBasedRobot):
         self.end_effector_tip_joint_index = None
         self.end_effector_target = None
         self.end_effector_tip_initial_position = np.array([-0.45, 0.0, 0.35])
+        self.end_effector_xyz_upper = np.array([-0.35, 0.20, 0.55])
+        self.end_effector_xyz_lower = np.array([-0.55, -0.20, 0.175])
         self.end_effector_fixed_quaternion = [0, -1, 0, 0]
 
         self.gripper_joint_index = None
@@ -104,8 +106,9 @@ class Kuka(URDFBasedRobot):
                              grip_ctrl=grip_ctrl)
         # actions alter the ee target pose
         self.end_effector_target += (a[:3] * 0.01)
-        z = np.clip(self.end_effector_target[-1], 0.175, 0.55)
-        self.end_effector_target[-1] = z
+        self.end_effector_target = np.clip(self.end_effector_target,
+                                           self.end_effector_xyz_lower,
+                                           self.end_effector_xyz_upper)
 
         joint_poses = self.compute_ik(bullet_client=bullet_client,
                                       target_ee_pos=self.end_effector_target)
