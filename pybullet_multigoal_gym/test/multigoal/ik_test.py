@@ -68,10 +68,10 @@ for i in range(numJoints):
 20 iiwa_gripper_finger2_finger_tip_joint
 """
 robotiq_gripper_joint_index = [12, 14, 16, 17, 19, 20]
-robotiq_gripper_ctrl_multiplier = [1.0, 1.0, 1.0, -1.0, 1.0, -1.0]
+robotiq_gripper_ctrl_multiplier = np.array([1.0, 1.0, 1.0, -1.0, 1.0, -1.0])
 
 gripper_joint_index = [12, 14]
-gripper_ctrl_multiplier = [1, 1]
+gripper_ctrl_multiplier = np.array([1, 1])
 
 for i in range(len(gripper_joint_index)):
     p.resetJointState(kukaId, gripper_joint_index[i], 0.0 * gripper_ctrl_multiplier[i])
@@ -120,7 +120,7 @@ while z < 0.8:
     p.setJointMotorControlArray(bodyUniqueId=kukaId,
                                 jointIndices=gripper_joint_index,
                                 controlMode=p.POSITION_CONTROL,
-                                targetPositions=np.array([g, g]),
+                                targetPositions=g*gripper_ctrl_multiplier,
                                 targetVelocities=np.zeros((2,)),
                                 forces=np.ones((2,)) * 500,
                                 positionGains=np.ones((2,)) * 0.03,
@@ -130,7 +130,7 @@ while z < 0.8:
     # p.setJointMotorControlArray(bodyUniqueId=kukaId,
     #                             jointIndices=robotiq_gripper_joint_index,
     #                             controlMode=p.POSITION_CONTROL,
-    #                             targetPositions=np.array([g, g, g, -g, g, -g]),
+    #                             targetPositions=g*robotiq_gripper_ctrl_multiplier,
     #                             targetVelocities=np.zeros((6,)),
     #                             forces=np.ones((6,))*500,
     #                             positionGains=np.ones((6,))*0.03,

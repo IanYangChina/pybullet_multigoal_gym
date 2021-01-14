@@ -1,13 +1,17 @@
 from pybullet_multigoal_gym.robots.robot_bases import URDFBasedRobot
 from gym import spaces
 import numpy as np
-import math
 
 
 class Kuka(URDFBasedRobot):
-    def __init__(self, grasping=False):
+    def __init__(self, gripper_type='parallel_jaw', grasping=False):
+        self.gripper_type = gripper_type
+        if self.gripper_type == 'robotiq85':
+            model_urdf = 'kuka/iiwa14_robotiq85.urdf'
+        else:
+            model_urdf = 'kuka/iiwa14_parallel_jaw.urdf'
         URDFBasedRobot.__init__(self,
-                                model_urdf='kuka/iiwa14_robotiq85.urdf',
+                                model_urdf=model_urdf,
                                 robot_name='iiwa14',
                                 self_collision=False)
         self.kuka_body_index = None
@@ -18,17 +22,31 @@ class Kuka(URDFBasedRobot):
         self.end_effector_target = None
         self.end_effector_tip_initial_position = np.array([-0.45, 0.0, 0.35])
         self.end_effector_fixed_quaternion = [0, -1, 0, 0]
-        self.robotiq_85_joint_index = None
-        self.robotiq_85_joint_name = [
-            'iiwa_gripper_finger1_joint',
-            'iiwa_gripper_finger2_joint',
-            'iiwa_gripper_finger1_inner_knuckle_joint',
-            'iiwa_gripper_finger1_finger_tip_joint',
-            'iiwa_gripper_finger2_inner_knuckle_joint',
-            'iiwa_gripper_finger2_finger_tip_joint'
-        ]
-        self.robotiq_85_abs_joint_limit = 0.804
-        self.robotiq_85_mimic_joint_multiplier = np.array([1.0, 1.0, 1.0, -1.0, 1.0, -1.0])
+
+        self.gripper_joint_index = None
+        if self.gripper_type == 'robotiq85':
+            self.gripper_joint_name = [
+                'iiwa_gripper_finger1_joint',
+                'iiwa_gripper_finger2_joint',
+                'iiwa_gripper_finger1_inner_knuckle_joint',
+                'iiwa_gripper_finger1_finger_tip_joint',
+                'iiwa_gripper_finger2_inner_knuckle_joint',
+                'iiwa_gripper_finger2_finger_tip_joint'
+            ]
+            self.gripper_abs_joint_limit = 0.804
+            self.gripper_grasp_block_state = 0.545
+            self.gripper_mmic_joint_multiplier = np.array([1.0, 1.0, 1.0, -1.0, 1.0, -1.0])
+        else:
+            self.gripper_joint_name = [
+                'iiwa_gripper_finger1_joint',
+                'iiwa_gripper_finger2_joint'
+            ]
+            self.gripper_abs_joint_limit = 0.025
+            self.gripper_grasp_block_state = 0.01
+            self.gripper_mmic_joint_multiplier = np.array([1.0, 1.0])
+        self.gripper_num_joint = len(self.gripper_joint_name)
+        self.gripper_tip_offset = 0.0
+
         self.grasping = grasping
         if self.grasping:
             self.action_space = spaces.Box(-np.ones([4]), np.ones([4]))
@@ -51,19 +69,25 @@ class Kuka(URDFBasedRobot):
             ]
         if self.end_effector_tip_joint_index is None:
             self.end_effector_tip_joint_index = self.jdict['iiwa_gripper_tip_joint'].jointIndex
-        if self.robotiq_85_joint_index is None:
-            self.robotiq_85_joint_index = [
-                self.jdict['iiwa_gripper_finger1_joint'].jointIndex,
-                self.jdict['iiwa_gripper_finger2_joint'].jointIndex,
-                self.jdict['iiwa_gripper_finger1_inner_knuckle_joint'].jointIndex,
-                self.jdict['iiwa_gripper_finger1_finger_tip_joint'].jointIndex,
-                self.jdict['iiwa_gripper_finger2_inner_knuckle_joint'].jointIndex,
-                self.jdict['iiwa_gripper_finger2_finger_tip_joint'].jointIndex,
-            ]
+        if self.gripper_joint_index is None:
+            if self.gripper_type == 'robotiq85':
+                self.gripper_joint_index = [
+                    self.jdict['iiwa_gripper_finger1_joint'].jointIndex,
+                    self.jdict['iiwa_gripper_finger2_joint'].jointIndex,
+                    self.jdict['iiwa_gripper_finger1_inner_knuckle_joint'].jointIndex,
+                    self.jdict['iiwa_gripper_finger1_finger_tip_joint'].jointIndex,
+                    self.jdict['iiwa_gripper_finger2_inner_knuckle_joint'].jointIndex,
+                    self.jdict['iiwa_gripper_finger2_finger_tip_joint'].jointIndex,
+                ]
+            else:
+                self.gripper_joint_index = [
+                    self.jdict['iiwa_gripper_finger1_joint'].jointIndex,
+                    self.jdict['iiwa_gripper_finger2_joint'].jointIndex,
+                ]
         # reset arm poses
         self.set_kuka_joint_state(self.kuka_rest_pose, np.zeros(len(self.kuka_rest_pose)))
-        self.set_finger_joint_state(self.robotiq_85_abs_joint_limit)
-        self.move_finger(bullet_client=bullet_client, grip_ctrl=self.robotiq_85_abs_joint_limit)
+        self.set_finger_joint_state(self.gripper_abs_joint_limit)
+        self.move_finger(bullet_client=bullet_client, grip_ctrl=self.gripper_abs_joint_limit)
         # pos = self.compute_ik(bullet_client, self.end_effector_tip_initial_position)
         # self.move_arm(bullet_client, pos)
         # for _ in range(20):
@@ -74,9 +98,11 @@ class Kuka(URDFBasedRobot):
     def apply_action(self, a, bullet_client):
         if self.grasping:
             assert a.shape == (4,)
-            grip_ctrl = (a[-1] + 1.0) * (self.robotiq_85_abs_joint_limit / 2)
+            # map action in [-1, 1] to gripper joint range
+            grip_ctrl = (a[-1] + 1.0) * (self.gripper_abs_joint_limit / 2)
             self.move_finger(bullet_client=bullet_client,
                              grip_ctrl=grip_ctrl)
+        # actions alter the ee target pose
         self.end_effector_target += (a[:3] * 0.01)
         joint_poses = self.compute_ik(bullet_client=bullet_client,
                                       target_ee_pos=self.end_effector_target)
@@ -130,15 +156,15 @@ class Kuka(URDFBasedRobot):
                                                 velocityGains=np.ones((7,)))
 
     def move_finger(self, bullet_client, grip_ctrl):
-        target_joint_poses = self.robotiq_85_mimic_joint_multiplier * grip_ctrl
+        target_joint_poses = self.gripper_mmic_joint_multiplier * grip_ctrl
         bullet_client.setJointMotorControlArray(bodyUniqueId=self.kuka_body_index,
-                                                jointIndices=self.robotiq_85_joint_index,
+                                                jointIndices=self.gripper_joint_index,
                                                 controlMode=bullet_client.POSITION_CONTROL,
                                                 targetPositions=target_joint_poses,
-                                                targetVelocities=np.zeros((6,)),
-                                                forces=np.ones((6,)) * 500,
-                                                positionGains=np.ones((6,)) * 0.03,
-                                                velocityGains=np.ones((6,)))
+                                                targetVelocities=np.zeros((self.gripper_num_joint,)),
+                                                forces=np.ones((self.gripper_num_joint,)) * 500,
+                                                positionGains=np.ones((self.gripper_num_joint,)) * 0.03,
+                                                velocityGains=np.ones((self.gripper_num_joint,)))
 
     def get_kuka_joint_state(self):
         kuka_joint_pos = []
@@ -159,15 +185,15 @@ class Kuka(URDFBasedRobot):
     def get_finger_joint_state(self):
         finger_joint_pos = []
         finger_joint_vel = []
-        for name in self.robotiq_85_joint_name:
+        for name in self.gripper_joint_name:
             x, vx = self.jdict[name].get_state()
             finger_joint_pos.append(x)
             finger_joint_vel.append(vx)
         return finger_joint_pos, finger_joint_vel
 
     def set_finger_joint_state(self, pos, vel=None):
-        pos = pos * self.robotiq_85_mimic_joint_multiplier
+        pos = pos * self.gripper_mmic_joint_multiplier
         if vel is None:
             vel = np.zeros(pos.shape[0])
         for i in range(pos.shape[0]):
-            self.jdict[self.robotiq_85_joint_name[i]].reset_position(pos[i], vel[i])
+            self.jdict[self.gripper_joint_name[i]].reset_position(pos[i], vel[i])

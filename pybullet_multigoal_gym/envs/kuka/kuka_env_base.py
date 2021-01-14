@@ -8,7 +8,8 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
     """
     Base class for non-hierarchical multi-goal RL task with a Kuka iiwa 14 robot
     """
-    def __init__(self, render=True, binary_reward=True, image_observation=False,
+    def __init__(self, render=True, binary_reward=True,
+                 image_observation=False, gripper_type='parallel_jaw',
                  table_type='table', target_on_table=False,
                  distance_threshold=0.02, grasping=False, has_obj=False, randomized_obj_pos=True, obj_range=0.15):
         self.binary_reward = binary_reward
@@ -40,7 +41,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             self.object_initial_pos['block'][0] = -0.65
 
         self.desired_goal = None
-        BaseBulletMGEnv.__init__(self, robot=Kuka(grasping=grasping),
+        BaseBulletMGEnv.__init__(self, robot=Kuka(grasping=grasping, gripper_type=gripper_type),
                                  render=render, image_observation=image_observation,
                                  seed=0, timestep=0.002, frame_skip=20)
 

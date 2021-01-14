@@ -5,92 +5,104 @@ ids = []
 renders = [True, False]
 sparse = [True, False]
 image_obs = [True, False]
-for i in range(2):
-    if renders[i]:
-        tag = 'Render'
+gripper_type = ['robotiq85', 'parallel_jaw']
+for grip in gripper_type:
+    if grip == 'robotiq85':
+        grip_tag = 'RobotiqGrip'
     else:
-        tag = ''
-    for j in range(2):
-        if sparse[j]:
-            reward_tag = 'Sparse'
+        grip_tag = 'ParallelGrip'
+    for i in range(2):
+        if renders[i]:
+            tag = 'Render'
         else:
-            reward_tag = 'Dense'
-        for k in range(2):
-            if image_obs[k]:
-                obs_tag = 'ImageObs'
+            tag = ''
+        for j in range(2):
+            if sparse[j]:
+                reward_tag = 'Sparse'
             else:
-                obs_tag = ''
+                reward_tag = 'Dense'
+            for k in range(2):
+                if image_obs[k]:
+                    obs_tag = 'ImageObs'
+                else:
+                    obs_tag = ''
 
-            ids.append('KukaReach' + tag + reward_tag + obs_tag + 'Env-v0')
+                ids.append('Kuka'+grip_tag+'Reach' + tag + reward_tag + obs_tag + 'Env-v0')
+                register(
+                    id='Kuka'+grip_tag+'Reach' + tag + reward_tag + obs_tag + 'Env-v0',
+                    entry_point='pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaReachEnv',
+                    kwargs={
+                        'render': renders[i],
+                        'binary_reward': sparse[j],
+                        'image_observation': image_obs[k],
+                        'gripper_type': grip
+                    },
+                    max_episode_steps=50,
+                )
+
+                ids.append('Kuka'+grip_tag+'Push' + tag + reward_tag + obs_tag + 'Env-v0')
+                register(
+                    id='Kuka'+grip_tag+'Push' + tag + reward_tag + obs_tag + 'Env-v0',
+                    entry_point='pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaPushEnv',
+                    kwargs={
+                        'render': renders[i],
+                        'binary_reward': sparse[j],
+                        'image_observation': image_obs[k],
+                        'gripper_type': grip
+                    },
+                    max_episode_steps=50,
+                )
+
+                ids.append('Kuka'+grip_tag+'PickAndPlace' + tag + reward_tag + obs_tag + 'Env-v0')
+                register(
+                    id='Kuka'+grip_tag+'PickAndPlace' + tag + reward_tag + obs_tag + 'Env-v0',
+                    entry_point='pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaPickAndPlaceEnv',
+                    kwargs={
+                        'render': renders[i],
+                        'binary_reward': sparse[j],
+                        'image_observation': image_obs[k],
+                        'gripper_type': grip
+                    },
+                    max_episode_steps=50,
+                )
+
+            ids.append('Kuka'+grip_tag+'Slide' + tag + reward_tag + 'Env-v0')
             register(
-                id='KukaReach' + tag + reward_tag + obs_tag + 'Env-v0',
-                entry_point='pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaReachEnv',
+                id='Kuka'+grip_tag+'Slide' + tag + reward_tag + 'Env-v0',
+                entry_point='pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaSlideEnv',
                 kwargs={
                     'render': renders[i],
                     'binary_reward': sparse[j],
-                    'image_observation': image_obs[k]
+                    'gripper_type': grip
                 },
                 max_episode_steps=50,
             )
 
-            ids.append('KukaPush' + tag + reward_tag + obs_tag + 'Env-v0')
-            register(
-                id='KukaPush' + tag + reward_tag + obs_tag + 'Env-v0',
-                entry_point='pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaPushEnv',
-                kwargs={
-                    'render': renders[i],
-                    'binary_reward': sparse[j],
-                    'image_observation': image_obs[k]
-                },
-                max_episode_steps=50,
-            )
-
-            ids.append('KukaPickAndPlace' + tag + reward_tag + obs_tag + 'Env-v0')
-            register(
-                id='KukaPickAndPlace' + tag + reward_tag + obs_tag + 'Env-v0',
-                entry_point='pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaPickAndPlaceEnv',
-                kwargs={
-                    'render': renders[i],
-                    'binary_reward': sparse[j],
-                    'image_observation': image_obs[k]
-                },
-                max_episode_steps=50,
-            )
-
-        ids.append('KukaSlide' + tag + reward_tag + 'Env-v0')
+        ids.append('Kuka'+grip_tag+'HierPickAndPlace' + tag + 'SparseEnv-v0')
         register(
-            id='KukaSlide' + tag + reward_tag + 'Env-v0',
-            entry_point='pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaSlideEnv',
+            id='Kuka'+grip_tag+'HierPickAndPlace' + tag + 'SparseEnv-v0',
+            entry_point='pybullet_multigoal_gym.envs.kuka.kuka_hierarchical_pick_and_place:HierarchicalKukaPickAndPlaceEnv',
             kwargs={
-                'render': renders[i],
-                'binary_reward': sparse[j]
+                'render': tag,
+                'binary_reward': True,
+                'image_observation': False,
+                'gripper_type': grip
             },
             max_episode_steps=50,
         )
 
-    ids.append('KukaHierPickAndPlace' + tag + 'SparseEnv-v0')
-    register(
-        id='KukaHierPickAndPlace' + tag + 'SparseEnv-v0',
-        entry_point='pybullet_multigoal_gym.envs.kuka.kuka_hierarchical_pick_and_place:HierarchicalKukaPickAndPlaceEnv',
-        kwargs={
-            'render': tag,
-            'binary_reward': True,
-            'image_observation': False
-        },
-        max_episode_steps=50,
-    )
-
-    ids.append('KukaHierPickAndPlace' + tag + 'SparseImageObsEnv-v0')
-    register(
-        id='KukaHierPickAndPlace' + tag + 'SparseImageObsEnv-v0',
-        entry_point='pybullet_multigoal_gym.envs.kuka.kuka_hierarchical_pick_and_place:HierarchicalKukaPickAndPlaceEnv',
-        kwargs={
-            'render': tag,
-            'binary_reward': True,
-            'image_observation': True
-        },
-        max_episode_steps=50,
-    )
+        ids.append('Kuka'+grip_tag+'HierPickAndPlace' + tag + 'SparseImageObsEnv-v0')
+        register(
+            id='Kuka'+grip_tag+'HierPickAndPlace' + tag + 'SparseImageObsEnv-v0',
+            entry_point='pybullet_multigoal_gym.envs.kuka.kuka_hierarchical_pick_and_place:HierarchicalKukaPickAndPlaceEnv',
+            kwargs={
+                'render': tag,
+                'binary_reward': True,
+                'image_observation': True,
+                'gripper_type': grip
+            },
+            max_episode_steps=50,
+        )
 
 
 def print_id():

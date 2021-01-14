@@ -5,7 +5,7 @@ This version uses a kuka iiwa14 7DoF arm, equipped with a robotiq85 two finger g
 The four tasks are basically the same as the ones in the OpenAI Gym: **Reach, Push, Pick and Place, Slide**.
 However, it may look funny when the robot picks up a block with the robotiq85 gripper,
 since it's under-actuated and thus makes it hard to fine-tune the simulation. 
-I will make a parallel-jaw gripper ASAP if I have time.
+You can use the parallel jaw gripper, which is effectively the same as the OpenAI one.
 
 I have implemented some goal-conditioned RL algos in my another repo, using the 
 original Gym environment. There are DDPG-HER, SAC-HER, and others.
@@ -61,7 +61,7 @@ import pybullet_multigoal_gym as pmg
 # Install matplotlib if you want to use imshow to view the goal images
 import matplotlib.pyplot as plt
 
-env = pmg.make('KukaPickAndPlaceRenderSparseEnv-v0')
+env = pmg.make('KukaParallelGripPickAndPlaceRenderDenseImageObsEnv-v0')
 obs = env.reset()
 t = 0
 while True:
@@ -85,7 +85,7 @@ import pybullet_multigoal_gym as pmg
 import matplotlib.pyplot as plt
 
 
-env = pmg.make('KukaHierPickAndPlaceSparseEnv-v0')
+env = pmg.make('KukaParallelGripHierPickAndPlaceRenderSparseImageObsEnv-v0')
 obs = env.reset()
 time_done = False
 while True:
@@ -119,3 +119,5 @@ while True:
 See the above example.
 
 2020.12.28 --- Add image observation to non-hierarchical environments
+
+2021.01.14 --- Add parallel jaw gripper

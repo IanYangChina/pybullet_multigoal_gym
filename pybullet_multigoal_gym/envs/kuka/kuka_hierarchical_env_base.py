@@ -9,7 +9,9 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
     Base class for hierarchical multi-goal RL task with a Kuka iiwa 14 robot
     """
 
-    def __init__(self, render=True, binary_reward=True, image_observation=False, num_steps=2,
+    def __init__(self, render=True, binary_reward=True,
+                 image_observation=False, gripper_type='parallel_jaw',
+                 num_steps=2,
                  table_type='table', target_on_table=False,
                  distance_threshold=0.02, grasping=False, has_obj=False, randomized_obj_pos=True, obj_range=0.15):
         self.binary_reward = binary_reward
@@ -38,7 +40,6 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
             'block_target': [-0.45, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
             'grip_target': [-0.45, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
         }
-        self.gripper_tip_offset = 0.015
 
         self.num_steps = num_steps
         self.sub_goal_space, self.final_goal_space, self.goal_images = None, None, None
@@ -49,7 +50,7 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
         self.desired_final_goal = None
         self.desired_final_goal_ind = None
         self.desired_final_goal_image = None
-        HierarchicalBaseBulletMGEnv.__init__(self, robot=Kuka(grasping=grasping),
+        HierarchicalBaseBulletMGEnv.__init__(self, robot=Kuka(grasping=grasping, gripper_type=gripper_type),
                                              render=render, image_observation=image_observation,
                                              num_steps=self.num_steps,
                                              seed=0, gravity=9.81, timestep=0.002, frame_skip=20)
@@ -150,7 +151,7 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
         pass
 
     def _get_obs(self):
-        # robot state contains gripper xyz coordinates, orientation (and finger width)
+        # robot state, shape=(7,), contains gripper xyz coordinates, orientation (and finger width)
         state = self.robot.calc_robot_state()
         assert self.desired_sub_goal is not None
         block_pos, block_quat = self._p.getBasePositionAndOrientation(self.object_bodies['block'])

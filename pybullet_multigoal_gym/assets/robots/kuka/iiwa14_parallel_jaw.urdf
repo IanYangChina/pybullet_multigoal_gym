@@ -394,14 +394,14 @@
     </inertial>
   </link>
 
-  <joint name="iiwa_gripper_left_finger_joint" type="prismatic">
+  <joint name="iiwa_gripper_finger1_joint" type="prismatic">
     <parent link="iiwa_gripper_base_link"/>
-    <child link="iiwa_gripper_left_finger"/>
+    <child link="iiwa_gripper_finger1"/>
     <origin rpy="0 0 0" xyz="0 0.03 0.04"/>
     <axis xyz="0 -1 0"/>
-    <limit effort="20" lower="0.0" upper="0.02" velocity="0.2"/>
+    <limit effort="20" lower="0.0" upper="0.025" velocity="0.2"/>
   </joint>
-  <link name="iiwa_gripper_left_finger">
+  <link name="iiwa_gripper_finger1">
     <contact>
       <lateral_friction value="1.0"/>
       <rolling_friction value="0.0"/>
@@ -426,14 +426,14 @@
       <inertia ixx="0.000380" ixy="0.000000" ixz="0.000000" iyx="0.000000" iyy="0.001110" iyz="0.000000" izx="0.000000" izy="0.000000" izz="0.001171"/>
     </inertial>
   </link>
-  <joint name="iiwa_gripper_right_finger_joint" type="prismatic">
+  <joint name="iiwa_gripper_finger2_joint" type="prismatic">
     <parent link="iiwa_gripper_base_link"/>
-    <child link="iiwa_gripper_right_finger"/>
+    <child link="iiwa_gripper_finger2"/>
     <origin rpy="0 0 0" xyz="0 -0.03 0.04"/>
     <axis xyz="0 1 0"/>
-    <limit effort="20" lower="0.0" upper="0.02" velocity="0.2"/>
+    <limit effort="20" lower="0.0" upper="0.025" velocity="0.2"/>
   </joint>
-  <link name="iiwa_gripper_right_finger">
+  <link name="iiwa_gripper_finger2">
     <contact>
       <lateral_friction value="1.0"/>
       <rolling_friction value="0.0"/>
@@ -462,14 +462,14 @@
 
   <!-- joints & links used to calculate distance between two finger tabs -->
   <joint name="iiwa_gripper_finger1_finger_tab_joint" type="fixed">
-    <parent link="iiwa_gripper_left_finger"/>
+    <parent link="iiwa_gripper_finger1"/>
     <child link="iiwa_gripper_finger1_finger_tab_link"/>
-    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 -0.005 0.0"/>
   </joint>
   <joint name="iiwa_gripper_finger2_finger_tab_joint" type="fixed">
-    <parent link="iiwa_gripper_right_finger"/>
+    <parent link="iiwa_gripper_finger2"/>
     <child link="iiwa_gripper_finger2_finger_tab_link"/>
-    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.005 0.0"/>
   </joint>
   <link name="iiwa_gripper_finger1_finger_tab_link">
     <inertial>
