@@ -17,7 +17,7 @@ class Kuka(URDFBasedRobot):
         self.kuka_body_index = None
         self.kuka_joint_index = None
         # rest poses for null space, setting the end effector to point downward
-        self.kuka_rest_pose = [0, -0.227, 0, 1.726, 0, -1.193, 0]
+        self.kuka_rest_pose = [0, -0.2703, 0, 1.8638, 0, -1.0088, 0]
         self.end_effector_tip_joint_index = None
         self.end_effector_target = None
         self.end_effector_tip_initial_position = np.array([-0.45, 0.0, 0.35])
@@ -113,18 +113,26 @@ class Kuka(URDFBasedRobot):
                       joint_poses=joint_poses)
 
     def calc_robot_state(self):
-        # gripper tip coordinates in the world frame
+        # gripper tip states in the world frame
         gripper_xyz = self.parts['iiwa_gripper_tip'].get_position()
+        gripper_rpy = self.parts['iiwa_gripper_tip'].get_orientation_eular()
         gripper_vel_xyz = self.parts['iiwa_gripper_tip'].get_linear_velocity()
-        robot_state = np.concatenate((gripper_xyz, gripper_vel_xyz))
+        gripper_vel_rpy = self.parts['iiwa_gripper_tip'].get_angular_velocity()
         if self.grasping:
             # calculate distance between the gripper finger tabs
             gripper_finger1_tab_xyz = np.array(self.parts['iiwa_gripper_finger1_finger_tab_link'].get_position())
             gripper_finger2_tab_xyz = np.array(self.parts['iiwa_gripper_finger2_finger_tab_link'].get_position())
             gripper_finger_closeness = np.sqrt(
-                np.sum(np.square(gripper_finger1_tab_xyz - gripper_finger2_tab_xyz))).reshape(1, )
-            robot_state = np.concatenate((robot_state, gripper_finger_closeness), axis=0)
-        return robot_state
+                np.sum(np.square(gripper_finger1_tab_xyz - gripper_finger2_tab_xyz))).ravel()
+            # calculate finger joint velocity instead of using a get() method due to compatibility among grippers
+            grip_base_vel = self.parts['iiwa_gripper_base_link'].get_linear_velocity()
+            grip_finger_vel = self.parts['iiwa_gripper_finger1_finger_tab_link'].get_linear_velocity()
+            gripper_finger_vel = (grip_base_vel - grip_finger_vel)[1].ravel()
+        else:
+            # symmetric gripper
+            gripper_finger_closeness = np.array([0.0])
+            gripper_finger_vel = np.array([0.0])
+        return gripper_xyz, gripper_rpy, gripper_finger_closeness
 
     def compute_ik(self, bullet_client, target_ee_pos, target_ee_quat=None):
         assert target_ee_pos.shape == (3,)

@@ -88,7 +88,9 @@ class HierarchicalBaseBulletMGEnv(gym.Env):
 
     def step(self, action):
         self.robot.apply_action(action, self._p)
-        self._p.stepSimulation()
+        for _ in range(5):
+            # ensure the action is finished
+            self._p.stepSimulation()
         obs = self._get_obs()
         sub_reward, sub_goal_achieved = self._compute_reward(obs['achieved_sub_goal'], obs['desired_sub_goal'])
         final_reward, final_goal_achieved = self._compute_reward(obs['achieved_final_goal'], obs['desired_final_goal'])

@@ -23,4 +23,4 @@ while True:
             # plt.pause(0.00001)
         if time_done:
             obs = env.reset()
-            print(obs['desired_final_goal_ind'])
+            # print(obs['desired_final_goal_ind'])

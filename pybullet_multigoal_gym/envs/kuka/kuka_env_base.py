@@ -100,15 +100,22 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
 
     def _get_obs(self):
         # robot state contains gripper xyz coordinates, orientation (and finger width)
-        state = self.robot.calc_robot_state()
+        gripper_xyz, gripper_rpy, gripper_finger_closeness = self.robot.calc_robot_state()
         assert self.desired_goal is not None
+        state = gripper_xyz
+        achieved_goal = gripper_xyz.copy()
         if self.has_obj:
-            block_pos, block_quat = self._p.getBasePositionAndOrientation(self.object_bodies['block'])
-            block_linear_vel, block_angular_vel = self._p.getBaseVelocity(self.object_bodies['block'])
-            state = np.concatenate((state, block_pos, block_quat, block_linear_vel, block_angular_vel))
-            achieved_goal = np.array(block_pos).copy()
+            block_xyz, block_quat = self._p.getBasePositionAndOrientation(self.object_bodies['block'])
+            block_rpy = self._p.getEulerFromQuaternion(block_quat)
+            # block_vel_xyz, block_vel_rpy = self._p.getBaseVelocity(self.object_bodies['block'])
+            block_rel_xyz = gripper_xyz - np.array(block_xyz)
+            block_rel_rpy = gripper_rpy - np.array(block_rpy)
+            state = np.concatenate((gripper_xyz, block_rel_xyz, block_rel_rpy))
+            achieved_goal = np.array(block_xyz).copy()
+            if self.grasping:
+                state = np.concatenate((gripper_xyz, gripper_finger_closeness, block_rel_xyz, block_rel_rpy))
         else:
-            achieved_goal = state[:3].copy()
+            assert not self.grasping, "grasping should not be true when there is no objects"
 
         if not self.image_observation:
             return {

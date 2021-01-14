@@ -76,8 +76,8 @@ class HierarchicalKukaPickAndPlaceEnv(HierarchicalKukaBulletMGEnv):
 
         # codes for testing reward function
         # block_pos_, _ = self._p.getBasePositionAndOrientation(self.object_bodies['block'])
-        # state = self.robot.calc_robot_state()
-        # achieved_goal = np.concatenate((state[:3].copy(), [state[-1].copy()], np.array(block_pos_).copy()))
+        # gripper_xyz, gripper_vel_xyz, gripper_vel_rpy, gripper_finger_closeness, gripper_finger_vel = self.robot.calc_robot_state()
+        # achieved_goal = np.concatenate((gripper_xyz.copy(), gripper_finger_closeness, np.array(block_pos_).copy()))
         # desired_goal = np.concatenate((gripper_target_pos, [0.03], block_target_pos))
         # sub_reward, sub_goal_achieved = self._compute_reward(achieved_goal, desired_goal)
 

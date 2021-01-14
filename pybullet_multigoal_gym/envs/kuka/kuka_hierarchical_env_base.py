@@ -152,13 +152,19 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
 
     def _get_obs(self):
         # robot state, shape=(7,), contains gripper xyz coordinates, orientation (and finger width)
-        state = self.robot.calc_robot_state()
+        gripper_xyz, gripper_rpy, gripper_finger_closeness = self.robot.calc_robot_state()
         assert self.desired_sub_goal is not None
-        block_pos, block_quat = self._p.getBasePositionAndOrientation(self.object_bodies['block'])
-        block_linear_vel, block_angular_vel = self._p.getBaseVelocity(self.object_bodies['block'])
-        state = np.concatenate((state, block_pos, block_quat, block_linear_vel, block_angular_vel))
+        block_xyz, block_quat = self._p.getBasePositionAndOrientation(self.object_bodies['block'])
+        block_rpy = self._p.getEulerFromQuaternion(block_quat)
+        # block_vel_xyz, block_vel_rpy = self._p.getBaseVelocity(self.object_bodies['block'])
+        block_rel_xyz = gripper_xyz - np.array(block_xyz)
+        block_rel_rpy = gripper_rpy - np.array(block_rpy)
 
-        achieved_goal = np.concatenate((state[:3].copy(), [state[6].copy()], np.array(block_pos).copy()))
+        state = np.concatenate((gripper_xyz, gripper_finger_closeness, block_rel_xyz, block_rel_rpy))
+
+        achieved_goal = np.concatenate((gripper_xyz.copy(),
+                                        gripper_finger_closeness.copy(),
+                                        np.array(block_xyz).copy()))
         if not self.image_observation:
             return {
                 'state': state.copy(),
