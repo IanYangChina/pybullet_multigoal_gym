@@ -17,7 +17,7 @@ class HierarchicalKukaPickAndPlaceEnv(HierarchicalKukaBulletMGEnv):
                                              gripper_type=gripper_type,
                                              num_steps=self.step_demonstrator.demon_num,
                                              distance_threshold=0.02,
-                                             grasping=True, has_obj=True, randomized_obj_pos=True, obj_range=0.15)
+                                             grasping=True, has_obj=True, randomized_obj_pos=True)
 
     def _generate_goal(self):
         block_pos, _ = self._p.getBasePositionAndOrientation(self.object_bodies['block'])
@@ -75,11 +75,11 @@ class HierarchicalKukaPickAndPlaceEnv(HierarchicalKukaBulletMGEnv):
         self._set_object_pose(self.object_bodies['block'], block_target_pos)
 
         # codes for testing reward function
-        block_pos_, _ = self._p.getBasePositionAndOrientation(self.object_bodies['block'])
-        state = self.robot.calc_robot_state()
-        achieved_goal = np.concatenate((state[:3].copy(), [state[-1].copy()], np.array(block_pos_).copy()))
-        desired_goal = np.concatenate((gripper_target_pos, [0.03], block_target_pos))
-        sub_reward, sub_goal_achieved = self._compute_reward(achieved_goal, desired_goal)
+        # block_pos_, _ = self._p.getBasePositionAndOrientation(self.object_bodies['block'])
+        # state = self.robot.calc_robot_state()
+        # achieved_goal = np.concatenate((state[:3].copy(), [state[-1].copy()], np.array(block_pos_).copy()))
+        # desired_goal = np.concatenate((gripper_target_pos, [0.03], block_target_pos))
+        # sub_reward, sub_goal_achieved = self._compute_reward(achieved_goal, desired_goal)
 
         # render an image
         goal_img = self.render(mode='rgb_array')

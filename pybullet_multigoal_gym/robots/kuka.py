@@ -41,8 +41,8 @@ class Kuka(URDFBasedRobot):
                 'iiwa_gripper_finger1_joint',
                 'iiwa_gripper_finger2_joint'
             ]
-            self.gripper_abs_joint_limit = 0.025
-            self.gripper_grasp_block_state = 0.01
+            self.gripper_abs_joint_limit = 0.035
+            self.gripper_grasp_block_state = 0.02
             self.gripper_mmic_joint_multiplier = np.array([1.0, 1.0])
         self.gripper_num_joint = len(self.gripper_joint_name)
         self.gripper_tip_offset = 0.0
@@ -85,7 +85,7 @@ class Kuka(URDFBasedRobot):
                     self.jdict['iiwa_gripper_finger2_joint'].jointIndex,
                 ]
         # reset arm poses
-        self.set_kuka_joint_state(self.kuka_rest_pose, np.zeros(len(self.kuka_rest_pose)))
+        self.set_kuka_joint_state(self.kuka_rest_pose, np.zeros(7))
         self.set_finger_joint_state(self.gripper_abs_joint_limit)
         self.move_finger(bullet_client=bullet_client, grip_ctrl=self.gripper_abs_joint_limit)
         # pos = self.compute_ik(bullet_client, self.end_effector_tip_initial_position)
@@ -142,7 +142,9 @@ class Kuka(URDFBasedRobot):
             upperLimits=[.967, 2, 2.96, 2.29, 2.96, 2.09, 3.05],
             # joint ranges for null space
             jointRanges=[5.8, 4, 5.8, 4, 5.8, 4, 6],
-            restPoses=self.kuka_rest_pose)
+            restPoses=self.kuka_rest_pose,
+            maxNumIterations=40,
+            residualThreshold=0.00001)
         return joint_poses[:7]
 
     def move_arm(self, bullet_client, joint_poses):

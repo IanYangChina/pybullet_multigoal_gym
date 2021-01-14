@@ -397,9 +397,9 @@
   <joint name="iiwa_gripper_finger1_joint" type="prismatic">
     <parent link="iiwa_gripper_base_link"/>
     <child link="iiwa_gripper_finger1"/>
-    <origin rpy="0 0 0" xyz="0 0.03 0.04"/>
+    <origin rpy="0 0 0" xyz="0 0.04 0.04"/>
     <axis xyz="0 -1 0"/>
-    <limit effort="20" lower="0.0" upper="0.025" velocity="0.2"/>
+    <limit effort="20" lower="0.0" upper="0.03" velocity="0.2"/>
   </joint>
   <link name="iiwa_gripper_finger1">
     <contact>
@@ -429,9 +429,9 @@
   <joint name="iiwa_gripper_finger2_joint" type="prismatic">
     <parent link="iiwa_gripper_base_link"/>
     <child link="iiwa_gripper_finger2"/>
-    <origin rpy="0 0 0" xyz="0 -0.03 0.04"/>
+    <origin rpy="0 0 0" xyz="0 -0.04 0.04"/>
     <axis xyz="0 1 0"/>
-    <limit effort="20" lower="0.0" upper="0.025" velocity="0.2"/>
+    <limit effort="20" lower="0.0" upper="0.03" velocity="0.2"/>
   </joint>
   <link name="iiwa_gripper_finger2">
     <contact>
