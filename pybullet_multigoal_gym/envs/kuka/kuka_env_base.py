@@ -8,6 +8,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
     """
     Base class for non-hierarchical multi-goal RL task with a Kuka iiwa 14 robot
     """
+
     def __init__(self, render=True, binary_reward=True,
                  image_observation=False, gripper_type='parallel_jaw',
                  table_type='table', target_on_table=False,
@@ -48,7 +49,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
         if not self.objects_urdf_loaded:
             self.objects_urdf_loaded = True
             self.object_bodies['table'] = self._p.loadURDF(
-                os.path.join(self.object_assets_path, self.table_type+".urdf"),
+                os.path.join(self.object_assets_path, self.table_type + ".urdf"),
                 basePosition=self.object_initial_pos['table'][:3],
                 baseOrientation=self.object_initial_pos['table'][3:])
             self.object_bodies['target'] = self._p.loadURDF(
@@ -70,6 +71,9 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                         (np.linalg.norm(object_xy_1 - object_xy_2[:2]) < 0.1):
                     object_xy_1 = end_effector_tip_initial_position[:2] + \
                                   self.np_random.uniform(-self.obj_range, self.obj_range, size=2)
+                    object_xy_1 = np.clip(object_xy_1,
+                                          self.robot.end_effector_xyz_lower[:-1],
+                                          self.robot.end_effector_xyz_upper[:-1])
                 object_xyz_1 = self.object_initial_pos['block'][:3].copy()
                 object_xyz_1[:2] = object_xy_1
                 self.set_object_pose(self.object_bodies['block'],
@@ -88,6 +92,10 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
         end_effector_tip_initial_position[-1] = 0.35
         self.desired_goal = end_effector_tip_initial_position + \
                             self.np_random.uniform(-self.obj_range, self.obj_range, size=3)
+        # make sure the goal is reachable by the robot
+        self.desired_goal = np.clip(self.desired_goal,
+                                    self.robot.end_effector_xyz_lower,
+                                    self.robot.end_effector_xyz_upper)
         if self.table_type == 'long_table':
             self.desired_goal[0] -= 0.60
         if self.target_one_table:

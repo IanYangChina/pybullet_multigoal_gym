@@ -85,6 +85,9 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
                     (np.linalg.norm(object_xy_1 - object_xy_2[:2]) < 0.1):
                 object_xy_1 = end_effector_tip_initial_position[:2] + \
                               self.np_random.uniform(-self.obj_range, self.obj_range, size=2)
+                object_xy_1 = np.clip(object_xy_1,
+                                      self.robot.end_effector_xyz_lower[:-1],
+                                      self.robot.end_effector_xyz_upper[:-1])
             object_xyz_1 = self.object_initial_pos['block'][:3].copy()
             object_xyz_1[:2] = object_xy_1
             self._set_object_pose(self.object_bodies['block'],

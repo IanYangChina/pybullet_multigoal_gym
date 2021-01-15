@@ -27,6 +27,10 @@ class HierarchicalKukaPickAndPlaceEnv(HierarchicalKukaBulletMGEnv):
         end_effector_tip_initial_position[-1] = 0.35
         block_target_position = end_effector_tip_initial_position + \
                                 self.np_random.uniform(-self.obj_range, self.obj_range, size=3)
+        # make sure the goal is reachable by the robot
+        block_target_position = np.clip(block_target_position,
+                                        self.robot.end_effector_xyz_lower,
+                                        self.robot.end_effector_xyz_upper)
         if self.target_one_table:
             block_target_position = self.object_initial_pos['block'][2]
 
@@ -54,7 +58,8 @@ class HierarchicalKukaPickAndPlaceEnv(HierarchicalKukaBulletMGEnv):
         else:
             goal_images = {
                 "pick": self._generate_goal_image(self.robot.gripper_grasp_block_state, picking_grip_pos, block_pos),
-                "place": self._generate_goal_image(self.robot.gripper_grasp_block_state, placing_grip_pos, block_target_position),
+                "place": self._generate_goal_image(self.robot.gripper_grasp_block_state, placing_grip_pos,
+                                                   block_target_position),
             }
             return sub_goals, final_goals, goal_images
 
