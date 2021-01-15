@@ -97,7 +97,10 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                                     self.robot.end_effector_xyz_lower,
                                     self.robot.end_effector_xyz_upper)
         if self.table_type == 'long_table':
-            self.desired_goal[0] -= 0.60
+            x = self.np_random.uniform(end_effector_tip_initial_position[0]-self.obj_range,
+                                       end_effector_tip_initial_position[0]+self.obj_range-0.6,
+                                       size=1)
+            self.desired_goal[0] = x
         if self.target_one_table:
             self.desired_goal[2] = self.object_initial_pos['block'][2]
 
