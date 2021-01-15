@@ -12,7 +12,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
     def __init__(self, render=True, binary_reward=True,
                  image_observation=False, gripper_type='parallel_jaw',
                  table_type='table', target_on_table=False,
-                 distance_threshold=0.02, grasping=False, has_obj=False, randomized_obj_pos=True, obj_range=0.15):
+                 distance_threshold=0.01, grasping=False, has_obj=False, randomized_obj_pos=True, obj_range=0.15):
         self.binary_reward = binary_reward
         self.image_observation = image_observation
 

@@ -399,7 +399,7 @@
     <child link="iiwa_gripper_finger1"/>
     <origin rpy="0 0 0" xyz="0 0.04 0.04"/>
     <axis xyz="0 -1 0"/>
-    <limit effort="20" lower="0.0" upper="0.03" velocity="0.2"/>
+    <limit effort="20" lower="0.0" upper="0.035" velocity="0.2"/>
   </joint>
   <link name="iiwa_gripper_finger1">
     <contact>
@@ -431,7 +431,7 @@
     <child link="iiwa_gripper_finger2"/>
     <origin rpy="0 0 0" xyz="0 -0.04 0.04"/>
     <axis xyz="0 1 0"/>
-    <limit effort="20" lower="0.0" upper="0.03" velocity="0.2"/>
+    <limit effort="20" lower="0.0" upper="0.035" velocity="0.2"/>
   </joint>
   <link name="iiwa_gripper_finger2">
     <contact>
