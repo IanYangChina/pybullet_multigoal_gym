@@ -4,7 +4,7 @@ import numpy as np
 
 
 class Kuka(URDFBasedRobot):
-    def __init__(self, gripper_type='parallel_jaw', grasping=False):
+    def __init__(self, gripper_type='parallel_jaw', grasping=False, end_effector_start_on_table=False):
         self.gripper_type = gripper_type
         if self.gripper_type == 'robotiq85':
             model_urdf = 'kuka/iiwa14_robotiq85.urdf'
@@ -18,6 +18,8 @@ class Kuka(URDFBasedRobot):
         self.kuka_joint_index = None
         # rest poses for null space, setting the end effector to point downward
         self.kuka_rest_pose = [0, -0.43064, 0, 1.95325, 0, -0.759, 0]
+        if end_effector_start_on_table:
+            self.kuka_rest_pose = [0, -0.58254, 0, 1.9794, 0, -0.5807, 0]
         self.end_effector_tip_joint_index = None
         self.end_effector_target = None
         self.end_effector_tip_initial_position = np.array([-0.45, 0.0, 0.25])

@@ -11,7 +11,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
 
     def __init__(self, render=True, binary_reward=True,
                  image_observation=False, gripper_type='parallel_jaw',
-                 table_type='table', target_on_table=False,
+                 table_type='table', target_on_table=False, end_effector_start_on_table=False,
                  distance_threshold=0.01, grasping=False, has_obj=False, randomized_obj_pos=True, obj_range=0.15):
         self.binary_reward = binary_reward
         self.image_observation = image_observation
@@ -39,9 +39,13 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
         }
         if self.table_type == 'long_table':
             self.object_initial_pos['table'][0] = -0.90
+            self.object_initial_pos['block'][0] = -0.50
 
         self.desired_goal = None
-        BaseBulletMGEnv.__init__(self, robot=Kuka(grasping=grasping, gripper_type=gripper_type),
+        BaseBulletMGEnv.__init__(self,
+                                 robot=Kuka(grasping=grasping,
+                                            gripper_type=gripper_type,
+                                            end_effector_start_on_table=end_effector_start_on_table),
                                  render=render, image_observation=image_observation,
                                  seed=0, timestep=0.002, frame_skip=20)
 
