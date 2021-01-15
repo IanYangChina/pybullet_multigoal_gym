@@ -23,6 +23,8 @@ class HierarchicalKukaPickAndPlaceEnv(HierarchicalKukaBulletMGEnv):
         block_pos, _ = self._p.getBasePositionAndOrientation(self.object_bodies['block'])
         block_pos = np.array(block_pos)
         end_effector_tip_initial_position = self.robot.end_effector_tip_initial_position.copy()
+        # make sure targets are above the table surface
+        end_effector_tip_initial_position[-1] = 0.35
         block_target_position = end_effector_tip_initial_position + \
                                 self.np_random.uniform(-self.obj_range, self.obj_range, size=3)
         if self.target_one_table:

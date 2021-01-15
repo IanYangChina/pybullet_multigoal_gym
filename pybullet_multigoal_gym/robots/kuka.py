@@ -17,10 +17,10 @@ class Kuka(URDFBasedRobot):
         self.kuka_body_index = None
         self.kuka_joint_index = None
         # rest poses for null space, setting the end effector to point downward
-        self.kuka_rest_pose = [0, -0.2703, 0, 1.8638, 0, -1.0088, 0]
+        self.kuka_rest_pose = [0, -0.43064, 0, 1.95325, 0, -0.759, 0]
         self.end_effector_tip_joint_index = None
         self.end_effector_target = None
-        self.end_effector_tip_initial_position = np.array([-0.45, 0.0, 0.35])
+        self.end_effector_tip_initial_position = np.array([-0.45, 0.0, 0.25])
         self.end_effector_xyz_upper = np.array([-0.35, 0.20, 0.55])
         self.end_effector_xyz_lower = np.array([-0.55, -0.20, 0.175])
         self.end_effector_fixed_quaternion = [0, -1, 0, 0]

@@ -38,7 +38,6 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
         }
         if self.table_type == 'long_table':
             self.object_initial_pos['table'][0] = -0.90
-            self.object_initial_pos['block'][0] = -0.65
 
         self.desired_goal = None
         BaseBulletMGEnv.__init__(self, robot=Kuka(grasping=grasping, gripper_type=gripper_type),
@@ -85,12 +84,15 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
 
     def _generate_goal(self):
         end_effector_tip_initial_position = self.robot.end_effector_tip_initial_position.copy()
+        # make sure targets are above the table surface
+        end_effector_tip_initial_position[-1] = 0.35
         self.desired_goal = end_effector_tip_initial_position + \
                             self.np_random.uniform(-self.obj_range, self.obj_range, size=3)
         if self.table_type == 'long_table':
             self.desired_goal[0] -= 0.60
         if self.target_one_table:
             self.desired_goal[2] = self.object_initial_pos['block'][2]
+
         self.set_object_pose(self.object_bodies['target'],
                              self.desired_goal,
                              self.object_initial_pos['target'][3:])
