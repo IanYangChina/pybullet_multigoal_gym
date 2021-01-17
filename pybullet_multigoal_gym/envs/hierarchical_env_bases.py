@@ -47,6 +47,7 @@ class HierarchicalBaseBulletMGEnv(gym.Env):
             self.observation_space = spaces.Dict(dict(
                 observation=spaces.Box(-np.inf, np.inf, shape=obs['observation'].shape, dtype='float32'),
                 state=spaces.Box(-np.inf, np.inf, shape=obs['state'].shape, dtype='float32'),
+                policy_state=spaces.Box(-np.inf, np.inf, shape=obs['policy_state'].shape, dtype='float32'),
                 achieved_sub_goal=spaces.Box(-np.inf, np.inf, shape=obs['achieved_sub_goal'].shape, dtype='float32'),
                 achieved_sub_goal_image=spaces.Box(-np.inf, np.inf, shape=obs['achieved_sub_goal_image'].shape, dtype='float32'),
                 desired_sub_goal=spaces.Box(-np.inf, np.inf, shape=obs['desired_sub_goal'].shape, dtype='float32'),
@@ -60,6 +61,7 @@ class HierarchicalBaseBulletMGEnv(gym.Env):
         else:
             self.observation_space = spaces.Dict(dict(
                 state=spaces.Box(-np.inf, np.inf, shape=obs['state'].shape, dtype='float32'),
+                policy_state=spaces.Box(-np.inf, np.inf, shape=obs['policy_state'].shape, dtype='float32'),
                 achieved_sub_goal=spaces.Box(-np.inf, np.inf, shape=obs['achieved_sub_goal'].shape, dtype='float32'),
                 desired_sub_goal=spaces.Box(-np.inf, np.inf, shape=obs['desired_sub_goal'].shape, dtype='float32'),
                 desired_sub_goal_ind=spaces.Discrete(n=num_steps),

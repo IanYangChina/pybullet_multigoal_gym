@@ -136,7 +136,7 @@ class Kuka(URDFBasedRobot):
             # symmetric gripper
             gripper_finger_closeness = np.array([0.0])
             gripper_finger_vel = np.array([0.0])
-        return gripper_xyz, gripper_rpy, gripper_finger_closeness
+        return gripper_xyz, gripper_rpy, gripper_finger_closeness, gripper_vel_xyz, gripper_vel_rpy, gripper_finger_vel
 
     def compute_ik(self, bullet_client, target_ee_pos, target_ee_quat=None):
         assert target_ee_pos.shape == (3,)

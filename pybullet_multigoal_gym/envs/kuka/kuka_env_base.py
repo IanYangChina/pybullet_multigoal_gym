@@ -117,34 +117,38 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
 
     def _get_obs(self):
         # robot state contains gripper xyz coordinates, orientation (and finger width)
-        gripper_xyz, gripper_rpy, gripper_finger_closeness = self.robot.calc_robot_state()
+        gripper_xyz, gripper_rpy, gripper_finger_closeness, gripper_vel_xyz, gripper_vel_rpy, gripper_finger_vel = self.robot.calc_robot_state()
         assert self.desired_goal is not None
-        state = gripper_xyz
+        policy_state = state = gripper_xyz
         achieved_goal = gripper_xyz.copy()
         if self.has_obj:
-            block_xyz, block_quat = self._p.getBasePositionAndOrientation(self.object_bodies['block'])
-            block_rpy = self._p.getEulerFromQuaternion(block_quat)
-            # block_vel_xyz, block_vel_rpy = self._p.getBaseVelocity(self.object_bodies['block'])
+            block_xyz, _ = self._p.getBasePositionAndOrientation(self.object_bodies['block'])
             block_rel_xyz = gripper_xyz - np.array(block_xyz)
-            block_rel_rpy = gripper_rpy - np.array(block_rpy)
-            state = np.concatenate((gripper_xyz, block_rel_xyz, block_rel_rpy))
+            block_vel_xyz, block_vel_rpy = self._p.getBaseVelocity(self.object_bodies['block'])
+            block_rel_vel_xyz = gripper_vel_xyz - np.array(block_vel_xyz)
+            block_rel_vel_rpy = gripper_vel_rpy - np.array(block_vel_rpy)
             achieved_goal = np.array(block_xyz).copy()
-            if self.grasping:
-                state = np.concatenate((gripper_xyz, gripper_finger_closeness, block_rel_xyz, block_rel_rpy))
+            # the HER paper use different state observations for the policy and critic network
+            # critic further takes the velocities as input
+            state = np.concatenate((gripper_xyz, gripper_finger_closeness, block_rel_xyz,
+                                    gripper_vel_xyz, gripper_finger_vel, block_rel_vel_xyz, block_rel_vel_rpy))
+            policy_state = np.concatenate((gripper_xyz, gripper_finger_closeness, block_rel_xyz))
         else:
             assert not self.grasping, "grasping should not be true when there is no objects"
 
         if not self.image_observation:
             return {
-                'state': state,
-                'achieved_goal': achieved_goal,
+                'state': state.copy(),
+                'policy_state': policy_state.copy(),
+                'achieved_goal': achieved_goal.copy(),
                 'desired_goal': self.desired_goal.copy(),
             }
         else:
             return {
                 'observation': self.render(mode='rgb_array'),
-                'state': state,
-                'achieved_goal': achieved_goal,
+                'state': state.copy(),
+                'policy_state': policy_state.copy(),
+                'achieved_goal': achieved_goal.copy(),
                 'desired_goal': self.desired_goal.copy(),
             }
 

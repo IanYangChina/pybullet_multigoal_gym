@@ -45,6 +45,7 @@ class BaseBulletMGEnv(gym.Env):
         if not self.image_observation:
             self.observation_space = spaces.Dict(dict(
                 state=spaces.Box(-np.inf, np.inf, shape=obs['state'].shape, dtype='float32'),
+                policy_state=spaces.Box(-np.inf, np.inf, shape=obs['policy_state'].shape, dtype='float32'),
                 achieved_goal=spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
                 desired_goal=spaces.Box(-np.inf, np.inf, shape=obs['desired_goal'].shape, dtype='float32'),
             ))
@@ -52,6 +53,7 @@ class BaseBulletMGEnv(gym.Env):
             self.observation_space = spaces.Dict(dict(
                 observation=spaces.Box(-np.inf, np.inf, shape=obs['observation'].shape, dtype='float32'),
                 state=spaces.Box(-np.inf, np.inf, shape=obs['state'].shape, dtype='float32'),
+                policy_state=spaces.Box(-np.inf, np.inf, shape=obs['policy_state'].shape, dtype='float32'),
                 achieved_goal=spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
                 desired_goal=spaces.Box(-np.inf, np.inf, shape=obs['desired_goal'].shape, dtype='float32'),
             ))

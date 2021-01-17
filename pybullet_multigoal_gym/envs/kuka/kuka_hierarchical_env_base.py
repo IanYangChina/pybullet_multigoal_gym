@@ -165,22 +165,27 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
         # update goal vectors
         self._update_goal()
         # robot state, shape=(7,), contains gripper xyz coordinates, orientation (and finger width)
-        gripper_xyz, gripper_rpy, gripper_finger_closeness = self.robot.calc_robot_state()
+        gripper_xyz, gripper_rpy, gripper_finger_closeness, gripper_vel_xyz, gripper_vel_rpy, gripper_finger_vel = self.robot.calc_robot_state()
         assert self.desired_sub_goal is not None
-        block_xyz, block_quat = self._p.getBasePositionAndOrientation(self.object_bodies['block'])
-        block_rpy = self._p.getEulerFromQuaternion(block_quat)
-        # block_vel_xyz, block_vel_rpy = self._p.getBaseVelocity(self.object_bodies['block'])
+        block_xyz, _ = self._p.getBasePositionAndOrientation(self.object_bodies['block'])
         block_rel_xyz = gripper_xyz - np.array(block_xyz)
-        block_rel_rpy = gripper_rpy - np.array(block_rpy)
-
-        state = np.concatenate((gripper_xyz, gripper_finger_closeness, block_rel_xyz, block_rel_rpy))
+        block_vel_xyz, block_vel_rpy = self._p.getBaseVelocity(self.object_bodies['block'])
+        block_rel_vel_xyz = gripper_vel_xyz - np.array(block_vel_xyz)
+        block_rel_vel_rpy = gripper_vel_rpy - np.array(block_vel_rpy)
+        # the HER paper use different state observations for the policy and critic network
+        # critic further takes the velocities as input
+        state = np.concatenate((gripper_xyz, gripper_finger_closeness, block_rel_xyz,
+                                gripper_vel_xyz, gripper_finger_vel, block_rel_vel_xyz, block_rel_vel_rpy))
+        policy_state = np.concatenate((gripper_xyz, gripper_finger_closeness, block_rel_xyz))
 
         achieved_goal = np.concatenate((gripper_xyz.copy(),
                                         gripper_finger_closeness.copy(),
                                         np.array(block_xyz).copy()))
+
         if not self.image_observation:
             return {
                 'state': state.copy(),
+                'policy_state': policy_state.copy(),
                 'achieved_sub_goal': achieved_goal.copy(),
                 'desired_sub_goal': self.desired_sub_goal.copy(),
                 'desired_sub_goal_ind': self.desired_sub_goal_ind,
@@ -194,6 +199,7 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
             return {
                 'observation': observation.copy(),
                 'state': state.copy(),
+                'policy_state': policy_state.copy(),
                 'achieved_sub_goal': achieved_goal.copy(),
                 'achieved_sub_goal_image': observation.copy(),
                 'desired_sub_goal': self.desired_sub_goal.copy(),
