@@ -98,6 +98,23 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
                                   self.object_initial_pos['block'][:3],
                                   self.object_initial_pos['block'][3:])
 
+        # sample block target position
+        # make sure targets are above the table surface
+        end_effector_tip_initial_position = self.robot.end_effector_tip_initial_position.copy()
+        end_effector_tip_initial_position[-1] = 0.35
+        block_target_position = end_effector_tip_initial_position + \
+                                self.np_random.uniform(-self.obj_range, self.obj_range, size=3)
+        # make sure the goal is reachable by the robot
+        block_target_position = np.clip(block_target_position,
+                                        self.robot.end_effector_xyz_lower,
+                                        self.robot.end_effector_xyz_upper)
+        if self.target_one_table:
+            block_target_position = self.object_initial_pos['block'][2]
+
+        self._set_object_pose(self.object_bodies['block_target'],
+                              block_target_position,
+                              self.object_initial_pos['block_target'][3:])
+
         # Generate goal spaces
         self.sub_goal_space, self.final_goal_space, self.goal_images = self._generate_goal()
         self.sub_goal_strings = list(self.sub_goal_space.keys())

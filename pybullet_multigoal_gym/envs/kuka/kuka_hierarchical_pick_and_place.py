@@ -22,21 +22,13 @@ class HierarchicalKukaPickAndPlaceEnv(HierarchicalKukaBulletMGEnv):
     def _generate_goal(self):
         block_pos, _ = self._p.getBasePositionAndOrientation(self.object_bodies['block'])
         block_pos = np.array(block_pos)
-        end_effector_tip_initial_position = self.robot.end_effector_tip_initial_position.copy()
-        # make sure targets are above the table surface
-        end_effector_tip_initial_position[-1] = 0.35
-        block_target_position = end_effector_tip_initial_position + \
-                                self.np_random.uniform(-self.obj_range, self.obj_range, size=3)
-        # make sure the goal is reachable by the robot
-        block_target_position = np.clip(block_target_position,
-                                        self.robot.end_effector_xyz_lower,
-                                        self.robot.end_effector_xyz_upper)
-        if self.target_one_table:
-            block_target_position = self.object_initial_pos['block'][2]
+
+        block_target_pos, _ = self._p.getBasePositionAndOrientation(self.object_bodies['block_target'])
+        block_target_pos = np.array(block_target_pos)
 
         picking_grip_pos = block_pos.copy()
         picking_grip_pos[-1] += self.robot.gripper_tip_offset
-        placing_grip_pos = block_target_position.copy()
+        placing_grip_pos = block_target_pos.copy()
         placing_grip_pos[-1] += self.robot.gripper_tip_offset
         sub_goals = {
             "pick": np.concatenate([
@@ -49,7 +41,7 @@ class HierarchicalKukaPickAndPlaceEnv(HierarchicalKukaBulletMGEnv):
                 # gripper xyz & finger width
                 placing_grip_pos, [0.03],
                 # absolute positions of blocks
-                block_target_position,
+                block_target_pos,
             ]),
         }
         final_goals = dcp(sub_goals)
@@ -58,8 +50,7 @@ class HierarchicalKukaPickAndPlaceEnv(HierarchicalKukaBulletMGEnv):
         else:
             goal_images = {
                 "pick": self._generate_goal_image(self.robot.gripper_grasp_block_state, picking_grip_pos, block_pos),
-                "place": self._generate_goal_image(self.robot.gripper_grasp_block_state, placing_grip_pos,
-                                                   block_target_position),
+                "place": self._generate_goal_image(self.robot.gripper_grasp_block_state, placing_grip_pos, block_target_pos),
             }
             return sub_goals, final_goals, goal_images
 
