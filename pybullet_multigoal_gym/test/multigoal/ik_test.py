@@ -1,9 +1,11 @@
+import os
 import pybullet as p
 import time
 import math
 from datetime import datetime
 import pybullet_data
 import numpy as np
+cwd = os.getcwd()
 
 
 def get_state(p, bodyIndex, kuka_joint_index):
@@ -27,12 +29,12 @@ p.resetDebugVisualizerCamera(0.9, -100, -10, [0, 0, 0.0])
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
 
 # model_path = '/home/xintong/Documents/PyProjects/pybullet_multigoal_gym/pybullet_multigoal_gym/assets/robots/kuka/iiwa14_robotiq85.urdf'
-model_path = '/home/xintong/Documents/PyProjects/pybullet_multigoal_gym/pybullet_multigoal_gym/assets/robots/kuka/iiwa14_parallel_jaw.urdf'
+model_path = os.path.join(cwd, '..', '..', 'assets', 'robots', 'kuka', 'iiwa14_parallel_jaw.urdf')
 
 kukaId = p.loadURDF(model_path, [0, 0, 0])
-p.loadURDF("/home/xintong/Documents/PyProjects/pybullet_multigoal_gym/pybullet_multigoal_gym/assets/objects/table.urdf",
+p.loadURDF(os.path.join(cwd, '..', '..', 'assets', 'objects', 'table.urdf'),
            [-0.4, 0.0, 0.08])
-p.loadURDF("/home/xintong/Documents/PyProjects/pybullet_multigoal_gym/pybullet_multigoal_gym/assets/objects/block.urdf",
+p.loadURDF(os.path.join(cwd, '..', '..', 'assets', 'objects', 'block.urdf'),
            [-0.415, 0.0, 0.18])
 p.resetBasePositionAndOrientation(kukaId, [0, 0, 0], [0, 0, 0, 1])
 jointIndex = [1, 2, 3, 4, 5, 6, 7]
@@ -74,7 +76,7 @@ gripper_joint_index = [12, 14]
 gripper_ctrl_multiplier = np.array([1, 1])
 
 for i in range(len(gripper_joint_index)):
-    p.resetJointState(kukaId, gripper_joint_index[i], 0.01 * gripper_ctrl_multiplier[i])
+    p.resetJointState(kukaId, gripper_joint_index[i], 0.02 * gripper_ctrl_multiplier[i])
 
 p.setGravity(0, 0, -9.8)
 p.setRealTimeSimulation(0)
@@ -84,7 +86,7 @@ p.setPhysicsEngineParameter(fixedTimeStep=0.002 * 20, numSolverIterations=5, num
 
 i = 0
 mp = 1
-g = 0.022
+g = 0.02
 start_time = time.process_time()
 # 25 simulation_steps = 1 seconds
 z = 0.17

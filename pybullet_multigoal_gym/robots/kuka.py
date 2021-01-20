@@ -107,7 +107,7 @@ class Kuka(URDFBasedRobot):
             self.move_finger(bullet_client=bullet_client,
                              grip_ctrl=grip_ctrl)
         # actions alter the ee target pose
-        self.end_effector_target += (a[:3] * 0.01)
+        self.end_effector_target += (a[:3] * 0.05)
         self.end_effector_target = np.clip(self.end_effector_target,
                                            self.end_effector_xyz_lower,
                                            self.end_effector_xyz_upper)
