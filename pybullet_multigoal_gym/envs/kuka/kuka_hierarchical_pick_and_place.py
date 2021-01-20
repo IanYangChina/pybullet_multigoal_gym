@@ -23,8 +23,7 @@ class HierarchicalKukaPickAndPlaceEnv(HierarchicalKukaBulletMGEnv):
         block_pos, _ = self._p.getBasePositionAndOrientation(self.object_bodies['block'])
         block_pos = np.array(block_pos)
 
-        block_target_pos, _ = self._p.getBasePositionAndOrientation(self.object_bodies['block_target'])
-        block_target_pos = np.array(block_target_pos)
+        block_target_pos = self.block_target.copy()
 
         picking_grip_pos = block_pos.copy()
         picking_grip_pos[-1] += self.robot.gripper_tip_offset

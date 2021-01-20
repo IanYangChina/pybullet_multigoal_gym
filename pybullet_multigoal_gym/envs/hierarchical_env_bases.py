@@ -101,6 +101,7 @@ class HierarchicalBaseBulletMGEnv(gym.Env):
             'sub_goal_achieved': sub_goal_achieved,
             'final_goal_achieved': final_goal_achieved
         }
+        info.update(self._check_early_stop())
         reward = {
             'sub_reward': sub_reward,
             'final_reward': final_reward
@@ -169,4 +170,7 @@ class HierarchicalBaseBulletMGEnv(gym.Env):
 
     def _compute_reward(self, achieved_goal, desired_goal):
         # method to override, purposed to compute goal-conditioned task-specific reward
+        raise NotImplementedError
+
+    def _check_early_stop(self):
         raise NotImplementedError

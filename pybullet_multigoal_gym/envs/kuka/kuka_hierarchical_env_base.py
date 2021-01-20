@@ -40,6 +40,7 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
             'block_target': [-0.45, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
             'grip_target': [-0.45, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
         }
+        self.block_target = None
 
         self.num_steps = num_steps
         self.sub_goal_space, self.final_goal_space, self.goal_images = None, None, None
@@ -111,9 +112,7 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
         if self.target_one_table:
             block_target_position = self.object_initial_pos['block'][2]
 
-        self._set_object_pose(self.object_bodies['block_target'],
-                              block_target_position,
-                              self.object_initial_pos['block_target'][3:])
+        self.block_target = block_target_position.copy()
 
         # Generate goal spaces
         self.sub_goal_space, self.final_goal_space, self.goal_images = self._generate_goal()
@@ -139,10 +138,13 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
         self.desired_sub_goal = self.sub_goal_space[sub_goal_key].copy()
         final_goal_key = self.final_goal_strings[self.desired_final_goal_ind]
         self.desired_final_goal = self.final_goal_space[final_goal_key].copy()
+        if self.image_observation:
+            self.desired_sub_goal_image = self.goal_images[sub_goal_key].copy()
+            self.desired_final_goal_image = self.goal_images[final_goal_key].copy()
         self._update_target_objects()
 
     def _update_target_objects(self):
-        # set target poses
+        # update sub goal targets (only for visualization)
         self._set_object_pose(self.object_bodies['block_target'],
                               self.desired_sub_goal[-3:],
                               self.object_initial_pos['block_target'][3:])
@@ -177,6 +179,9 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
 
     def _step_callback(self):
         pass
+
+    def _check_early_stop(self):
+        return {}
 
     def _get_obs(self):
         # update goal vectors
