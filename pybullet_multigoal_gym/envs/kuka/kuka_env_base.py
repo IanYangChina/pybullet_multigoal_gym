@@ -48,6 +48,10 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                                             end_effector_start_on_table=end_effector_start_on_table),
                                  render=render, image_observation=image_observation,
                                  seed=0, timestep=0.002, frame_skip=20)
+        self.object_bound_lower = self.robot.end_effector_xyz_lower.copy()
+        self.object_bound_lower[0] += 0.03
+        self.object_bound_upper = self.robot.end_effector_xyz_upper.copy()
+        self.object_bound_upper[0] -= 0.03
 
     def task_reset(self):
         if not self.objects_urdf_loaded:
@@ -76,8 +80,8 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                     object_xy_1 = end_effector_tip_initial_position[:2] + \
                                   self.np_random.uniform(-self.obj_range, self.obj_range, size=2)
                     object_xy_1 = np.clip(object_xy_1,
-                                          self.robot.end_effector_xyz_lower[:-1],
-                                          self.robot.end_effector_xyz_upper[:-1])
+                                          self.robot.object_bound_lower[:-1],
+                                          self.robot.object_bound_upper[:-1])
                 object_xyz_1 = self.object_initial_pos['block'][:3].copy()
                 object_xyz_1[:2] = object_xy_1
                 self.set_object_pose(self.object_bodies['block'],
@@ -98,8 +102,8 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                             self.np_random.uniform(-self.obj_range, self.obj_range, size=3)
         # make sure the goal is reachable by the robot
         self.desired_goal = np.clip(self.desired_goal,
-                                    self.robot.end_effector_xyz_lower,
-                                    self.robot.end_effector_xyz_upper)
+                                    self.robot.object_bound_lower,
+                                    self.robot.object_bound_upper)
         if self.table_type == 'long_table':
             x = self.np_random.uniform(end_effector_tip_initial_position[0]-self.obj_range,
                                        end_effector_tip_initial_position[0]+self.obj_range-0.6,

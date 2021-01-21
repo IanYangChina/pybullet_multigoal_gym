@@ -87,8 +87,8 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
                 object_xy_1 = end_effector_tip_initial_position[:2] + \
                               self.np_random.uniform(-self.obj_range, self.obj_range, size=2)
                 object_xy_1 = np.clip(object_xy_1,
-                                      self.robot.end_effector_xyz_lower[:-1],
-                                      self.robot.end_effector_xyz_upper[:-1])
+                                      self.robot.object_bound_lower[:-1],
+                                      self.robot.object_bound_upper[:-1])
             object_xyz_1 = self.object_initial_pos['block'][:3].copy()
             object_xyz_1[:2] = object_xy_1
             self._set_object_pose(self.object_bodies['block'],
@@ -107,8 +107,8 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
                                 self.np_random.uniform(-self.obj_range, self.obj_range, size=3)
         # make sure the goal is reachable by the robot
         block_target_position = np.clip(block_target_position,
-                                        self.robot.end_effector_xyz_lower,
-                                        self.robot.end_effector_xyz_upper)
+                                        self.robot.object_bound_lower,
+                                        self.robot.object_bound_upper)
         if self.target_one_table:
             block_target_position = self.object_initial_pos['block'][2]
 

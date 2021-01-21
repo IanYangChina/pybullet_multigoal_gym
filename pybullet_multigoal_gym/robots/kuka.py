@@ -26,6 +26,10 @@ class Kuka(URDFBasedRobot):
         self.end_effector_xyz_upper = np.array([-0.35, 0.20, 0.55])
         self.end_effector_xyz_lower = np.array([-0.55, -0.20, 0.175])
         self.end_effector_fixed_quaternion = [0, -1, 0, 0]
+        self.object_bound_lower = self.end_effector_xyz_lower.copy()
+        self.object_bound_lower[0] += 0.03
+        self.object_bound_upper = self.end_effector_xyz_upper.copy()
+        self.object_bound_upper[0] -= 0.03
 
         self.gripper_joint_index = None
         if self.gripper_type == 'robotiq85':
