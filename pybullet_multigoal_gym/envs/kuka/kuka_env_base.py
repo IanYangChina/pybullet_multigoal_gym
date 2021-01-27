@@ -77,13 +77,14 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                         basePosition=self.object_initial_pos['block'][:3],
                         baseOrientation=self.object_initial_pos['block'][3:])
 
+        object_xyz_1 = None
         if self.has_obj:
             if self.randomized_obj_pos:
                 end_effector_tip_initial_position = self.robot.end_effector_tip_initial_position.copy()
                 object_xy_1 = end_effector_tip_initial_position[:2]
                 object_xy_2 = end_effector_tip_initial_position[:2]
-                while (np.linalg.norm(object_xy_1 - end_effector_tip_initial_position[:2]) < 0.1) or \
-                        (np.linalg.norm(object_xy_1 - object_xy_2[:2]) < 0.1):
+                while (np.linalg.norm(object_xy_1 - end_effector_tip_initial_position[:2]) < 0.02) or \
+                        (np.linalg.norm(object_xy_1 - object_xy_2[:2]) < 0.02):
                     object_xy_1 = self.np_random.uniform(self.robot.object_bound_lower[:-1],
                                                          self.robot.object_bound_upper[:-1])
 
@@ -96,11 +97,18 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                                      self.object_initial_pos['block'][:3],
                                      self.object_initial_pos['block'][3:])
 
-        self._generate_goal()
+        self._generate_goal(current_obj_pos=object_xyz_1)
 
-    def _generate_goal(self):
+    def _generate_goal(self, current_obj_pos=None):
+        if current_obj_pos is None:
+            center = self.robot.end_effector_tip_initial_position[:2].copy()
+        else:
+            center = current_obj_pos[:2]
         self.desired_goal = self.np_random.uniform(self.robot.object_bound_lower,
                                                    self.robot.object_bound_upper)
+        while np.linalg.norm(self.desired_goal[:2] - center) < 0.02:
+            self.desired_goal = self.np_random.uniform(self.robot.object_bound_lower,
+                                                       self.robot.object_bound_upper)
         if self.table_type == 'long_table':
             x = self.np_random.uniform(self.robot.object_bound_lower[0]-0.6,
                                        self.robot.object_bound_upper[0],
