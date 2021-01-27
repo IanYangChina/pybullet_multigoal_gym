@@ -40,6 +40,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
         if self.table_type == 'long_table':
             self.object_initial_pos['table'][0] = -0.90
             self.object_initial_pos['block'][0] = -0.50
+            self.object_initial_pos['block'][2] = 0.170
 
         self.desired_goal = None
         BaseBulletMGEnv.__init__(self,
@@ -65,10 +66,16 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                 basePosition=self.object_initial_pos['target'][:3],
                 baseOrientation=self.object_initial_pos['target'][3:])
             if self.has_obj:
-                self.object_bodies['block'] = self._p.loadURDF(
-                    os.path.join(self.object_assets_path, "block.urdf"),
-                    basePosition=self.object_initial_pos['block'][:3],
-                    baseOrientation=self.object_initial_pos['block'][3:])
+                if self.table_type == 'long_table':
+                    self.object_bodies['block'] = self._p.loadURDF(
+                        os.path.join(self.object_assets_path, "cylinder_bulk.urdf"),
+                        basePosition=self.object_initial_pos['block'][:3],
+                        baseOrientation=self.object_initial_pos['block'][3:])
+                else:
+                    self.object_bodies['block'] = self._p.loadURDF(
+                        os.path.join(self.object_assets_path, "block.urdf"),
+                        basePosition=self.object_initial_pos['block'][:3],
+                        baseOrientation=self.object_initial_pos['block'][3:])
 
         if self.has_obj:
             if self.randomized_obj_pos:
@@ -95,8 +102,8 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
         self.desired_goal = self.np_random.uniform(self.robot.object_bound_lower,
                                                    self.robot.object_bound_upper)
         if self.table_type == 'long_table':
-            x = self.np_random.uniform(end_effector_tip_initial_position[0]-self.obj_range,
-                                       end_effector_tip_initial_position[0]+self.obj_range-0.6,
+            x = self.np_random.uniform(self.robot.object_bound_lower[0]-0.6,
+                                       self.robot.object_bound_upper[0],
                                        size=1)
             self.desired_goal[0] = x
         if self.target_one_table:

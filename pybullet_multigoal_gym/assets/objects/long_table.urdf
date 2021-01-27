@@ -7,7 +7,7 @@
     <!-- table -->
     <link name="table">
         <contact>
-            <lateral_friction value="0.002"/>
+            <lateral_friction value="0.05"/>
         </contact>
         <inertial>
             <origin rpy="0 0 0" xyz="0 0 0"/>

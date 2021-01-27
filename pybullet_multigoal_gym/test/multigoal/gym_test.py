@@ -4,7 +4,7 @@ import pybullet_multigoal_gym as pmg
 import matplotlib.pyplot as plt
 # pmg.envs.print_id()
 
-env = pmg.make('KukaParallelGripSlideRenderSparseEnv-v0')
+env = pmg.make('KukaParallelGripPushRenderSparseEnv-v0')
 obs = env.reset()
 time_done = False
 while True:

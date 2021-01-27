@@ -86,7 +86,7 @@ p.setPhysicsEngineParameter(fixedTimeStep=0.002 * 20, numSolverIterations=5, num
 
 i = 0
 mp = 1
-g = 0.02
+g = 0.022
 start_time = time.process_time()
 # 25 simulation_steps = 1 seconds
 z = 0.17
