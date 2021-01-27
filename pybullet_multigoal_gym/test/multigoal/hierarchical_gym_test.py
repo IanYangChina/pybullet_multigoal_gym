@@ -4,14 +4,13 @@ import pybullet_multigoal_gym as pmg
 import matplotlib.pyplot as plt
 # pmg.envs.print_id()
 
-env = pmg.make('KukaParallelGripHierPickAndPlaceRenderSparseImageObsEnv-v0')
+env = pmg.make('KukaParallelGripHierPickAndPlaceRenderSparseEnv-v0')
 obs = env.reset()
 while True:
     time_done = False
-    # env.reset()
     while not time_done:
-        high_level_action = env.high_level_action_space.sample()
-        env.set_sub_goal(high_level_action)
+        # high_level_action = env.high_level_action_space.sample()
+        # env.set_sub_goal(high_level_action)
         sub_goal_done = False
         while not sub_goal_done and not time_done:
             action = env.low_level_action_space.sample()

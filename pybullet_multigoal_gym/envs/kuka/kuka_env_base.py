@@ -77,13 +77,10 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                 object_xy_2 = end_effector_tip_initial_position[:2]
                 while (np.linalg.norm(object_xy_1 - end_effector_tip_initial_position[:2]) < 0.1) or \
                         (np.linalg.norm(object_xy_1 - object_xy_2[:2]) < 0.1):
-                    object_xy_1 = end_effector_tip_initial_position[:2] + \
-                                  self.np_random.uniform(-self.obj_range, self.obj_range, size=2)
-                    object_xy_1 = np.clip(object_xy_1,
-                                          self.robot.object_bound_lower[:-1],
-                                          self.robot.object_bound_upper[:-1])
-                object_xyz_1 = self.object_initial_pos['block'][:3].copy()
-                object_xyz_1[:2] = object_xy_1
+                    object_xy_1 = self.np_random.uniform(self.robot.object_bound_lower[:-1],
+                                                         self.robot.object_bound_upper[:-1])
+
+                object_xyz_1 = np.append(object_xy_1, self.object_initial_pos['block'][2])
                 self.set_object_pose(self.object_bodies['block'],
                                      object_xyz_1,
                                      self.object_initial_pos['block'][3:])
@@ -95,15 +92,8 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
         self._generate_goal()
 
     def _generate_goal(self):
-        end_effector_tip_initial_position = self.robot.end_effector_tip_initial_position.copy()
-        # make sure targets are above the table surface
-        end_effector_tip_initial_position[-1] = 0.35
-        self.desired_goal = end_effector_tip_initial_position + \
-                            self.np_random.uniform(-self.obj_range, self.obj_range, size=3)
-        # make sure the goal is reachable by the robot
-        self.desired_goal = np.clip(self.desired_goal,
-                                    self.robot.object_bound_lower,
-                                    self.robot.object_bound_upper)
+        self.desired_goal = self.np_random.uniform(self.robot.object_bound_lower,
+                                                   self.robot.object_bound_upper)
         if self.table_type == 'long_table':
             x = self.np_random.uniform(end_effector_tip_initial_position[0]-self.obj_range,
                                        end_effector_tip_initial_position[0]+self.obj_range-0.6,
