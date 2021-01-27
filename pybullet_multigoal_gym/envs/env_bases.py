@@ -78,9 +78,6 @@ class BaseBulletMGEnv(gym.Env):
 
     def step(self, action):
         self.robot.apply_action(action, self._p)
-        for _ in range(5):
-            # ensure the action is finished
-            self._p.stepSimulation()
         obs = self._get_obs()
         reward, goal_achieved = self._compute_reward(obs['achieved_goal'], obs['desired_goal'])
         self._step_callback()

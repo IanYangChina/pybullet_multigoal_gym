@@ -119,6 +119,9 @@ class Kuka(URDFBasedRobot):
         joint_poses = self.compute_ik(bullet_client=bullet_client,
                                       target_ee_pos=self.end_effector_target)
         self.move_arm(bullet_client=bullet_client, joint_poses=joint_poses)
+        for _ in range(5):
+            # ensure the action is finished
+            self._p.stepSimulation()
 
     def calc_robot_state(self):
         # gripper tip states in the world frame
