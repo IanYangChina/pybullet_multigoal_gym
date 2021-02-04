@@ -49,10 +49,10 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                                             end_effector_start_on_table=end_effector_start_on_table),
                                  render=render, image_observation=image_observation,
                                  seed=0, timestep=0.002, frame_skip=20)
-        self.object_bound_lower = self.robot.end_effector_xyz_lower.copy()
-        self.object_bound_lower[0] += 0.03
-        self.object_bound_upper = self.robot.end_effector_xyz_upper.copy()
-        self.object_bound_upper[0] -= 0.03
+        if self.table_type == 'long_table':
+            self.robot.object_bound_upper[0] = -0.45
+            self.robot.target_bound_lower[0] -= 0.4
+            self.robot.target_bound_upper[0] -= 0.3
 
     def task_reset(self):
         if not self.objects_urdf_loaded:
@@ -104,16 +104,13 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             center = self.robot.end_effector_tip_initial_position[:2].copy()
         else:
             center = current_obj_pos[:2]
-        self.desired_goal = self.np_random.uniform(self.robot.object_bound_lower,
-                                                   self.robot.object_bound_upper)
-        while np.linalg.norm(self.desired_goal[:2] - center) < 0.02:
-            self.desired_goal = self.np_random.uniform(self.robot.object_bound_lower,
-                                                       self.robot.object_bound_upper)
-        if self.table_type == 'long_table':
-            x = self.np_random.uniform(self.robot.object_bound_lower[0]-0.4,
-                                       self.robot.object_bound_upper[0]-0.3,
-                                       size=1)
-            self.desired_goal[0] = x
+
+        while True:
+            self.desired_goal = self.np_random.uniform(self.robot.target_bound_lower,
+                                                       self.robot.target_bound_upper)
+            if np.linalg.norm(self.desired_goal[:2] - center) > 0.02:
+                break
+
         if not self.target_in_the_air:
             if not self.grasping:
                 self.desired_goal[2] = self.object_initial_pos['block'][2]

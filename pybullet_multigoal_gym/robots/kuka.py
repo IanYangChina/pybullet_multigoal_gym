@@ -16,7 +16,7 @@ class Kuka(URDFBasedRobot):
                                 self_collision=False)
         self.kuka_body_index = None
         self.kuka_joint_index = None
-        # rest poses for null space, setting the end effector to point downward
+        # initial robot joint states
         self.kuka_rest_pose = [0, -0.43064, 0, 1.95325, 0, -0.759, 0]
         if end_effector_start_on_table:
             self.kuka_rest_pose = [0, -0.58254, 0, 1.9794, 0, -0.5807, 0]
@@ -30,6 +30,8 @@ class Kuka(URDFBasedRobot):
         self.object_bound_lower[0] += 0.03
         self.object_bound_upper = self.end_effector_xyz_upper.copy()
         self.object_bound_upper[0] -= 0.03
+        self.target_bound_lower = self.object_bound_lower.copy()
+        self.target_bound_upper = self.object_bound_upper.copy()
 
         self.gripper_joint_index = None
         if self.gripper_type == 'robotiq85':
