@@ -110,8 +110,8 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             self.desired_goal = self.np_random.uniform(self.robot.object_bound_lower,
                                                        self.robot.object_bound_upper)
         if self.table_type == 'long_table':
-            x = self.np_random.uniform(self.robot.object_bound_lower[0]-0.6,
-                                       self.robot.object_bound_upper[0],
+            x = self.np_random.uniform(self.robot.object_bound_lower[0]-0.4,
+                                       self.robot.object_bound_upper[0]-0.4,
                                        size=1)
             self.desired_goal[0] = x
         if self.target_one_table:
