@@ -11,14 +11,14 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
 
     def __init__(self, render=True, binary_reward=True,
                  image_observation=False, gripper_type='parallel_jaw',
-                 table_type='table', target_on_table=False, end_effector_start_on_table=False,
+                 table_type='table', target_in_the_air=True, end_effector_start_on_table=False,
                  distance_threshold=0.01, grasping=False, has_obj=False, randomized_obj_pos=True, obj_range=0.15):
         self.binary_reward = binary_reward
         self.image_observation = image_observation
 
         self.table_type = table_type
         assert self.table_type in ['table', 'long_table']
-        self.target_one_table = target_on_table
+        self.target_in_the_air = target_in_the_air
         self.distance_threshold = distance_threshold
         self.grasping = grasping
         self.has_obj = has_obj
@@ -111,11 +111,16 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                                                        self.robot.object_bound_upper)
         if self.table_type == 'long_table':
             x = self.np_random.uniform(self.robot.object_bound_lower[0]-0.4,
-                                       self.robot.object_bound_upper[0]-0.4,
+                                       self.robot.object_bound_upper[0]-0.3,
                                        size=1)
             self.desired_goal[0] = x
-        if self.target_one_table:
-            self.desired_goal[2] = self.object_initial_pos['block'][2]
+        if not self.target_in_the_air:
+            if not self.grasping:
+                self.desired_goal[2] = self.object_initial_pos['block'][2]
+            else:
+                # with .5 probability, set the pick-and-place target on the table
+                if self.np_random.uniform(0, 1) >= 0.5:
+                    self.desired_goal[2] = self.object_initial_pos['block'][2]
 
         self.set_object_pose(self.object_bodies['target'],
                              self.desired_goal,
