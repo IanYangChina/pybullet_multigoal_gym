@@ -117,6 +117,8 @@ while True:
 
 <img src="/src/push.gif" width="800"/>
 
+<img src="/src/pendulum.gif" width="800"/>
+
 ### Updates
 
 2020.12.26 --- Add hierarchical environments for a pick and place task, with image observation and goal supported. 
