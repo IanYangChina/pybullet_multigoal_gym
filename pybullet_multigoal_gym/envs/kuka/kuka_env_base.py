@@ -10,11 +10,16 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
     """
 
     def __init__(self, render=True, binary_reward=True,
-                 image_observation=False, gripper_type='parallel_jaw',
+                 image_observation=False, goal_image=False, depth_image=False, gripper_type='parallel_jaw',
                  table_type='table', target_in_the_air=True, end_effector_start_on_table=False,
                  distance_threshold=0.01, grasping=False, has_obj=False, randomized_obj_pos=True, obj_range=0.15):
         self.binary_reward = binary_reward
         self.image_observation = image_observation
+        self.goal_image = goal_image
+        if depth_image:
+            self.render_mode = 'rgbd_array'
+        else:
+            self.render_mode = 'rgb_array'
 
         self.table_type = table_type
         assert self.table_type in ['table', 'long_table']
@@ -43,11 +48,12 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             self.object_initial_pos['block'][2] = 0.170
 
         self.desired_goal = None
+        self.desired_goal_image = None
         BaseBulletMGEnv.__init__(self,
                                  robot=Kuka(grasping=grasping,
                                             gripper_type=gripper_type,
                                             end_effector_start_on_table=end_effector_start_on_table),
-                                 render=render, image_observation=image_observation,
+                                 render=render, image_observation=image_observation, goal_image=goal_image,
                                  seed=0, timestep=0.002, frame_skip=20)
         if self.table_type == 'long_table':
             self.robot.object_bound_upper[0] = -0.45
@@ -98,17 +104,22 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                                      self.object_initial_pos['block'][3:])
 
         self._generate_goal(current_obj_pos=object_xyz_1)
+        if self.goal_image:
+            self._generate_goal_image(current_obj_pos=object_xyz_1)
 
     def _generate_goal(self, current_obj_pos=None):
         if current_obj_pos is None:
-            center = self.robot.end_effector_tip_initial_position[:2].copy()
+            # generate a goal around the gripper if no object is involved
+            center = self.robot.end_effector_tip_initial_position.copy()
         else:
-            center = current_obj_pos[:2]
+            center = current_obj_pos
 
+        # generate the 3DoF goal within a 3D bounding box such that,
+        #       it is at least 0.02m away from the gripper or the object
         while True:
             self.desired_goal = self.np_random.uniform(self.robot.target_bound_lower,
                                                        self.robot.target_bound_upper)
-            if np.linalg.norm(self.desired_goal[:2] - center) > 0.02:
+            if np.linalg.norm(self.desired_goal - center) > 0.02:
                 break
 
         if not self.target_in_the_air:
@@ -122,6 +133,46 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
         self.set_object_pose(self.object_bodies['target'],
                              self.desired_goal,
                              self.object_initial_pos['target'][3:])
+
+    def _generate_goal_image(self, current_obj_pos=None):
+        if current_obj_pos is None:
+            # no object cases
+            target_gripper_pos = self.desired_goal.copy()
+            target_kuka_joint_pos = self.robot.compute_ik(self._p, target_gripper_pos)
+            self.robot.set_kuka_joint_state(target_kuka_joint_pos)
+            self.desired_goal_image = self.render(mode=self.render_mode)
+            self.robot.set_kuka_joint_state(self.robot.kuka_rest_pose, np.zeros(7))
+        elif not self.grasping:
+            # Push task
+            original_obj_pos = current_obj_pos.copy()
+            target_obj_pos = self.desired_goal.copy()
+            self.set_object_pose(self.object_bodies['block'],
+                                 target_obj_pos,
+                                 self.object_initial_pos['block'][3:])
+            self.desired_goal_image = self.render(mode=self.render_mode)
+            self.set_object_pose(self.object_bodies['block'],
+                                 original_obj_pos,
+                                 self.object_initial_pos['block'][3:])
+        else:
+            # PickAndPlace task
+            self.robot.set_finger_joint_state(self.robot.gripper_grasp_block_state)
+            target_gripper_pos = self.desired_goal.copy()
+            target_kuka_joint_pos = self.robot.compute_ik(self._p, target_gripper_pos)
+            self.robot.set_kuka_joint_state(target_kuka_joint_pos)
+
+            original_obj_pos = current_obj_pos.copy()
+            target_obj_pos = self.desired_goal.copy()
+            self.set_object_pose(self.object_bodies['block'],
+                                 target_obj_pos,
+                                 self.object_initial_pos['block'][3:])
+
+            self.desired_goal_image = self.render(mode=self.render_mode)
+
+            self.set_object_pose(self.object_bodies['block'],
+                                 original_obj_pos,
+                                 self.object_initial_pos['block'][3:])
+            self.robot.set_kuka_joint_state(self.robot.kuka_rest_pose, np.zeros(7))
+            self.robot.set_finger_joint_state(self.robot.gripper_abs_joint_limit)
 
     def _step_callback(self):
         pass
@@ -154,13 +205,24 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                 'achieved_goal': achieved_goal.copy(),
                 'desired_goal': self.desired_goal.copy(),
             }
-        else:
+        elif not self.goal_image:
             return {
-                'observation': self.render(mode='rgb_array'),
+                'observation': self.render(mode=self.render_mode),
                 'state': state.copy(),
                 'policy_state': policy_state.copy(),
                 'achieved_goal': achieved_goal.copy(),
                 'desired_goal': self.desired_goal.copy(),
+            }
+        else:
+            observation = self.render(mode=self.render_mode)
+            return {
+                'observation': observation.copy(),
+                'state': state.copy(),
+                'policy_state': policy_state.copy(),
+                'achieved_goal': achieved_goal.copy(),
+                'achieved_goal_img': observation.copy(),
+                'desired_goal': self.desired_goal.copy(),
+                'desired_goal_img': self.desired_goal_image.copy(),
             }
 
     def _compute_reward(self, achieved_goal, desired_goal):

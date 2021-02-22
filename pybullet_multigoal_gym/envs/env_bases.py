@@ -11,12 +11,13 @@ class BaseBulletMGEnv(gym.Env):
     Base class for non-hierarchical multi-goal RL task, based on PyBullet and Gym.
     """
     def __init__(self, robot,
-                 render=False, image_observation=False,
+                 render=False, image_observation=False, goal_image=False,
                  seed=0, gravity=9.81, timestep=0.002, frame_skip=20):
         self.robot = robot
 
         self.isRender = render
         self.image_observation = image_observation
+        self.goal_image = goal_image
 
         self.seed(seed=seed)
         self._gravity = gravity
@@ -29,8 +30,8 @@ class BaseBulletMGEnv(gym.Env):
         self._cam_dist = 1.2
         self._cam_yaw = -90
         self._cam_pitch = -30
-        self._render_width = 100
-        self._render_height = 100
+        self._render_width = 256
+        self._render_height = 256
         self._num_solver_iterations = 5
         self._use_real_time_simulation = False
         self.configure_bullet_client()
@@ -49,13 +50,23 @@ class BaseBulletMGEnv(gym.Env):
                 achieved_goal=spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
                 desired_goal=spaces.Box(-np.inf, np.inf, shape=obs['desired_goal'].shape, dtype='float32'),
             ))
-        else:
+        elif not self.goal_image:
             self.observation_space = spaces.Dict(dict(
                 observation=spaces.Box(-np.inf, np.inf, shape=obs['observation'].shape, dtype='float32'),
                 state=spaces.Box(-np.inf, np.inf, shape=obs['state'].shape, dtype='float32'),
                 policy_state=spaces.Box(-np.inf, np.inf, shape=obs['policy_state'].shape, dtype='float32'),
                 achieved_goal=spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
                 desired_goal=spaces.Box(-np.inf, np.inf, shape=obs['desired_goal'].shape, dtype='float32'),
+            ))
+        else:
+            self.observation_space = spaces.Dict(dict(
+                observation=spaces.Box(-np.inf, np.inf, shape=obs['observation'].shape, dtype='float32'),
+                state=spaces.Box(-np.inf, np.inf, shape=obs['state'].shape, dtype='float32'),
+                policy_state=spaces.Box(-np.inf, np.inf, shape=obs['policy_state'].shape, dtype='float32'),
+                achieved_goal=spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
+                achieved_goal_img=spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal_img'].shape, dtype='float32'),
+                desired_goal=spaces.Box(-np.inf, np.inf, shape=obs['desired_goal'].shape, dtype='float32'),
+                desired_goal_img=spaces.Box(-np.inf, np.inf, shape=obs['desired_goal_img'].shape, dtype='float32'),
             ))
 
     @property
@@ -89,24 +100,27 @@ class BaseBulletMGEnv(gym.Env):
     def render(self, mode="human"):
         if mode == "human":
             self.isRender = True
-        if mode != "rgb_array":
-            return np.array([])
-
-        view_matrix = self._p.computeViewMatrix(
-            cameraEyePosition=[-1.0, 0.25, 0.8],
-            cameraTargetPosition=[-0.45, 0.0, 0.2],
-            cameraUpVector=[0, 0, 1])
-        proj_matrix = self._p.computeProjectionMatrixFOV(
-            fov=60, aspect=float(self._render_width) / self._render_height,
-            nearVal=0.1, farVal=100.0)
-        (_, _, px, _, _) = self._p.getCameraImage(
-            width=self._render_width, height=self._render_height, viewMatrix=view_matrix,
-            projectionMatrix=proj_matrix,
-            renderer=pybullet.ER_BULLET_HARDWARE_OPENGL
-        )
-        rgb_array = np.array(px)
-        rgb_array = rgb_array[:, :, :3]
-        return rgb_array
+        else:
+            view_matrix = self._p.computeViewMatrix(
+                cameraEyePosition=[-1.0, 0.25, 0.6],
+                cameraTargetPosition=[-0.6, 0.05, 0.2],
+                cameraUpVector=[0, 0, 1])
+            proj_matrix = self._p.computeProjectionMatrixFOV(
+                fov=60, aspect=float(self._render_width) / self._render_height,
+                nearVal=0.1, farVal=100.0)
+            (_, _, px, depth, _) = self._p.getCameraImage(
+                width=self._render_width, height=self._render_height, viewMatrix=view_matrix,
+                projectionMatrix=proj_matrix,
+                renderer=pybullet.ER_BULLET_HARDWARE_OPENGL
+            )
+            rgb_array = px[:, :, :3]
+            if mode == "rgb_array":
+                return rgb_array
+            elif mode == "rgbd_array":
+                # transform depth value into [0 255] as type uint8
+                depth = np.array([depth*255]).transpose((1, 2, 0)).astype('uint8')
+                rgbd_array = np.concatenate((rgb_array, depth), axis=-1)
+                return rgbd_array
 
     def close(self):
         if self.ownsPhysicsClient:
