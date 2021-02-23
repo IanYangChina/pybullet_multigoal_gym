@@ -30,8 +30,8 @@ class BaseBulletMGEnv(gym.Env):
         self._cam_dist = 1.2
         self._cam_yaw = -90
         self._cam_pitch = -30
-        self._render_width = 256
-        self._render_height = 256
+        self._render_width = 128
+        self._render_height = 128
         self._num_solver_iterations = 5
         self._use_real_time_simulation = False
         self.configure_bullet_client()
