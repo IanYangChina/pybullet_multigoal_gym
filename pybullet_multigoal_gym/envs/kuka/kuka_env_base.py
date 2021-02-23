@@ -20,6 +20,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             self.render_mode = 'rgbd_array'
         else:
             self.render_mode = 'rgb_array'
+        self.visualize_target = True
 
         self.table_type = table_type
         assert self.table_type in ['table', 'long_table']
@@ -129,10 +130,14 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                 # with .5 probability, set the pick-and-place target on the table
                 if self.np_random.uniform(0, 1) >= 0.5:
                     self.desired_goal[2] = self.object_initial_pos['block'][2]
-
-        self.set_object_pose(self.object_bodies['target'],
-                             self.desired_goal,
-                             self.object_initial_pos['target'][3:])
+        if self.visualize_target:
+            self.set_object_pose(self.object_bodies['target'],
+                                 self.desired_goal,
+                                 self.object_initial_pos['target'][3:])
+        else:
+            self.set_object_pose(self.object_bodies['target'],
+                                 [0.0, 0.0, -3.0],
+                                 self.object_initial_pos['target'][3:])
 
     def _generate_goal_image(self, current_obj_pos=None):
         if current_obj_pos is None:
