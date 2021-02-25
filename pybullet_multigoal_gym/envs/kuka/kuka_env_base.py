@@ -10,7 +10,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
     """
 
     def __init__(self, render=True, binary_reward=True,
-                 image_observation=False, goal_image=False, depth_image=False, gripper_type='parallel_jaw',
+                 image_observation=False, goal_image=False, depth_image=False, depth_only=False, gripper_type='parallel_jaw',
                  table_type='table', target_in_the_air=True, end_effector_start_on_table=False,
                  distance_threshold=0.01, grasping=False, has_obj=False, randomized_obj_pos=True, obj_range=0.15):
         self.binary_reward = binary_reward
@@ -20,6 +20,8 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             self.render_mode = 'rgbd_array'
         else:
             self.render_mode = 'rgb_array'
+        if depth_only:
+            self.render_mode = 'depth'
         self.visualize_target = True
 
         self.table_type = table_type

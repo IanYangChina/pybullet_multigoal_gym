@@ -116,11 +116,14 @@ class BaseBulletMGEnv(gym.Env):
             rgb_array = px[:, :, :3]
             if mode == "rgb_array":
                 return rgb_array
-            elif mode == "rgbd_array":
+            else:
                 # transform depth value into [0 255] as type uint8
                 depth = np.array([depth*255]).transpose((1, 2, 0)).astype('uint8')
                 rgbd_array = np.concatenate((rgb_array, depth), axis=-1)
-                return rgbd_array
+                if mode == 'rgbd_array':
+                    return rgbd_array
+                elif mode == 'depth':
+                    return depth
 
     def close(self):
         if self.ownsPhysicsClient:

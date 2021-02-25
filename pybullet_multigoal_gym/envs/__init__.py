@@ -101,7 +101,7 @@ for grip in gripper_type:
             id='Kuka'+grip_tag+'HierPickAndPlace' + tag + 'SparseEnv-v0',
             entry_point='pybullet_multigoal_gym.envs.kuka.kuka_hierarchical_pick_and_place:HierarchicalKukaPickAndPlaceEnv',
             kwargs={
-                'render': tag,
+                'render': renders[i],
                 'binary_reward': True,
                 'image_observation': False,
                 'gripper_type': grip
@@ -114,9 +114,25 @@ for grip in gripper_type:
             id='Kuka'+grip_tag+'HierPickAndPlace' + tag + 'SparseImageObsEnv-v0',
             entry_point='pybullet_multigoal_gym.envs.kuka.kuka_hierarchical_pick_and_place:HierarchicalKukaPickAndPlaceEnv',
             kwargs={
-                'render': tag,
+                'render': renders[i],
                 'binary_reward': True,
                 'image_observation': True,
+                'gripper_type': grip
+            },
+            max_episode_steps=50,
+        )
+
+        ids.append('Kuka'+grip_tag+'Push' + tag + 'SparseDepthOnlyObsImageGoalEnv-v0')
+        register(
+            id='Kuka'+grip_tag+'Push' + tag + 'SparseDepthOnlyObsImageGoalEnv-v0',
+            entry_point='pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaPushEnv',
+            kwargs={
+                'render': renders[i],
+                'binary_reward': True,
+                'depth_image': False,
+                'image_observation': True,
+                'goal_image': True,
+                'depth_only': True,
                 'gripper_type': grip
             },
             max_episode_steps=50,
