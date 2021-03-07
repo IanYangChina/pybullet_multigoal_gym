@@ -4,7 +4,8 @@ import numpy as np
 
 
 class Kuka(URDFBasedRobot):
-    def __init__(self, gripper_type='parallel_jaw', grasping=False, end_effector_start_on_table=False):
+    def __init__(self, gripper_type='parallel_jaw', grasping=False, end_effector_start_on_table=False,
+                 obj_range=0.15, target_range=0.15):
         self.gripper_type = gripper_type
         if self.gripper_type == 'robotiq85':
             model_urdf = 'kuka/iiwa14_robotiq85.urdf'
@@ -23,15 +24,16 @@ class Kuka(URDFBasedRobot):
         self.end_effector_tip_joint_index = None
         self.end_effector_target = None
         self.end_effector_tip_initial_position = np.array([-0.45, 0.0, 0.25])
-        self.end_effector_xyz_upper = np.array([-0.35, 0.20, 0.55])
-        self.end_effector_xyz_lower = np.array([-0.55, -0.20, 0.175])
+        self.end_effector_xyz_upper = np.array([-0.3, 0.20, 0.55])
+        self.end_effector_xyz_lower = np.array([-0.6, -0.20, 0.175])
         self.end_effector_fixed_quaternion = [0, -1, 0, 0]
-        self.object_bound_lower = self.end_effector_xyz_lower.copy()
+        self.object_bound_lower = self.end_effector_tip_initial_position.copy() - obj_range
         self.object_bound_lower[0] += 0.03
-        self.object_bound_upper = self.end_effector_xyz_upper.copy()
+        self.object_bound_upper = self.end_effector_tip_initial_position.copy() + obj_range
         self.object_bound_upper[0] -= 0.03
-        self.target_bound_lower = self.object_bound_lower.copy()
-        self.target_bound_upper = self.object_bound_upper.copy()
+        self.target_bound_lower = self.end_effector_tip_initial_position.copy() - target_range
+        self.target_bound_lower[-1] = self.end_effector_xyz_lower[-1]
+        self.target_bound_upper = self.end_effector_tip_initial_position.copy() + target_range
 
         self.gripper_joint_index = None
         if self.gripper_type == 'robotiq85':

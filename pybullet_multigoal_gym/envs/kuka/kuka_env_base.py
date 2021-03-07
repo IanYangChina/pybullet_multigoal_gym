@@ -12,7 +12,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
     def __init__(self, render=True, binary_reward=True,
                  image_observation=False, goal_image=False, depth_image=False, depth_only=False, gripper_type='parallel_jaw',
                  table_type='table', target_in_the_air=True, end_effector_start_on_table=False,
-                 distance_threshold=0.01, grasping=False, has_obj=False, randomized_obj_pos=True, obj_range=0.15):
+                 distance_threshold=0.01, grasping=False, has_obj=False, randomized_obj_pos=True, obj_range=0.15, target_range=0.15):
         self.binary_reward = binary_reward
         self.image_observation = image_observation
         self.goal_image = goal_image
@@ -32,6 +32,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
         self.has_obj = has_obj
         self.randomized_obj_pos = randomized_obj_pos
         self.obj_range = obj_range
+        self.target_range = target_range
 
         self.object_assets_path = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "objects")
         self.objects_urdf_loaded = False
@@ -55,13 +56,14 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
         BaseBulletMGEnv.__init__(self,
                                  robot=Kuka(grasping=grasping,
                                             gripper_type=gripper_type,
-                                            end_effector_start_on_table=end_effector_start_on_table),
+                                            end_effector_start_on_table=end_effector_start_on_table,
+                                            obj_range=self.obj_range, target_range=self.target_range),
                                  render=render, image_observation=image_observation, goal_image=goal_image,
                                  seed=0, timestep=0.002, frame_skip=20)
         if self.table_type == 'long_table':
-            self.robot.object_bound_upper[0] = -0.45
-            self.robot.target_bound_lower[0] -= 0.4
-            self.robot.target_bound_upper[0] -= 0.3
+            self.robot.object_bound_upper[0] = -0.55
+            self.robot.target_bound_lower[0] -= 0.5
+            self.robot.target_bound_upper[0] -= 0.5
 
     def task_reset(self):
         if not self.objects_urdf_loaded:
@@ -126,12 +128,12 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                 break
 
         if not self.target_in_the_air:
-            if not self.grasping:
+            self.desired_goal[2] = self.object_initial_pos['block'][2]
+        elif self.grasping:
+            # with .5 probability, set the pick-and-place target on the table
+            if self.np_random.uniform(0, 1) >= 0.5:
                 self.desired_goal[2] = self.object_initial_pos['block'][2]
-            else:
-                # with .5 probability, set the pick-and-place target on the table
-                if self.np_random.uniform(0, 1) >= 0.5:
-                    self.desired_goal[2] = self.object_initial_pos['block'][2]
+
         if self.visualize_target:
             self.set_object_pose(self.object_bodies['target'],
                                  self.desired_goal,
