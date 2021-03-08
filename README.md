@@ -1,8 +1,8 @@
 ### Pybullet-implementation of the multi-goal robotics environment originally from Open AI Gym.
 
-This version uses a kuka iiwa14 7DoF arm, equipped with a robotiq85 two finger gripper.
+This version uses a kuka iiwa14 7DoF arm, equipped with a robotiq85 two finger gripper or a simple parallel jaw.
 
-The four tasks are basically the same as the ones in the OpenAI Gym: **Reach, Push, Pick and Place, Slide**.
+The basic four tasks are basically the same as the ones in the OpenAI Gym: **Reach, Push, Pick and Place, Slide**.
 However, it may look funny when the robot picks up a block with the robotiq85 gripper,
 since it's under-actuated and thus makes it hard to fine-tune the simulation. 
 You can use the parallel jaw gripper, which is effectively the same as the OpenAI one.
@@ -10,8 +10,11 @@ You can use the parallel jaw gripper, which is effectively the same as the OpenA
 I have implemented some goal-conditioned RL algos in my another repo, using the 
 original Gym environment. There are DDPG-HER, SAC-HER, and others.
 <a href="https://github.com/IanYangChina/DRL_Implementation.git" target="_blank">DRL_Implementation.</a>
-Expired mujoco license got me here. I will also 
-retrain those agents and pose performance ASAP.
+Expired mujoco license got me here. I will also retrain those agents and pose performance ASAP.
+
+Our team is preparing some harder tasks for long-horizon sparse reward robotic arm manipulation tasks
+on this package as well. All the environments will be summarised in a paper for references ASAP. We will
+release a stable version when everything is set, but feel free to play with the current branch.
 
 ### Installation
 
