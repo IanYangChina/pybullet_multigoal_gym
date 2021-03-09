@@ -120,11 +120,9 @@ while True:
 
 ### Scenes
 
-<img src="src/01.jpeg" width="800"/>
+<img src="src/HERBenchmark.png" width="800"/>
 
-<img src="/src/sac_demo.gif" width="800"/>
-
-<img src="/src/push.gif" width="800"/>
+<img src="/src/MultiBlockTasks.gif" width="800"/>
 
 ### Updates
 
