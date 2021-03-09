@@ -1,8 +1,8 @@
 <?xml version="1.0" ?>
 
 <robot name="block">
-    <material name="Black">
-        <color rgba="0 0 0 1"/>
+    <material name="Yellow">
+        <color rgba="0 1 1 1"/>
     </material>
     <!-- block -->
     <link name="block">
@@ -23,7 +23,7 @@
             <geometry>
                 <box size="0.03 0.03 0.03"/>
             </geometry>
-            <material name="Black"/>
+            <material name="Yellow"/>
         </visual>
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>

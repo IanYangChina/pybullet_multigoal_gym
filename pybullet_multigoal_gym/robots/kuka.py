@@ -32,8 +32,10 @@ class Kuka(URDFBasedRobot):
         self.object_bound_upper = self.end_effector_tip_initial_position.copy() + obj_range
         self.object_bound_upper[0] -= 0.03
         self.target_bound_lower = self.end_effector_tip_initial_position.copy() - target_range
+        self.target_bound_lower[0] += 0.03
         self.target_bound_lower[-1] = self.end_effector_xyz_lower[-1]
         self.target_bound_upper = self.end_effector_tip_initial_position.copy() + target_range
+        self.target_bound_upper[0] -= 0.03
 
         self.gripper_joint_index = None
         if self.gripper_type == 'robotiq85':

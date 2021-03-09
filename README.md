@@ -45,26 +45,31 @@ Rewards are set to negatively proportional to the goal distance. For sparse,
 it's -1 and 0 rewards, where 0 stands for goal being achieved. For dense reward,
 it equals to the negative goal distance (achieved & desired goals).
 
-Due to backend differences, the `render()` method should not need to be called by users. To run experiment 
-headless, make environment without the word `'Render'` in the id. To run experiment with image observations,
-make environments with the word `'ImageObs'` in the id. Only the Reach, PickAndPlace and Push envs support
-image observation.
-
-Here's how you view all the env ids:
-```python
-import pybullet_multigoal_gym as pmg
-pmg.envs.print_id()
-```
+Use the `make_env(...)` method to make your environments. Due to backend differences, the `render()` method 
+should not need to be called by users. 
+To run experiment headless, make environment with `render=False`. 
+To run experiment with image observations, make environment with `image_observation=True`. 
+Only the Reach, PickAndPlace and Push envs support image observation. See examples below.
 
 ### Try it out
 
 ```python
-# Non hierarchical environments
+# Single-stage manipulation environments
+# Reach, Push, PickAndPlace, Slide
 import pybullet_multigoal_gym as pmg
 # Install matplotlib if you want to use imshow to view the goal images
 import matplotlib.pyplot as plt
 
-env = pmg.make('KukaParallelGripPickAndPlaceRenderDenseImageObsEnv-v0')
+env = pmg.make_env(task='reach',    
+                   # task is in ['reach', 'push', 'pick_and_place', 'slide']
+                   gripper='parallel_jaw', 
+                   # gripper is in ['parallel_jaw', 'robotiq85']
+                   render=True,
+                   binary_reward=True,
+                   max_episode_steps=50,
+                   image_observation=True,
+                   depth_image=False,
+                   goal_image=False)
 obs = env.reset()
 t = 0
 while True:
@@ -82,13 +87,14 @@ while True:
 ```
 
 ```python
-# Hierarchical environments
+# Hierarchical environments: only a simple pick-and-place task is available
 import pybullet_multigoal_gym as pmg
+print("Existing hierarchical envs: ", pmg.ids)
 # Install matplotlib if you want to use imshow to view the goal images
 import matplotlib.pyplot as plt
 
 
-env = pmg.make('KukaParallelGripHierPickAndPlaceRenderSparseImageObsEnv-v0')
+env = pmg.make('KukaParallelGripHierPickAndPlaceSparseImageObsEnv-v0')
 obs = env.reset()
 time_done = False
 while True:
@@ -125,6 +131,10 @@ while True:
 2020.12.26 --- Add hierarchical environments for a pick and place task, with image observation and goal supported. 
 See the above example.
 
-2020.12.28 --- Add image observation to non-hierarchical environments
+2020.12.28 --- Add image observation to non-hierarchical environments.
 
-2021.01.14 --- Add parallel jaw gripper
+2021.01.14 --- Add parallel jaw gripper.
+
+2021.03.08 --- Add a make_env(...) method to replace the pre-registration codes.
+
+2021.03.09 --- Add multi-block stacking and re-arranging tasks

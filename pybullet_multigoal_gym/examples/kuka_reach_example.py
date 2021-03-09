@@ -1,7 +1,14 @@
-import pybullet_multigoal_gym
+import pybullet_multigoal_gym as pmg
 
 
-env = pybullet_multigoal_gym.make('KukaPickAndPlaceRenderSparseEnv-v0')
+env = pmg.make_env(task='reach',
+                   gripper='parallel_jaw',
+                   render=True,
+                   binary_reward=True,
+                   max_episode_steps=50,
+                   image_observation=False,
+                   depth_image=False,
+                   goal_image=False)
 obs = env.reset()
 t = 0
 while True:
