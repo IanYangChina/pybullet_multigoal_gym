@@ -201,7 +201,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             achieved_goal = np.array(block_xyz).copy()
             # the HER paper use different state observations for the policy and critic network
             # critic further takes the velocities as input
-            state = np.concatenate((gripper_xyz, gripper_finger_closeness, block_rel_xyz,
+            state = np.concatenate((gripper_xyz, block_xyz, gripper_finger_closeness, block_rel_xyz,
                                     gripper_vel_xyz, gripper_finger_vel, block_rel_vel_xyz, block_rel_vel_rpy))
             policy_state = np.concatenate((gripper_xyz, gripper_finger_closeness, block_rel_xyz))
         else:
