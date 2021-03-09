@@ -47,7 +47,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             'target': [-0.45, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0]
         }
         if self.table_type == 'long_table':
-            self.object_initial_pos['table'][0] = -0.90
+            self.object_initial_pos['table'][0] = -0.70
             self.object_initial_pos['block'][0] = -0.50
             self.object_initial_pos['block'][2] = 0.170
 
@@ -61,9 +61,8 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                                  render=render, image_observation=image_observation, goal_image=goal_image,
                                  seed=0, timestep=0.002, frame_skip=20)
         if self.table_type == 'long_table':
-            self.robot.object_bound_upper[0] = -0.55
-            self.robot.target_bound_lower[0] -= 0.5
-            self.robot.target_bound_upper[0] -= 0.5
+            self.robot.target_bound_lower[0] -= 0.4
+            self.robot.target_bound_upper[0] -= 0.4
 
     def task_reset(self):
         if not self.objects_urdf_loaded:
@@ -93,9 +92,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             if self.randomized_obj_pos:
                 end_effector_tip_initial_position = self.robot.end_effector_tip_initial_position.copy()
                 object_xy_1 = end_effector_tip_initial_position[:2]
-                object_xy_2 = end_effector_tip_initial_position[:2]
-                while (np.linalg.norm(object_xy_1 - end_effector_tip_initial_position[:2]) < 0.02) or \
-                        (np.linalg.norm(object_xy_1 - object_xy_2[:2]) < 0.02):
+                while np.linalg.norm(object_xy_1 - end_effector_tip_initial_position[:2]) < 0.1:
                     object_xy_1 = self.np_random.uniform(self.robot.object_bound_lower[:-1],
                                                          self.robot.object_bound_upper[:-1])
 
@@ -124,7 +121,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
         while True:
             self.desired_goal = self.np_random.uniform(self.robot.target_bound_lower,
                                                        self.robot.target_bound_upper)
-            if np.linalg.norm(self.desired_goal - center) > 0.02:
+            if np.linalg.norm(self.desired_goal - center) > 0.1:
                 break
 
         if not self.target_in_the_air:
