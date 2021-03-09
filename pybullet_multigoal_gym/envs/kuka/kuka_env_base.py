@@ -6,7 +6,7 @@ from pybullet_multigoal_gym.robots.kuka import Kuka
 
 class KukaBulletMGEnv(BaseBulletMGEnv):
     """
-    Base class for non-hierarchical multi-goal RL task with a Kuka iiwa 14 robot
+    Base class for the OpenAI multi-goal manipulation tasks with a Kuka iiwa 14 robot
     """
 
     def __init__(self, render=True, binary_reward=True,
@@ -209,7 +209,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
 
         if not self.image_observation:
             return {
-                'state': state.copy(),
+                'observation': state.copy(),
                 'policy_state': policy_state.copy(),
                 'achieved_goal': achieved_goal.copy(),
                 'desired_goal': self.desired_goal.copy(),
