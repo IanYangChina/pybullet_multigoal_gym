@@ -8,9 +8,7 @@ env = pmg.make_env(task='pick_and_place',
                    render=True,
                    binary_reward=True,
                    max_episode_steps=50,
-                   image_observation=False,
-                   depth_image=False,
-                   goal_image=False)
+                   image_observation=False)
 
 # env = pmg.make('KukaParallelGripBlockStackRenderSparseEnv-v0')
 obs = env.reset()

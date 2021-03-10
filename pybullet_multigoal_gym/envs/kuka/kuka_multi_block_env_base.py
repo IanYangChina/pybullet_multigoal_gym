@@ -10,9 +10,10 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
     """
 
     def __init__(self, render=True, binary_reward=True,
-                 image_observation=False, goal_image=False, depth_image=False,
-                 gripper_type='parallel_jaw', target_in_the_air=True,
-                 distance_threshold=0.05, grasping=False, randomized_obj_pos=True, obj_range=0.15, target_range=0.15):
+                 image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
+                 camera_setup=None, observation_cam_id=0, goal_cam_id=0,
+                 gripper_type='parallel_jaw', num_block=3, obj_range=0.15, target_range=0.15,
+                 distance_threshold=0.05, grasping=False, randomized_obj_pos=True):
         self.binary_reward = binary_reward
         self.image_observation = image_observation
         self.goal_image = goal_image
@@ -20,12 +21,14 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             self.render_mode = 'rgbd_array'
         else:
             self.render_mode = 'rgb_array'
-        self.visualize_target = True
+        self.visualize_target = visualize_target
+        self.observation_cam_id = observation_cam_id
+        self.goal_cam_id = goal_cam_id
 
-        self.target_in_the_air = target_in_the_air
         self.distance_threshold = distance_threshold
         self.grasping = grasping
         self.randomized_obj_pos = randomized_obj_pos
+        self.num_block = num_block
         self.obj_range = obj_range
         self.target_range = target_range
 
@@ -71,44 +74,56 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                                             end_effector_start_on_table=False,
                                             obj_range=self.obj_range, target_range=self.target_range),
                                  render=render, image_observation=image_observation, goal_image=goal_image,
+                                 camera_setup=camera_setup,
                                  seed=0, timestep=0.002, frame_skip=20)
 
     def task_reset(self):
         if not self.objects_urdf_loaded:
             self.objects_urdf_loaded = True
-            for object_name in self.object_bodies.keys():
-                self.object_bodies[object_name] = self._p.loadURDF(
-                    os.path.join(self.object_assets_path, object_name + ".urdf"),
-                    basePosition=self.object_initial_pos[object_name][:3],
-                    baseOrientation=self.object_initial_pos[object_name][3:])
-                if ('target' in object_name) and (not self.visualize_target):
-                    self.set_object_pose(self.object_bodies[object_name],
+            self.object_bodies['table'] = self._p.loadURDF(
+                os.path.join(self.object_assets_path, "table.urdf"),
+                basePosition=self.object_initial_pos['table'][:3],
+                baseOrientation=self.object_initial_pos['table'][3:])
+            for n in range(self.num_block):
+                block_name = self.block_keys[n]
+                self.object_bodies[block_name] = self._p.loadURDF(
+                    os.path.join(self.object_assets_path, block_name + ".urdf"),
+                    basePosition=self.object_initial_pos[block_name][:3],
+                    baseOrientation=self.object_initial_pos[block_name][3:])
+                target_name = self.target_keys[n]
+                self.object_bodies[target_name] = self._p.loadURDF(
+                    os.path.join(self.object_assets_path, target_name + ".urdf"),
+                    basePosition=self.object_initial_pos[target_name][:3],
+                    baseOrientation=self.object_initial_pos[target_name][3:])
+                if not self.visualize_target:
+                    self.set_object_pose(self.object_bodies[target_name],
                                          [0.0, 0.0, -3.0],
-                                         self.object_initial_pos[object_name][3:])
+                                         self.object_initial_pos[target_name][3:])
 
         block_poses = []
         if self.randomized_obj_pos:
             new_object_xy = self.np_random.uniform(self.robot.object_bound_lower[:-1],
                                                     self.robot.object_bound_upper[:-1])
             block_poses.append(np.concatenate((new_object_xy, [0.175])))
-            for _ in range(len(self.block_keys) - 1):
+            for _ in range(self.num_block - 1):
                 done = False
                 while not done:
                     new_object_xy = self.np_random.uniform(self.robot.object_bound_lower[:-1],
                                                            self.robot.object_bound_upper[:-1])
                     object_not_overlap = []
                     for pos in block_poses:
-                        object_not_overlap.append((np.linalg.norm(new_object_xy - pos[:-1]) > 0.03))
+                        object_not_overlap.append((np.linalg.norm(new_object_xy - pos[:-1]) > 0.1))
                     if all(object_not_overlap):
                         block_poses.append(np.concatenate((new_object_xy.copy(), [0.175])))
                         done = True
 
-            for i in range(len(self.block_keys)):
+            for i in range(self.num_block):
                 self.set_object_pose(self.object_bodies[self.block_keys[i]],
                                      block_poses[i],
                                      self.object_initial_pos[self.block_keys[i]][3:])
         else:
-            for object_name in self.block_keys:
+            for i in range(self.num_block):
+                object_name = self.block_keys[i]
                 self.set_object_pose(self.object_bodies[object_name],
                                      self.object_initial_pos[object_name][:3],
                                      self.object_initial_pos[object_name][3:])
@@ -122,7 +137,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         if self.grasping:
             # block stacking
             # generate a random order of blocks to be stacked
-            new_order = np.arange(len(self.block_keys), dtype=np.int)
+            new_order = np.arange(self.num_block, dtype=np.int)
             self.np_random.shuffle(new_order)
             new_order = new_order.tolist()
             # generate a random base block position
@@ -130,13 +145,14 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                                                      self.robot.target_bound_upper)
             # make sure the block is on the table surface
             base_target_xyz[-1] = 0.175
+            # generate the stacked target poses
             target_xyzs = [base_target_xyz]
-            for _ in range(len(self.block_keys) - 1):
+            for _ in range(self.num_block - 1):
                 next_target_xyz = base_target_xyz.copy()
                 next_target_xyz[-1] = 0.175 + self.block_size * (_ + 1)
                 target_xyzs.append(next_target_xyz.copy())
-
-            for _ in range(len(self.block_keys)):
+            # generate goal and set target poses according to the order
+            for _ in range(self.num_block):
                 desired_goal.append(target_xyzs[new_order.index(_)])
                 if self.visualize_target:
                     self.set_object_pose(self.object_bodies[self.target_keys[_]],
@@ -151,14 +167,14 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                 self.set_object_pose(self.object_bodies[self.target_keys[0]],
                                      desired_goal[-1],
                                      self.object_initial_pos[self.target_keys[0]][3:])
-            for _ in range(len(self.block_keys) - 1):
+            for _ in range(self.num_block - 1):
                 done = False
                 while not done:
                     new_target_xy = self.np_random.uniform(self.robot.target_bound_lower[:-1],
                                                            self.robot.target_bound_upper[:-1])
                     target_not_overlap = []
                     for pos in desired_goal:
-                        target_not_overlap.append((np.linalg.norm(new_target_xy - pos[:-1]) > 0.03))
+                        target_not_overlap.append((np.linalg.norm(new_target_xy - pos[:-1]) > 0.1))
                     if all(target_not_overlap):
                         desired_goal.append(np.concatenate((new_target_xy.copy(), [0.175])))
                         done = True
@@ -170,26 +186,40 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         self.desired_goal = np.concatenate(desired_goal)
 
     def _generate_goal_image(self, block_poses):
-        # PickAndPlace task
-        self.robot.set_finger_joint_state(self.robot.gripper_grasp_block_state)
-        target_gripper_pos = self.desired_goal[-3:].copy()
-        target_kuka_joint_pos = self.robot.compute_ik(self._p, target_gripper_pos)
-        self.robot.set_kuka_joint_state(target_kuka_joint_pos)
-
         target_obj_pos = self.desired_goal.copy()
-        for i in range(len(self.block_keys)):
-            self.set_object_pose(self.object_bodies[self.block_keys[i]],
-                                 target_obj_pos[i*3:i*3+2],
-                                 self.object_initial_pos[self.block_keys[i]][3:])
+        if self.grasping:
+            # block stacking
+            self.robot.set_finger_joint_state(self.robot.gripper_grasp_block_state)
+            target_gripper_pos = self.desired_goal[-3:].copy()
+            target_gripper_pos[-1] = 0.175 + self.block_size * (self.num_block-1)
+            target_kuka_joint_pos = self.robot.compute_ik(self._p, target_gripper_pos)
+            self.robot.set_kuka_joint_state(target_kuka_joint_pos)
 
-        self.desired_goal_image = self.render(mode=self.render_mode)
+            for i in range(self.num_block):
+                self.set_object_pose(self.object_bodies[self.block_keys[i]],
+                                     target_obj_pos[i*3:i*3+3],
+                                     self.object_initial_pos[self.block_keys[i]][3:])
 
-        for i in range(len(self.block_keys)):
-            self.set_object_pose(self.object_bodies[self.block_keys[i]],
-                                 block_poses[i],
-                                 self.object_initial_pos[self.block_keys[i]][3:])
-        self.robot.set_kuka_joint_state(self.robot.kuka_rest_pose, np.zeros(7))
-        self.robot.set_finger_joint_state(self.robot.gripper_abs_joint_limit)
+            self.desired_goal_image = self.render(mode=self.render_mode, camera_id=self.goal_cam_id)
+
+            for i in range(self.num_block):
+                self.set_object_pose(self.object_bodies[self.block_keys[i]],
+                                     block_poses[i],
+                                     self.object_initial_pos[self.block_keys[i]][3:])
+            self.robot.set_kuka_joint_state(self.robot.kuka_rest_pose, np.zeros(7))
+            self.robot.set_finger_joint_state(self.robot.gripper_abs_joint_limit)
+        else:
+            for i in range(self.num_block):
+                self.set_object_pose(self.object_bodies[self.block_keys[i]],
+                                     target_obj_pos[i*3:i*3+3],
+                                     self.object_initial_pos[self.block_keys[i]][3:])
+
+            self.desired_goal_image = self.render(mode=self.render_mode, camera_id=self.goal_cam_id)
+
+            for i in range(self.num_block):
+                self.set_object_pose(self.object_bodies[self.block_keys[i]],
+                                     block_poses[i],
+                                     self.object_initial_pos[self.block_keys[i]][3:])
 
     def _step_callback(self):
         pass
@@ -202,7 +232,8 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         block_states = []
         policy_block_states = []
         achieved_goal = []
-        for block_name in self.block_keys:
+        for n in range(self.num_block):
+            block_name = self.block_keys[n]
             block_xyz, block_rpy = self._p.getBasePositionAndOrientation(self.object_bodies[block_name])
             block_rel_xyz = gripper_xyz - np.array(block_xyz)
             block_vel_xyz, block_vel_rpy = self._p.getBaseVelocity(self.object_bodies[block_name])
@@ -234,14 +265,14 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             }
         elif not self.goal_image:
             return {
-                'observation': self.render(mode=self.render_mode),
+                'observation': self.render(mode=self.render_mode, camera_id=self.observation_cam_id),
                 'state': state.copy(),
                 'policy_state': policy_state.copy(),
                 'achieved_goal': achieved_goal.copy(),
                 'desired_goal': self.desired_goal.copy(),
             }
         else:
-            observation = self.render(mode=self.render_mode)
+            observation = self.render(mode=self.render_mode, camera_id=self.observation_cam_id)
             return {
                 'observation': observation.copy(),
                 'state': state.copy(),

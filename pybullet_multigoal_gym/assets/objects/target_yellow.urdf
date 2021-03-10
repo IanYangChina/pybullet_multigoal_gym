@@ -2,7 +2,7 @@
 
 <robot name="block_target">
     <material name="Yellow">
-        <color rgba="0 1 1 0.5"/>
+        <color rgba="1 1 0 0.5"/>
     </material>
     <!-- table -->
     <link name="block_target">

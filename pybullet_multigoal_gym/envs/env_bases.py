@@ -1,6 +1,7 @@
 import gym
 import numpy as np
 import pybullet
+import warnings
 from gym.utils import seeding
 from gym import spaces
 from pybullet_utils import bullet_client
@@ -11,7 +12,7 @@ class BaseBulletMGEnv(gym.Env):
     Base class for non-hierarchical multi-goal RL task, based on PyBullet and Gym.
     """
     def __init__(self, robot,
-                 render=False, image_observation=False, goal_image=False,
+                 render=False, image_observation=False, goal_image=False, camera_setup=None,
                  seed=0, gravity=9.81, timestep=0.002, frame_skip=20):
         self.robot = robot
 
@@ -24,17 +25,32 @@ class BaseBulletMGEnv(gym.Env):
         self._timestep = timestep
         self._frame_skip = frame_skip
 
+        # bullet client setup
         self.physicsClientId = -1
         self.ownsPhysicsClient = 0
         self._p = None
-        self._cam_dist = 1.2
-        self._cam_yaw = -90
-        self._cam_pitch = -30
-        self._render_width = 128
-        self._render_height = 128
+        # debug viewer camera
+        self._debug_cam_dist = 1.2
+        self._debug_cam_yaw = -90
+        self._debug_cam_pitch = -30
         self._num_solver_iterations = 5
         self._use_real_time_simulation = False
+        # configure client
         self.configure_bullet_client()
+        # observation camera setup
+        if camera_setup is None:
+            self.camera_setup = [{
+                'cameraEyePosition': [-1.0, 0.25, 0.6],
+                'cameraTargetPosition': [-0.6, 0.05, 0.2],
+                'cameraUpVector': [0, 0, 1],
+                'render_width': 128,
+                'render_height': 128
+            }]
+        else:
+            self.camera_setup = camera_setup
+        self.camera_matrices = self._get_camera_matrix()
+        self._render_width = 128
+        self._render_height = 128
 
         self.metadata = {
             'render.modes': ['human', 'rgb_array'],
@@ -97,20 +113,23 @@ class BaseBulletMGEnv(gym.Env):
         }
         return obs, reward, False, info
 
-    def render(self, mode="human"):
+    def render(self, mode="human", camera_id=0):
         if mode == "human":
-            self.isRender = True
+            warnings.warn("Users should not call env.render() with mode=\"human\" with pybullet backend."
+                          "Users should make the env instance with render=True if a GUI window is desired.")
         else:
-            view_matrix = self._p.computeViewMatrix(
-                cameraEyePosition=[-1.0, 0.25, 0.6],
-                cameraTargetPosition=[-0.6, 0.05, 0.2],
-                cameraUpVector=[0, 0, 1])
-            proj_matrix = self._p.computeProjectionMatrixFOV(
-                fov=60, aspect=float(self._render_width) / self._render_height,
-                nearVal=0.1, farVal=100.0)
+            # view_matrix = self._p.computeViewMatrix(
+            #     cameraEyePosition=[-1.0, 0.25, 0.6],
+            #     cameraTargetPosition=[-0.6, 0.05, 0.2],
+            #     cameraUpVector=[0, 0, 1])
+            # proj_matrix = self._p.computeProjectionMatrixFOV(
+            #     fov=60, aspect=float(self._render_width) / self._render_height,
+            #     nearVal=0.1, farVal=100.0)
             (_, _, px, depth, _) = self._p.getCameraImage(
-                width=self._render_width, height=self._render_height, viewMatrix=view_matrix,
-                projectionMatrix=proj_matrix,
+                width=self.camera_setup[camera_id]['render_width'],
+                height=self.camera_setup[camera_id]['render_height'],
+                viewMatrix=self.camera_matrices[camera_id]['view_matrix'],
+                projectionMatrix=self.camera_matrices[camera_id]['proj_matrix'],
                 renderer=pybullet.ER_BULLET_HARDWARE_OPENGL
             )
             rgb_array = px[:, :, :3]
@@ -140,13 +159,31 @@ class BaseBulletMGEnv(gym.Env):
                 self._p = bullet_client.BulletClient()
             self.physicsClientId = self._p._client
             self._p.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0, lightPosition=[0.0, 0.0, 4])
-            self._p.resetDebugVisualizerCamera(self._cam_dist, self._cam_yaw - 30, self._cam_pitch+10, [0, 0, 0.3])
+            self._p.resetDebugVisualizerCamera(self._debug_cam_dist,
+                                               self._debug_cam_yaw - 30,
+                                               self._debug_cam_pitch+10, [0, 0, 0.3])
             self._p.setGravity(0, 0, -self._gravity)
             self._p.setDefaultContactERP(0.9)
             self._p.setPhysicsEngineParameter(fixedTimeStep=self._timestep * self._frame_skip,
                                               numSolverIterations=self._num_solver_iterations,
                                               numSubSteps=self._frame_skip)
             self._p.setRealTimeSimulation(self._use_real_time_simulation)
+
+    def _get_camera_matrix(self):
+        cam_matrices = []
+        for cam_dict in self.camera_setup:
+            view_matrix = self._p.computeViewMatrix(
+                cameraEyePosition=cam_dict['cameraEyePosition'],
+                cameraTargetPosition=cam_dict['cameraTargetPosition'],
+                cameraUpVector=cam_dict['cameraUpVector'])
+            proj_matrix = self._p.computeProjectionMatrixFOV(
+                fov=60, aspect=float(cam_dict['render_width']) / cam_dict['render_height'],
+                nearVal=0.1, farVal=100.0)
+            cam_matrices.append({
+                'view_matrix': view_matrix,
+                'proj_matrix': proj_matrix,
+            })
+        return cam_matrices
 
     def task_reset(self):
         # method to override, purposed to task specific reset

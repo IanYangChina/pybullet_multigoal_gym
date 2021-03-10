@@ -2,7 +2,7 @@
 
 <robot name="block">
     <material name="Yellow">
-        <color rgba="0 1 1 1"/>
+        <color rgba="1 1 0 1"/>
     </material>
     <!-- block -->
     <link name="block">

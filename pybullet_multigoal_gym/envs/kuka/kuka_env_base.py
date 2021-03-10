@@ -10,9 +10,11 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
     """
 
     def __init__(self, render=True, binary_reward=True,
-                 image_observation=False, goal_image=False, depth_image=False, depth_only=False, gripper_type='parallel_jaw',
-                 table_type='table', target_in_the_air=True, end_effector_start_on_table=False,
-                 distance_threshold=0.05, grasping=False, has_obj=False, randomized_obj_pos=True, obj_range=0.15, target_range=0.15):
+                 image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
+                 camera_setup=None, observation_cam_id=0, goal_cam_id=0,
+                 gripper_type='parallel_jaw', table_type='table', obj_range=0.15, target_range=0.15,
+                 target_in_the_air=True, end_effector_start_on_table=False,
+                 distance_threshold=0.05, grasping=False, has_obj=False, randomized_obj_pos=True):
         self.binary_reward = binary_reward
         self.image_observation = image_observation
         self.goal_image = goal_image
@@ -20,9 +22,9 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             self.render_mode = 'rgbd_array'
         else:
             self.render_mode = 'rgb_array'
-        if depth_only:
-            self.render_mode = 'depth'
-        self.visualize_target = True
+        self.visualize_target = visualize_target
+        self.observation_cam_id = observation_cam_id
+        self.goal_cam_id = goal_cam_id
 
         self.table_type = table_type
         assert self.table_type in ['table', 'long_table']
@@ -59,6 +61,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                                             end_effector_start_on_table=end_effector_start_on_table,
                                             obj_range=self.obj_range, target_range=self.target_range),
                                  render=render, image_observation=image_observation, goal_image=goal_image,
+                                 camera_setup=camera_setup,
                                  seed=0, timestep=0.002, frame_skip=20)
         if self.table_type == 'long_table':
             self.robot.target_bound_lower[0] -= 0.4
@@ -86,6 +89,10 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                         os.path.join(self.object_assets_path, "block.urdf"),
                         basePosition=self.object_initial_pos['block'][:3],
                         baseOrientation=self.object_initial_pos['block'][3:])
+            if not self.visualize_target:
+                self.set_object_pose(self.object_bodies['target'],
+                                     [0.0, 0.0, -3.0],
+                                     self.object_initial_pos['target'][3:])
 
         object_xyz_1 = None
         if self.has_obj:
@@ -135,10 +142,6 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             self.set_object_pose(self.object_bodies['target'],
                                  self.desired_goal,
                                  self.object_initial_pos['target'][3:])
-        else:
-            self.set_object_pose(self.object_bodies['target'],
-                                 [0.0, 0.0, -3.0],
-                                 self.object_initial_pos['target'][3:])
 
     def _generate_goal_image(self, current_obj_pos=None):
         if current_obj_pos is None:
@@ -146,7 +149,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             target_gripper_pos = self.desired_goal.copy()
             target_kuka_joint_pos = self.robot.compute_ik(self._p, target_gripper_pos)
             self.robot.set_kuka_joint_state(target_kuka_joint_pos)
-            self.desired_goal_image = self.render(mode=self.render_mode)
+            self.desired_goal_image = self.render(mode=self.render_mode, camera_id=self.goal_cam_id)
             self.robot.set_kuka_joint_state(self.robot.kuka_rest_pose, np.zeros(7))
         elif not self.grasping:
             # Push task
@@ -155,7 +158,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             self.set_object_pose(self.object_bodies['block'],
                                  target_obj_pos,
                                  self.object_initial_pos['block'][3:])
-            self.desired_goal_image = self.render(mode=self.render_mode)
+            self.desired_goal_image = self.render(mode=self.render_mode, camera_id=self.goal_cam_id)
             self.set_object_pose(self.object_bodies['block'],
                                  original_obj_pos,
                                  self.object_initial_pos['block'][3:])
@@ -172,7 +175,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                                  target_obj_pos,
                                  self.object_initial_pos['block'][3:])
 
-            self.desired_goal_image = self.render(mode=self.render_mode)
+            self.desired_goal_image = self.render(mode=self.render_mode, camera_id=self.goal_cam_id)
 
             self.set_object_pose(self.object_bodies['block'],
                                  original_obj_pos,
@@ -213,14 +216,14 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             }
         elif not self.goal_image:
             return {
-                'observation': self.render(mode=self.render_mode),
+                'observation': self.render(mode=self.render_mode, camera_id=self.observation_cam_id),
                 'state': state.copy(),
                 'policy_state': policy_state.copy(),
                 'achieved_goal': achieved_goal.copy(),
                 'desired_goal': self.desired_goal.copy(),
             }
         else:
-            observation = self.render(mode=self.render_mode)
+            observation = self.render(mode=self.render_mode, camera_id=self.observation_cam_id)
             return {
                 'observation': observation.copy(),
                 'state': state.copy(),
