@@ -227,7 +227,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
 
         if not self.image_observation:
             return {
-                'state': state.copy(),
+                'observation': state.copy(),
                 'policy_state': policy_state.copy(),
                 'achieved_goal': achieved_goal.copy(),
                 'desired_goal': self.desired_goal.copy(),
