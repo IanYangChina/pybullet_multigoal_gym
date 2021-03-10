@@ -1,4 +1,4 @@
-from gym.envs.registration import register, make
+from gym.envs.registration import register, make, registry
 ids = []
 # multi-goal envs
 renders = [True, False]
@@ -43,7 +43,7 @@ def print_id():
 def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, binary_reward=True, max_episode_steps=50,
              image_observation=False, depth_image=False, goal_image=False, visualize_target=True,
              camera_setup=None, observation_cam_id=0, goal_cam_id=0):
-    tasks = ['push', 'reach', 'slide', 'pick_and_place', 'block_stack', 'block_rearrange']
+    tasks = ['push', 'reach', 'slide', 'pick_and_place', 'block_stack', 'block_rearrange', 'chest_pick_and_place']
     grippers = ['robotiq85', 'parallel_jaw']
     assert gripper in grippers, 'invalid gripper: {}, only support: {}'.format(gripper, grippers)
     if task == 'reach':
@@ -65,6 +65,9 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
     elif task == 'block_rearrange':
         task_tag = 'BlockRearrangeEnv'
         entry = 'pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaBlockRearrangeEnv'
+    elif task == 'chest_pick_and_place':
+        task_tag = 'ChestPickAndPlace'
+        entry = 'pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaChestPickAndPlaceEnv'
     else:
         raise ValueError('invalid task name: {}, only support: {}'.format(task, tasks))
     env_id = 'Kuka' + task_tag
@@ -94,45 +97,47 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
             print('Using default camera for observation and goal image')
     env_id += '-v0'
     print('Task id: %s' % env_id)
-    # register and make env instance
-    if task in ['push', 'reach', 'slide', 'pick_and_place']:
-        register(
-                id=env_id,
-                entry_point=entry,
-                kwargs={
-                    'render': render,
-                    'binary_reward': binary_reward,
-                    'image_observation': image_observation,
-                    'depth_image': depth_image,
-                    'goal_image': goal_image,
-                    'visualize_target': visualize_target,
-                    'camera_setup': camera_setup,
-                    'observation_cam_id': observation_cam_id,
-                    'goal_cam_id': goal_cam_id,
-                    'gripper_type': gripper,
-                },
-                max_episode_steps=max_episode_steps,
-            )
-    else:
-        assert num_block >= 2, "need at least 2 blocks"
-        assert num_block <= 5, "only support up to 5 blocks"
-        register(
-                id=env_id,
-                entry_point=entry,
-                kwargs={
-                    'render': render,
-                    'binary_reward': binary_reward,
-                    'image_observation': image_observation,
-                    'depth_image': depth_image,
-                    'goal_image': goal_image,
-                    'visualize_target': visualize_target,
-                    'camera_setup': camera_setup,
-                    'observation_cam_id': observation_cam_id,
-                    'goal_cam_id': goal_cam_id,
-                    'gripper_type': gripper,
-                    'num_block': num_block
-                },
-                max_episode_steps=max_episode_steps,
-            )
+    if env_id not in registry.env_specs:
+        # register and make env instance
+        if task in ['push', 'reach', 'slide', 'pick_and_place']:
+            register(
+                    id=env_id,
+                    entry_point=entry,
+                    kwargs={
+                        'render': render,
+                        'binary_reward': binary_reward,
+                        'image_observation': image_observation,
+                        'depth_image': depth_image,
+                        'goal_image': goal_image,
+                        'visualize_target': visualize_target,
+                        'camera_setup': camera_setup,
+                        'observation_cam_id': observation_cam_id,
+                        'goal_cam_id': goal_cam_id,
+                        'gripper_type': gripper,
+                    },
+                    max_episode_steps=max_episode_steps,
+                )
+        else:
+            if task == 'block_stack':
+                assert num_block >= 2, "need at least 2 blocks to stack"
+            assert num_block <= 5, "only support up to 5 blocks"
+            register(
+                    id=env_id,
+                    entry_point=entry,
+                    kwargs={
+                        'render': render,
+                        'binary_reward': binary_reward,
+                        'image_observation': image_observation,
+                        'depth_image': depth_image,
+                        'goal_image': goal_image,
+                        'visualize_target': visualize_target,
+                        'camera_setup': camera_setup,
+                        'observation_cam_id': observation_cam_id,
+                        'goal_cam_id': goal_cam_id,
+                        'gripper_type': gripper,
+                        'num_block': num_block
+                    },
+                    max_episode_steps=max_episode_steps,
+                )
 
     return make(env_id)

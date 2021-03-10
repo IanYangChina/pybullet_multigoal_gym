@@ -55,17 +55,20 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
 
         self.desired_goal = None
         self.desired_goal_image = None
-        BaseBulletMGEnv.__init__(self,
-                                 robot=Kuka(grasping=grasping,
-                                            gripper_type=gripper_type,
-                                            end_effector_start_on_table=end_effector_start_on_table,
-                                            obj_range=self.obj_range, target_range=self.target_range),
-                                 render=render, image_observation=image_observation, goal_image=goal_image,
+
+        robot = Kuka(grasping=grasping,
+                     gripper_type=gripper_type,
+                     end_effector_start_on_table=end_effector_start_on_table,
+                     obj_range=self.obj_range, target_range=self.target_range)
+        if self.table_type == 'long_table':
+            # target range for slide task
+            robot.target_bound_lower[0] -= 0.4
+            robot.target_bound_upper[0] -= 0.4
+
+        BaseBulletMGEnv.__init__(self, robot=robot, render=render,
+                                 image_observation=image_observation, goal_image=goal_image,
                                  camera_setup=camera_setup,
                                  seed=0, timestep=0.002, frame_skip=20)
-        if self.table_type == 'long_table':
-            self.robot.target_bound_lower[0] -= 0.4
-            self.robot.target_bound_upper[0] -= 0.4
 
     def task_reset(self):
         if not self.objects_urdf_loaded:

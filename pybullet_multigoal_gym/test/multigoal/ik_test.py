@@ -5,6 +5,7 @@ import math
 from datetime import datetime
 import pybullet_data
 import numpy as np
+
 cwd = os.getcwd()
 
 
@@ -34,6 +35,10 @@ model_path = os.path.join(cwd, '..', '..', 'assets', 'robots', 'kuka', 'iiwa14_p
 kukaId = p.loadURDF(model_path, [0, 0, 0])
 p.loadURDF(os.path.join(cwd, '..', '..', 'assets', 'objects', 'table.urdf'),
            [-0.4, 0.0, 0.08])
+p.loadURDF(os.path.join(cwd, '..', '..', 'assets', 'objects', 'chest.urdf'),
+           [-0.58, 0.18, 0.21], flags=p.URDF_USE_SELF_COLLISION)
+p.loadURDF(os.path.join(cwd, '..', '..', 'assets', 'objects', 'chest.urdf'),
+           [-0.58, -0.18, 0.21], flags=p.URDF_USE_SELF_COLLISION)
 p.loadURDF(os.path.join(cwd, '..', '..', 'assets', 'objects', 'block.urdf'),
            [-0.415, 0.0, 0.18])
 p.resetBasePositionAndOrientation(kukaId, [0, 0, 0], [0, 0, 0, 1])
@@ -58,8 +63,15 @@ rp = [0, -0.52563, 0, 2.09435, 0, -0.495188, 0]
 # joint damping coefficents
 jd = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
 
+orn = p.getQuaternionFromEuler([0, -math.pi, 0])
+start_pos = [-0.33, 0.2, 0.26]
+jointPoses = p.calculateInverseKinematics(kukaId, kukaEndEffectorIndex,
+                                          start_pos, orn, ll, ul, jr, rp,
+                                          maxNumIterations=40,
+                                          residualThreshold=0.00001)
+
 for i in range(numJoints):
-    p.resetJointState(kukaId, jointIndex[i], rp[i])
+    p.resetJointState(kukaId, jointIndex[i], jointPoses[i])
 
 """
 12 iiwa_gripper_finger1_joint
@@ -86,11 +98,9 @@ p.setPhysicsEngineParameter(fixedTimeStep=0.002 * 20, numSolverIterations=5, num
 
 i = 0
 mp = 1
-g = 0.022
+g = 0.03
 start_time = time.process_time()
-# 25 simulation_steps = 1 seconds
-z = 0.17
-while z < 0.8:
+while True:
     time.sleep(0.05)
     p.stepSimulation()
 
@@ -99,8 +109,14 @@ while z < 0.8:
     # a = np.random.uniform(-grip_ctrl_bound, grip_ctrl_bound)
     # de-normalized gripper ctrl signal
     # g = (a+grip_ctrl_bound) * 0.4
-    z += 0.001 * i
-    pos = [-0.4, 0.0, z]
+
+    pos = start_pos
+    # pos[0] -= 0.00002 * i
+    # last_z = pos[2]
+    # pos[2] += 0.00002 * i
+    # if pos[2] >= 0.5:
+    #     pos[2] = last_z
+
     state, _ = get_state(p, kukaId, [1, 2, 3, 4, 5, 6, 7, 8])
     (x, y, z), (a, b, c, d), _, _, _, _ = p.getLinkState(kukaId, 8)
     i += 1
@@ -108,7 +124,9 @@ while z < 0.8:
     orn = p.getQuaternionFromEuler([0, -math.pi, 0])
 
     jointPoses = p.calculateInverseKinematics(kukaId, kukaEndEffectorIndex,
-                                              pos, orn, ll, ul, jr, rp)
+                                              pos, orn, ll, ul, jr, rp,
+                                              maxNumIterations=40,
+                                              residualThreshold=0.00001)
 
     p.setJointMotorControlArray(bodyUniqueId=kukaId,
                                 jointIndices=[1, 2, 3, 4, 5, 6, 7],
@@ -123,7 +141,7 @@ while z < 0.8:
     p.setJointMotorControlArray(bodyUniqueId=kukaId,
                                 jointIndices=gripper_joint_index,
                                 controlMode=p.POSITION_CONTROL,
-                                targetPositions=g*gripper_ctrl_multiplier,
+                                targetPositions=g * gripper_ctrl_multiplier,
                                 targetVelocities=np.zeros((2,)),
                                 forces=np.ones((2,)) * 500,
                                 positionGains=np.ones((2,)) * 0.03,

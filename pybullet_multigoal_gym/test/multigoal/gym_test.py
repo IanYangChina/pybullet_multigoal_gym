@@ -3,7 +3,7 @@ import numpy as np
 import time
 import pybullet_multigoal_gym as pmg
 
-env = pmg.make_env(task='pick_and_place',
+env = pmg.make_env(task='chest_pick_and_place',
                    gripper='parallel_jaw',
                    render=True,
                    binary_reward=True,
