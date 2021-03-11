@@ -122,7 +122,7 @@ while True:
 
 <img src="src/HERBenchmark.png" width="800"/>
 
-<img src="/src/MultiBlockTasks.gif" width="800"/>
+<img src="/src/MultiStepBenchmark.png" width="800"/>
 
 ### Updates
 
