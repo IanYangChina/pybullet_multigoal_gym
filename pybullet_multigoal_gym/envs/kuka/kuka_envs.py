@@ -98,5 +98,19 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                                          visualize_target=visualize_target,
                                          camera_setup=camera_setup, observation_cam_id=observation_cam_id, goal_cam_id=goal_cam_id,
                                          gripper_type=gripper_type,
-                                         num_block=num_block, grasping=True, chest=True,
+                                         num_block=num_block, grasping=True, chest=True, chest_door='up_sliding',
+                                         obj_range=0.1)
+
+
+class KukaChestPushEnv(KukaBulletMultiBlockEnv):
+    def __init__(self, render=True, binary_reward=True,
+                 image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
+                 camera_setup=None, observation_cam_id=0, goal_cam_id=0,
+                 gripper_type='parallel_jaw', num_block=5):
+        KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward,
+                                         image_observation=image_observation, goal_image=goal_image, depth_image=depth_image,
+                                         visualize_target=visualize_target,
+                                         camera_setup=camera_setup, observation_cam_id=observation_cam_id, goal_cam_id=goal_cam_id,
+                                         gripper_type=gripper_type,
+                                         num_block=num_block, grasping=False, chest=True, chest_door='front_sliding',
                                          obj_range=0.1)

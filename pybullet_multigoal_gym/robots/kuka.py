@@ -8,13 +8,14 @@ class Kuka(URDFBasedRobot):
                  obj_range=0.15, target_range=0.15):
         self.gripper_type = gripper_type
         if self.gripper_type == 'robotiq85':
-            model_urdf = 'kuka/iiwa14_robotiq85.urdf'
+            model_urdf = 'robots/kuka/iiwa14_robotiq85.urdf'
         else:
-            model_urdf = 'kuka/iiwa14_parallel_jaw.urdf'
+            model_urdf = 'robots/kuka/iiwa14_parallel_jaw.urdf'
         URDFBasedRobot.__init__(self,
                                 model_urdf=model_urdf,
                                 robot_name='iiwa14',
-                                self_collision=False)
+                                self_collision=False,
+                                fixed_base=True)
         self.kuka_body_index = None
         self.kuka_joint_index = None
         # initial robot joint states

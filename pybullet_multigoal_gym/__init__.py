@@ -43,7 +43,8 @@ def print_id():
 def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, binary_reward=True, max_episode_steps=50,
              image_observation=False, depth_image=False, goal_image=False, visualize_target=True,
              camera_setup=None, observation_cam_id=0, goal_cam_id=0):
-    tasks = ['push', 'reach', 'slide', 'pick_and_place', 'block_stack', 'block_rearrange', 'chest_pick_and_place']
+    tasks = ['push', 'reach', 'slide', 'pick_and_place',
+             'block_stack', 'block_rearrange', 'chest_pick_and_place', 'chest_push']
     grippers = ['robotiq85', 'parallel_jaw']
     assert gripper in grippers, 'invalid gripper: {}, only support: {}'.format(gripper, grippers)
     if task == 'reach':
@@ -68,6 +69,9 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
     elif task == 'chest_pick_and_place':
         task_tag = 'ChestPickAndPlace'
         entry = 'pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaChestPickAndPlaceEnv'
+    elif task == 'chest_push':
+        task_tag = 'ChestPush'
+        entry = 'pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaChestPushEnv'
     else:
         raise ValueError('invalid task name: {}, only support: {}'.format(task, tasks))
     env_id = 'Kuka' + task_tag

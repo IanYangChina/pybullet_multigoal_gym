@@ -2,7 +2,7 @@ import numpy as np
 import os
 
 
-class XmlBasedRobot:
+class XmlBasedRobot(object):
     """Base class for .xml based agents."""
 
     def __init__(self, robot_name, self_collision=True):
@@ -49,7 +49,7 @@ class URDFBasedRobot(XmlBasedRobot):
         p = bullet_client
         # load urdf if it's the first time that reset() gets called
         if not self.robot_urdf_loaded:
-            full_path = os.path.join(os.path.dirname(__file__), "..", "assets", "robots", self.model_urdf)
+            full_path = os.path.join(os.path.dirname(__file__), "..", "assets", self.model_urdf)
             self.robot_urdf_loaded = True
             if self.self_collision:
                 self.addToScene(p, p.loadURDF(full_path,

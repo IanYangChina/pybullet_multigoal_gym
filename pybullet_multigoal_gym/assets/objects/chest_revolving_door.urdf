@@ -1,0 +1,257 @@
+<?xml version="1.0" ?>
+
+<robot name="chest">
+    <material name="Body">
+        <color rgba="0.8 0.5 0.3 1.0"/>
+    </material>
+    <material name="Door">
+        <color rgba="0.3 0.3 0.3 1.0"/>
+    </material>
+    <material name="KeyPoint">
+        <color rgba="0 1 0 0.3"/>
+    </material>
+
+    <link name="chest_back_wall">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0"/>
+            <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.01 0.14 0.10"/>
+            </geometry>
+            <material name="Body"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.01 0.14 0.10"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="chest_back_front_wall_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0.10 0.0 0"/>
+        <parent link="chest_back_wall"/>
+        <child link="chest_front_wall"/>
+    </joint>
+    <link name="chest_front_wall">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0"/>
+            <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.01 0.14 0.10"/>
+            </geometry>
+            <material name="Body"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.01 0.14 0.10"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="chest_back_left_wall_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0.05 0.065 0"/>
+        <parent link="chest_back_wall"/>
+        <child link="chest_left_wall"/>
+    </joint>
+    <link name="chest_left_wall">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0"/>
+            <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.09 0.01 0.10"/>
+            </geometry>
+            <material name="Body"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.09 0.01 0.10"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="chest_back_right_wall_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0.05 -0.065 0.0"/>
+        <parent link="chest_back_wall"/>
+        <child link="chest_right_wall"/>
+    </joint>
+    <link name="chest_right_wall">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0"/>
+            <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.09 0.01 0.10"/>
+            </geometry>
+            <material name="Body"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.09 0.01 0.10"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="chest_back_wall_bearing_joint" type="revolute">
+        <origin rpy="1.57 0 0" xyz="0.0 0.0 0.055"/>
+        <parent link="chest_back_wall"/>
+        <child link="chest_door_bearing"/>
+        <axis xyz="0 0 1"/>
+        <limit effort="200" lower="0.0" upper="1.57" velocity="10"/>
+    </joint>
+    <link name="chest_door_bearing">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="1"/>
+            <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.005" length="0.14"/>
+            </geometry>
+            <material name="Body"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.005" length="0.14"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="chest_door_bearing_joint" type="fixed">
+        <origin rpy="-1.57 0 0" xyz="0.055 0.0 0.0"/>
+        <parent link="chest_door_bearing"/>
+        <child link="chest_door"/>
+    </joint>
+    <link name="chest_door">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="2"/>
+            <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.10 0.14 0.01"/>
+            </geometry>
+            <material name="Door"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.10 0.14 0.01"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="chest_door_left_keypoint_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0.05 0.07 0.0"/>
+        <parent link="chest_door"/>
+        <child link="chest_door_left_keypoint"/>
+    </joint>
+    <link name="chest_door_left_keypoint">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0.0"/>
+            <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <sphere radius="0.005"/>
+            </geometry>
+            <material name="KeyPoint"/>
+        </visual>
+    </link>
+    <joint name="chest_door_right_keypoint_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0.05 -0.07 0.0"/>
+        <parent link="chest_door"/>
+        <child link="chest_door_right_keypoint"/>
+    </joint>
+    <link name="chest_door_right_keypoint">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0.0"/>
+            <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <sphere radius="0.005"/>
+            </geometry>
+            <material name="KeyPoint"/>
+        </visual>
+    </link>
+
+    <joint name="chest_door_handle_joint" type="fixed">
+        <origin rpy="0 1.57 0" xyz="0.085    0.0 0.0"/>
+        <parent link="chest_door"/>
+        <child link="chest_door_handle"/>
+    </joint>
+    <link name="chest_door_handle">
+        <contact>
+            <lateral_friction value="1.0"/>
+            <rolling_friction value="0.0"/>
+            <inertia_scaling value="3.0"/>
+            <contact_cfm value="0.0"/>
+            <contact_erp value="1.0"/>
+        </contact>
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="2"/>
+            <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.005" length="0.07"/>
+            </geometry>
+            <material name="Door"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.005" length="0.08"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="chest_door_handle_keypoint_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0.0 0.0 0.035"/>
+        <parent link="chest_door_handle"/>
+        <child link="chest_door_handle_keypoint"/>
+    </joint>
+    <link name="chest_door_handle_keypoint">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0.0"/>
+            <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <sphere radius="0.005"/>
+            </geometry>
+            <material name="KeyPoint"/>
+        </visual>
+    </link>
+</robot>

@@ -2,6 +2,7 @@ import os
 import numpy as np
 from pybullet_multigoal_gym.envs.env_bases import BaseBulletMGEnv
 from pybullet_multigoal_gym.robots.kuka import Kuka
+from pybullet_multigoal_gym.robots.chest import Chest
 
 
 class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
@@ -13,7 +14,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                  image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
                  camera_setup=None, observation_cam_id=0, goal_cam_id=0,
                  gripper_type='parallel_jaw',
-                 num_block=3, grasping=False, chest=False,
+                 num_block=3, grasping=False, chest=False, chest_door='front_sliding',
                  obj_range=0.15, target_range=0.15,
                  distance_threshold=0.05, randomized_obj_pos=True):
         self.binary_reward = binary_reward
@@ -53,8 +54,8 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         }
         self.object_initial_pos = {
             'table': [-0.45, 0.0, 0.08, 0.0, 0.0, 0.0, 1.0],
-            'chest': [-0.65, 0.0, 0.21, 0.0, 0.0, 0.0, 1.0],
-            'target_chest': [-0.65, 0.18, 0.21, 0.0, 0.0, 0.0, 1.0],
+            'chest': [-0.625, 0.0, 0.21, 0.0, 0.0, 0.0, 1.0],
+            'target_chest': [-0.625, 0.18, 0.175, 0.0, 0.0, 0.0, 1.0],
 
             'block_blue': [-0.45, 0.0, 0.175, 0.0, 0.0, 0.0, 1.0],
             'block_green': [-0.45, 0.08, 0.175, 0.0, 0.0, 0.0, 1.0],
@@ -80,6 +81,8 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                      end_effector_start_on_table=False,
                      obj_range=self.obj_range, target_range=self.target_range)
         if self.chest:
+            self.chest_robot = Chest(base_position=self.object_initial_pos['chest'][:3],
+                                     door=chest_door, rest_door_state=0.0)
             self.distance_threshold = 0.08
             self.chest_pos_y_range = 0.15
             robot.object_bound_lower[0] += 0.05
@@ -100,10 +103,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                 basePosition=self.object_initial_pos['table'][:3],
                 baseOrientation=self.object_initial_pos['table'][3:])
             if self.chest:
-                self.object_bodies['chest'] = self._p.loadURDF(
-                    os.path.join(self.object_assets_path, "chest.urdf"),
-                    basePosition=self.object_initial_pos['chest'][:3],
-                    baseOrientation=self.object_initial_pos['chest'][3:])
+                self.chest_robot.reset(bullet_client=self._p)
                 self.object_bodies['target_chest'] = self._p.loadURDF(
                     os.path.join(self.object_assets_path, 'target_chest' + ".urdf"),
                     basePosition=self.object_initial_pos['target_chest'][:3],
@@ -159,12 +159,11 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                                      self.object_initial_pos[object_name][3:])
 
         if self.chest:
+            self.chest_robot.robot_specific_reset(self._p)
             new_y = self.np_random.uniform(-self.chest_pos_y_range, self.chest_pos_y_range)
             chest_xyz = self.object_initial_pos['chest'][:3].copy()
             chest_xyz[1] = new_y
-            self.set_object_pose(self.object_bodies['chest'],
-                                 chest_xyz,
-                                 self.object_initial_pos['chest'][3:])
+            self.chest_robot.set_base_pos(self._p, position=chest_xyz)
 
         self._generate_goal()
         if self.goal_image:
@@ -174,9 +173,10 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         desired_goal = []
         if self.chest:
             # chest pick and place
-            chest_center_xyz, _ = self._p.getBasePositionAndOrientation(self.object_bodies['chest'])
+            chest_center_xyz, _ = self.chest_robot.get_base_pos(self._p)
             chest_center_xyz = np.array(chest_center_xyz)
             chest_center_xyz[0] += 0.05
+            chest_center_xyz[2] = 0.175
             if self.visualize_target:
                 self.set_object_pose(self.object_bodies['target_chest'],
                                      chest_center_xyz,
@@ -233,7 +233,9 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
 
     def _generate_goal_image(self, block_poses):
         target_obj_pos = self.desired_goal.copy()
-        if self.grasping:
+        if self.chest:
+            self.desired_goal_image = self.render(mode=self.render_mode, camera_id=self.goal_cam_id)
+        elif self.grasping:
             # block stacking
             self.robot.set_finger_joint_state(self.robot.gripper_grasp_block_state)
             target_gripper_pos = self.desired_goal[-3:].copy()
@@ -299,7 +301,8 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         policy_state = [gripper_xyz, gripper_finger_closeness] + policy_block_states
 
         if self.chest:
-            pass
+            door_joint_pos, door_joint_vel, keypoint_state = self.chest_robot.calc_robot_state()
+            state = state + [[door_joint_pos], [door_joint_vel]] + keypoint_state
 
         state = np.concatenate(state)
         policy_state = np.concatenate(policy_state)
