@@ -1,7 +1,7 @@
 import numpy as np
 from copy import deepcopy as dcp
 from pybullet_multigoal_gym.utils.demonstrator import StepDemonstrator
-from pybullet_multigoal_gym.envs.kuka.kuka_hierarchical_env_base import HierarchicalKukaBulletMGEnv
+from pybullet_multigoal_gym.envs.base_envs.kuka_hierarchical_base_env import HierarchicalKukaBulletMGEnv
 
 
 class HierarchicalKukaPickAndPlaceEnv(HierarchicalKukaBulletMGEnv):

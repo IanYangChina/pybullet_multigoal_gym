@@ -42,36 +42,37 @@ def print_id():
 
 def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, binary_reward=True, max_episode_steps=50,
              image_observation=False, depth_image=False, goal_image=False, visualize_target=True,
-             camera_setup=None, observation_cam_id=0, goal_cam_id=0):
+             camera_setup=None, observation_cam_id=0, goal_cam_id=0,
+             use_curriculum=False, num_goals_to_generate=1e6):
     tasks = ['push', 'reach', 'slide', 'pick_and_place',
              'block_stack', 'block_rearrange', 'chest_pick_and_place', 'chest_push']
     grippers = ['robotiq85', 'parallel_jaw']
     assert gripper in grippers, 'invalid gripper: {}, only support: {}'.format(gripper, grippers)
     if task == 'reach':
         task_tag = 'Reach'
-        entry = 'pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaReachEnv'
+        entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_single_step_envs:KukaReachEnv'
     elif task == 'push':
         task_tag = 'Push'
-        entry = 'pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaPushEnv'
+        entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_single_step_envs:KukaPushEnv'
     elif task == 'pick_and_place':
         task_tag = 'PickAndPlace'
-        entry = 'pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaPickAndPlaceEnv'
+        entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_single_step_envs:KukaPickAndPlaceEnv'
     elif task == 'slide':
         task_tag = 'Slide'
         image_observation = depth_image = goal_image = False
-        entry = 'pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaSlideEnv'
+        entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_single_step_envs:KukaSlideEnv'
     elif task == 'block_stack':
         task_tag = 'BlockStack'
-        entry = 'pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaBlockStackEnv'
+        entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_multi_step_envs:KukaBlockStackEnv'
     elif task == 'block_rearrange':
         task_tag = 'BlockRearrangeEnv'
-        entry = 'pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaBlockRearrangeEnv'
+        entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_multi_step_envs:KukaBlockRearrangeEnv'
     elif task == 'chest_pick_and_place':
         task_tag = 'ChestPickAndPlace'
-        entry = 'pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaChestPickAndPlaceEnv'
+        entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_multi_step_envs:KukaChestPickAndPlaceEnv'
     elif task == 'chest_push':
         task_tag = 'ChestPush'
-        entry = 'pybullet_multigoal_gym.envs.kuka.kuka_envs:KukaChestPushEnv'
+        entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_multi_step_envs:KukaChestPushEnv'
     else:
         raise ValueError('invalid task name: {}, only support: {}'.format(task, tasks))
     env_id = 'Kuka' + task_tag
@@ -139,7 +140,9 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
                         'observation_cam_id': observation_cam_id,
                         'goal_cam_id': goal_cam_id,
                         'gripper_type': gripper,
-                        'num_block': num_block
+                        'num_block': num_block,
+                        'use_curriculum': use_curriculum,
+                        'num_goals_to_generate': int(num_goals_to_generate)
                     },
                     max_episode_steps=max_episode_steps,
                 )

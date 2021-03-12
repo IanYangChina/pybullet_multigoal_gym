@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from pybullet_multigoal_gym.envs.env_bases import BaseBulletMGEnv
+from pybullet_multigoal_gym.envs.base_envs.base_env import BaseBulletMGEnv
 from pybullet_multigoal_gym.robots.kuka import Kuka
 from pybullet_multigoal_gym.robots.chest import Chest
 
@@ -15,8 +15,8 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                  camera_setup=None, observation_cam_id=0, goal_cam_id=0,
                  gripper_type='parallel_jaw',
                  num_block=3, grasping=False, chest=False, chest_door='front_sliding',
-                 obj_range=0.15, target_range=0.15,
-                 distance_threshold=0.05, randomized_obj_pos=True):
+                 obj_range=0.15, target_range=0.15, distance_threshold=0.05,
+                 use_curriculum=False, num_curriculum=5, base_curriculum_episode_steps=50, num_goals_to_generate=1e5):
         self.binary_reward = binary_reward
         self.image_observation = image_observation
         self.goal_image = goal_image
@@ -34,7 +34,6 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         self.obj_range = obj_range
         self.target_range = target_range
         self.distance_threshold = distance_threshold
-        self.randomized_obj_pos = randomized_obj_pos
 
         self.object_assets_path = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "objects")
         self.objects_urdf_loaded = False
@@ -53,21 +52,21 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             'target_yellow': None
         }
         self.object_initial_pos = {
-            'table': [-0.45, 0.0, 0.08, 0.0, 0.0, 0.0, 1.0],
-            'chest': [-0.625, 0.0, 0.21, 0.0, 0.0, 0.0, 1.0],
-            'target_chest': [-0.625, 0.18, 0.175, 0.0, 0.0, 0.0, 1.0],
+            'table': [-0.52, 0.0, 0.08, 0.0, 0.0, 0.0, 1.0],
+            'chest': [-0.695, 0.0, 0.21, 0.0, 0.0, 0.0, 1.0],
+            'target_chest': [-0.695, 0.18, 0.175, 0.0, 0.0, 0.0, 1.0],
 
-            'block_blue': [-0.45, 0.0, 0.175, 0.0, 0.0, 0.0, 1.0],
-            'block_green': [-0.45, 0.08, 0.175, 0.0, 0.0, 0.0, 1.0],
-            'block_purple': [-0.45, 0.16, 0.175, 0.0, 0.0, 0.0, 1.0],
-            'block_red': [-0.45, -0.08, 0.175, 0.0, 0.0, 0.0, 1.0],
-            'block_yellow': [-0.45, -0.16, 0.175, 0.0, 0.0, 0.0, 1.0],
+            'block_blue': [-0.52, 0.0, 0.175, 0.0, 0.0, 0.0, 1.0],
+            'block_green': [-0.52, 0.08, 0.175, 0.0, 0.0, 0.0, 1.0],
+            'block_purple': [-0.52, 0.16, 0.175, 0.0, 0.0, 0.0, 1.0],
+            'block_red': [-0.52, -0.08, 0.175, 0.0, 0.0, 0.0, 1.0],
+            'block_yellow': [-0.52, -0.16, 0.175, 0.0, 0.0, 0.0, 1.0],
 
-            'target_blue': [-0.45, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
-            'target_green': [-0.45, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
-            'target_purple': [-0.45, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
-            'target_red': [-0.45, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
-            'target_yellow': [-0.45, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
+            'target_blue': [-0.52, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
+            'target_green': [-0.52, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
+            'target_purple': [-0.52, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
+            'target_red': [-0.52, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
+            'target_yellow': [-0.52, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0],
         }
         self.block_size = 0.03
         self.block_keys = ['block_blue', 'block_green', 'block_purple', 'block_red', 'block_yellow']
@@ -90,13 +89,28 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             robot.object_bound_lower[1] -= 0.05
             robot.object_bound_upper[1] += 0.05
 
+        self.curriculum = use_curriculum
+        self.curriculum_update = True
+        self.num_curriculum = num_curriculum
+        # start with the easiest goal being the only possible goal
+        self.curriculum_prob = np.concatenate([[1.0], np.zeros(self.num_curriculum-1)])
+        self.base_curriculum_episode_steps = base_curriculum_episode_steps
+        # the number of episode steps increases as goals become harder to achieve
+        self.curriculum_goal_step = 0 * 25 + self.base_curriculum_episode_steps
+        # the number of goals to generate for each curriculum
+        #       commonly equal to the total number of episodes / the number of curriculum
+        self.num_goals_per_curriculum = num_goals_to_generate / self.num_curriculum
+        # record the number of generated goals per curriculum
+        self.num_generated_goals_per_curriculum = np.zeros(self.num_curriculum)
+
         BaseBulletMGEnv.__init__(self, robot=robot, render=render,
                                  image_observation=image_observation, goal_image=goal_image,
                                  camera_setup=camera_setup,
                                  seed=0, timestep=0.002, frame_skip=20)
 
-    def task_reset(self):
+    def _task_reset(self):
         if not self.objects_urdf_loaded:
+            # don't reload object urdf
             self.objects_urdf_loaded = True
             self.object_bodies['table'] = self._p.loadURDF(
                 os.path.join(self.object_assets_path, "table.urdf"),
@@ -130,33 +144,27 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                                              [0.0, 0.0, -3.0],
                                              self.object_initial_pos[target_name][3:])
 
+        # randomize object positions
         block_poses = []
-        if self.randomized_obj_pos:
-            new_object_xy = self.np_random.uniform(self.robot.object_bound_lower[:-1],
-                                                   self.robot.object_bound_upper[:-1])
-            block_poses.append(np.concatenate((new_object_xy, [0.175])))
-            for _ in range(self.num_block - 1):
-                done = False
-                while not done:
-                    new_object_xy = self.np_random.uniform(self.robot.object_bound_lower[:-1],
-                                                           self.robot.object_bound_upper[:-1])
-                    object_not_overlap = []
-                    for pos in block_poses:
-                        object_not_overlap.append((np.linalg.norm(new_object_xy - pos[:-1]) > 0.06))
-                    if all(object_not_overlap):
-                        block_poses.append(np.concatenate((new_object_xy.copy(), [0.175])))
-                        done = True
+        new_object_xy = self.np_random.uniform(self.robot.object_bound_lower[:-1],
+                                               self.robot.object_bound_upper[:-1])
+        block_poses.append(np.concatenate((new_object_xy, [0.175])))
+        for _ in range(self.num_block - 1):
+            done = False
+            while not done:
+                new_object_xy = self.np_random.uniform(self.robot.object_bound_lower[:-1],
+                                                       self.robot.object_bound_upper[:-1])
+                object_not_overlap = []
+                for pos in block_poses:
+                    object_not_overlap.append((np.linalg.norm(new_object_xy - pos[:-1]) > 0.06))
+                if all(object_not_overlap):
+                    block_poses.append(np.concatenate((new_object_xy.copy(), [0.175])))
+                    done = True
 
-            for i in range(self.num_block):
-                self.set_object_pose(self.object_bodies[self.block_keys[i]],
-                                     block_poses[i],
-                                     self.object_initial_pos[self.block_keys[i]][3:])
-        else:
-            for i in range(self.num_block):
-                object_name = self.block_keys[i]
-                self.set_object_pose(self.object_bodies[object_name],
-                                     self.object_initial_pos[object_name][:3],
-                                     self.object_initial_pos[object_name][3:])
+        for i in range(self.num_block):
+            self.set_object_pose(self.object_bodies[self.block_keys[i]],
+                                 block_poses[i],
+                                 self.object_initial_pos[self.block_keys[i]][3:])
 
         if self.chest:
             self.chest_robot.robot_specific_reset(self._p)
@@ -165,75 +173,55 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             chest_xyz[1] = new_y
             self.chest_robot.set_base_pos(self._p, position=chest_xyz)
 
-        self._generate_goal()
+        # generate goals & images
+        self._generate_goal(block_poses)
         if self.goal_image:
             self._generate_goal_image(block_poses)
 
-    def _generate_goal(self):
-        desired_goal = []
-        if self.chest:
-            # chest pick and place
-            chest_center_xyz, _ = self.chest_robot.get_base_pos(self._p)
-            chest_center_xyz = np.array(chest_center_xyz)
-            chest_center_xyz[0] += 0.05
-            chest_center_xyz[2] = 0.175
-            if self.visualize_target:
-                self.set_object_pose(self.object_bodies['target_chest'],
-                                     chest_center_xyz,
-                                     self.object_initial_pos['target_chest'][3:])
-            for _ in range(self.num_block):
-                desired_goal.append(chest_center_xyz)
-        elif self.grasping:
-            # block stacking
-            # generate a random order of blocks to be stacked
-            new_order = np.arange(self.num_block, dtype=np.int)
-            self.np_random.shuffle(new_order)
-            new_order = new_order.tolist()
-            # generate a random base block position
-            base_target_xyz = self.np_random.uniform(self.robot.target_bound_lower,
-                                                     self.robot.target_bound_upper)
-            # make sure the block is on the table surface
-            base_target_xyz[-1] = 0.175
-            # generate the stacked target poses
-            target_xyzs = [base_target_xyz]
-            for _ in range(self.num_block - 1):
-                next_target_xyz = base_target_xyz.copy()
-                next_target_xyz[-1] = 0.175 + self.block_size * (_ + 1)
-                target_xyzs.append(next_target_xyz.copy())
-            # generate goal and set target poses according to the order
-            for _ in range(self.num_block):
-                desired_goal.append(target_xyzs[new_order.index(_)])
-                if self.visualize_target:
-                    self.set_object_pose(self.object_bodies[self.target_keys[_]],
-                                         desired_goal[-1],
-                                         self.object_initial_pos[self.target_keys[_]][3:])
-        else:
-            # block rearranging
-            new_target_xy = self.np_random.uniform(self.robot.target_bound_lower[:-1],
-                                                   self.robot.target_bound_upper[:-1])
-            desired_goal.append(np.concatenate((new_target_xy, [0.175])))
-            for _ in range(self.num_block - 1):
-                done = False
-                while not done:
-                    new_target_xy = self.np_random.uniform(self.robot.target_bound_lower[:-1],
-                                                           self.robot.target_bound_upper[:-1])
-                    target_not_overlap = []
-                    for pos in desired_goal:
-                        target_not_overlap.append((np.linalg.norm(new_target_xy - pos[:-1]) > 0.06))
-                    if all(target_not_overlap):
-                        desired_goal.append(np.concatenate((new_target_xy.copy(), [0.175])))
-                        done = True
-            if self.visualize_target:
-                for _ in range(self.num_block):
-                    self.set_object_pose(self.object_bodies[self.target_keys[_]],
-                                         desired_goal[_],
-                                         self.object_initial_pos[self.target_keys[_]][3:])
+    def activate_curriculum_update(self):
+        self.curriculum_update = True
 
-        self.desired_goal = np.concatenate(desired_goal)
+    def deactivate_curriculum_update(self):
+        self.curriculum_update = False
+
+    def update_curriculum_prob(self):
+        # array of boolean masks
+        mask_finished = self.num_generated_goals_per_curriculum == self.num_goals_per_curriculum
+        mask_half = self.num_generated_goals_per_curriculum >= (self.num_goals_per_curriculum / 2)
+        # set finished curriculum prob to 0.0
+        self.curriculum_prob[mask_finished] = 0.0
+        # process the first curriculum separately
+        if mask_half[0] and not mask_finished[0]:
+            self.curriculum_prob[0] = 0.5
+            self.curriculum_prob[1] = 0.5
+
+        # process the second to the second-last curriculums
+        for i in range(1, self.num_curriculum-1):
+            if mask_finished[i-1] and not mask_finished[i]:
+
+                if mask_half[i]:
+                    # set the next curriculum prob to 0.5
+                    #       if the current one has been trained for half the total number
+                    #       and the last one has been trained completely
+                    self.curriculum_prob[i] = 0.5
+                    self.curriculum_prob[i+1] = 0.5
+                else:
+                    # set the next curriculum prob to 1.0
+                    #       if the current one has not yet been trained for half the total number
+                    #       and the last one has been trained completely
+                    self.curriculum_prob[i] = 1.0
+
+        # process the last curriculum separately
+        if mask_finished[-2]:
+            self.curriculum_prob[-1] = 1.0
+
+    def _generate_goal(self, block_poses):
+        raise NotImplementedError
 
     def _generate_goal_image(self, block_poses):
         target_obj_pos = self.desired_goal.copy()
         if self.chest:
+            # this is tricky...
             self.desired_goal_image = self.render(mode=self.render_mode, camera_id=self.goal_cam_id)
         elif self.grasping:
             # block stacking
@@ -254,6 +242,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                 self.set_object_pose(self.object_bodies[self.block_keys[i]],
                                      block_poses[i],
                                      self.object_initial_pos[self.block_keys[i]][3:])
+
             self.robot.set_kuka_joint_state(self.robot.kuka_rest_pose, np.zeros(7))
             self.robot.set_finger_joint_state(self.robot.gripper_abs_joint_limit)
         else:

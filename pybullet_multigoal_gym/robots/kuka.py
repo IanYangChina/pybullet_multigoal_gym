@@ -19,14 +19,15 @@ class Kuka(URDFBasedRobot):
         self.kuka_body_index = None
         self.kuka_joint_index = None
         # initial robot joint states
-        self.kuka_rest_pose = [0, -0.43064, 0, 1.95325, 0, -0.759, 0]
-        if end_effector_start_on_table:
-            self.kuka_rest_pose = [0, -0.58254, 0, 1.9794, 0, -0.5807, 0]
+        self.kuka_rest_pose = [0, -0.5592432, 0, 1.733180, 0, -0.8501557, 0]
         self.end_effector_tip_joint_index = None
         self.end_effector_target = None
-        self.end_effector_tip_initial_position = np.array([-0.45, 0.0, 0.25])
-        self.end_effector_xyz_upper = np.array([-0.3, 0.20, 0.55])
-        self.end_effector_xyz_lower = np.array([-0.6, -0.20, 0.175])
+        self.end_effector_tip_initial_position = np.array([-0.52, 0.0, 0.25])
+        if end_effector_start_on_table:
+            self.end_effector_tip_initial_position[-1] = 0.175
+
+        self.end_effector_xyz_upper = np.array([-0.37, 0.20, 0.55])
+        self.end_effector_xyz_lower = np.array([-0.67, -0.20, 0.175])
         self.end_effector_fixed_quaternion = [0, -1, 0, 0]
         self.object_bound_lower = self.end_effector_tip_initial_position.copy() - obj_range
         self.object_bound_lower[0] += 0.03
@@ -100,14 +101,10 @@ class Kuka(URDFBasedRobot):
                     self.jdict['iiwa_gripper_finger2_joint'].jointIndex,
                 ]
         # reset arm poses
+        # self.kuka_rest_pose = self.compute_ik(bullet_client, self.end_effector_tip_initial_position)
         self.set_kuka_joint_state(self.kuka_rest_pose, np.zeros(7))
         self.set_finger_joint_state(self.gripper_abs_joint_limit)
         self.move_finger(bullet_client=bullet_client, grip_ctrl=self.gripper_abs_joint_limit)
-        # pos = self.compute_ik(bullet_client, self.end_effector_tip_initial_position)
-        # self.move_arm(bullet_client, pos)
-        # for _ in range(20):
-        #     bullet_client.stepSimulation()
-        # joint = self.get_kuka_joint_state()
         self.end_effector_target = self.parts['iiwa_gripper_tip'].get_position()
 
     def apply_action(self, a, bullet_client):

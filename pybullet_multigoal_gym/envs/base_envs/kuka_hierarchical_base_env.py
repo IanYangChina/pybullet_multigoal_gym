@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from pybullet_multigoal_gym.envs.hierarchical_env_bases import HierarchicalBaseBulletMGEnv
+from pybullet_multigoal_gym.envs.env_bases.hierarchical_env_bases import HierarchicalBaseBulletMGEnv
 from pybullet_multigoal_gym.robots.kuka import Kuka
 
 
@@ -56,7 +56,7 @@ class HierarchicalKukaBulletMGEnv(HierarchicalBaseBulletMGEnv):
                                              num_steps=self.num_steps,
                                              seed=0, gravity=9.81, timestep=0.002, frame_skip=20)
 
-    def task_reset(self):
+    def _task_reset(self):
         # Load objects
         if not self.objects_urdf_loaded:
             self.objects_urdf_loaded = True

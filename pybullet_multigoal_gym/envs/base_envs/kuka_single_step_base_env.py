@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from pybullet_multigoal_gym.envs.env_bases import BaseBulletMGEnv
+from pybullet_multigoal_gym.envs.base_envs.base_env import BaseBulletMGEnv
 from pybullet_multigoal_gym.robots.kuka import Kuka
 
 
@@ -14,7 +14,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                  camera_setup=None, observation_cam_id=0, goal_cam_id=0,
                  gripper_type='parallel_jaw', table_type='table', obj_range=0.15, target_range=0.15,
                  target_in_the_air=True, end_effector_start_on_table=False,
-                 distance_threshold=0.05, grasping=False, has_obj=False, randomized_obj_pos=True):
+                 distance_threshold=0.05, grasping=False, has_obj=False):
         self.binary_reward = binary_reward
         self.image_observation = image_observation
         self.goal_image = goal_image
@@ -32,7 +32,6 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
         self.distance_threshold = distance_threshold
         self.grasping = grasping
         self.has_obj = has_obj
-        self.randomized_obj_pos = randomized_obj_pos
         self.obj_range = obj_range
         self.target_range = target_range
 
@@ -44,9 +43,9 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             'target': None
         }
         self.object_initial_pos = {
-            'table': [-0.45, 0.0, 0.08, 0.0, 0.0, 0.0, 1.0],
-            'block': [-0.45, 0.0, 0.175, 0.0, 0.0, 0.0, 1.0],
-            'target': [-0.45, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0]
+            'table': [-0.52, 0.0, 0.08, 0.0, 0.0, 0.0, 1.0],
+            'block': [-0.52, 0.0, 0.175, 0.0, 0.0, 0.0, 1.0],
+            'target': [-0.52, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0]
         }
         if self.table_type == 'long_table':
             self.object_initial_pos['table'][0] = -0.70
@@ -70,8 +69,9 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                                  camera_setup=camera_setup,
                                  seed=0, timestep=0.002, frame_skip=20)
 
-    def task_reset(self):
+    def _task_reset(self):
         if not self.objects_urdf_loaded:
+            # don't reload object urdf
             self.objects_urdf_loaded = True
             self.object_bodies['table'] = self._p.loadURDF(
                 os.path.join(self.object_assets_path, self.table_type + ".urdf"),
@@ -97,24 +97,21 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                                      [0.0, 0.0, -3.0],
                                      self.object_initial_pos['target'][3:])
 
+        # randomize object positions
         object_xyz_1 = None
         if self.has_obj:
-            if self.randomized_obj_pos:
-                end_effector_tip_initial_position = self.robot.end_effector_tip_initial_position.copy()
-                object_xy_1 = end_effector_tip_initial_position[:2]
-                while np.linalg.norm(object_xy_1 - end_effector_tip_initial_position[:2]) < 0.1:
-                    object_xy_1 = self.np_random.uniform(self.robot.object_bound_lower[:-1],
-                                                         self.robot.object_bound_upper[:-1])
+            end_effector_tip_initial_position = self.robot.end_effector_tip_initial_position.copy()
+            object_xy_1 = end_effector_tip_initial_position[:2]
+            while np.linalg.norm(object_xy_1 - end_effector_tip_initial_position[:2]) < 0.1:
+                object_xy_1 = self.np_random.uniform(self.robot.object_bound_lower[:-1],
+                                                     self.robot.object_bound_upper[:-1])
 
-                object_xyz_1 = np.append(object_xy_1, self.object_initial_pos['block'][2])
-                self.set_object_pose(self.object_bodies['block'],
-                                     object_xyz_1,
-                                     self.object_initial_pos['block'][3:])
-            else:
-                self.set_object_pose(self.object_bodies['block'],
-                                     self.object_initial_pos['block'][:3],
-                                     self.object_initial_pos['block'][3:])
+            object_xyz_1 = np.append(object_xy_1, self.object_initial_pos['block'][2])
+            self.set_object_pose(self.object_bodies['block'],
+                                 object_xyz_1,
+                                 self.object_initial_pos['block'][3:])
 
+        # generate goals & images
         self._generate_goal(current_obj_pos=object_xyz_1)
         if self.goal_image:
             self._generate_goal_image(current_obj_pos=object_xyz_1)

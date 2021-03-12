@@ -84,7 +84,7 @@ class HierarchicalBaseBulletMGEnv(gym.Env):
 
     def reset(self):
         self.robot.reset(self._p)
-        self.task_reset()
+        self._task_reset()
         obs = self._get_obs()
         return obs
 
@@ -150,7 +150,7 @@ class HierarchicalBaseBulletMGEnv(gym.Env):
                                               numSubSteps=self._frame_skip)
             self._p.setRealTimeSimulation(self._use_real_time_simulation)
 
-    def task_reset(self):
+    def _task_reset(self):
         # method to override, purposed to task specific reset
         #   e.g., object random spawn
         raise NotImplementedError
