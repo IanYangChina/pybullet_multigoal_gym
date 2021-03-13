@@ -90,7 +90,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             robot.object_bound_upper[1] += 0.05
 
         self.curriculum = use_curriculum
-        self.curriculum_update = True
+        self.curriculum_update = False
         self.num_curriculum = num_curriculum
         # start with the easiest goal being the only possible goal
         self.curriculum_prob = np.concatenate([[1.0], np.zeros(self.num_curriculum-1)])
