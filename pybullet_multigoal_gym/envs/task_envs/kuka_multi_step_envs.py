@@ -69,16 +69,13 @@ class KukaBlockRearrangeEnv(KukaBulletMultiBlockEnv):
         desired_goal = []
 
         if not self.curriculum:
-            new_target_xy = self.np_random.uniform(self.robot.target_bound_lower[:-1],
-                                                   self.robot.target_bound_upper[:-1])
-            desired_goal.append(np.concatenate((new_target_xy, [0.175])))
-            for _ in range(self.num_block - 1):
+            for _ in range(self.num_block):
                 done = False
                 while not done:
                     new_target_xy = self.np_random.uniform(self.robot.target_bound_lower[:-1],
                                                            self.robot.target_bound_upper[:-1])
                     target_not_overlap = []
-                    for pos in desired_goal:
+                    for pos in desired_goal + block_poses:
                         target_not_overlap.append((np.linalg.norm(new_target_xy - pos[:-1]) > 0.06))
                     if all(target_not_overlap):
                         desired_goal.append(np.concatenate((new_target_xy.copy(), [0.175])))
