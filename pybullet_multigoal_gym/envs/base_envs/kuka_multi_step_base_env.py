@@ -13,7 +13,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
     def __init__(self, render=True, binary_reward=True,
                  image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
                  camera_setup=None, observation_cam_id=0, goal_cam_id=0,
-                 gripper_type='parallel_jaw',
+                 gripper_type='parallel_jaw', end_effector_start_on_table=False,
                  num_block=3, grasping=False, chest=False, chest_door='front_sliding',
                  obj_range=0.15, target_range=0.15, distance_threshold=0.05,
                  use_curriculum=False, num_curriculum=5, base_curriculum_episode_steps=50, num_goals_to_generate=1e5):
@@ -77,7 +77,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
 
         robot = Kuka(grasping=self.grasping,
                      gripper_type=gripper_type,
-                     end_effector_start_on_table=False,
+                     end_effector_start_on_table=end_effector_start_on_table,
                      obj_range=self.obj_range, target_range=self.target_range)
         if self.chest:
             self.chest_robot = Chest(base_position=self.object_initial_pos['chest'][:3],

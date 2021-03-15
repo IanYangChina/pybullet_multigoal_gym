@@ -101,8 +101,8 @@ class Kuka(URDFBasedRobot):
                     self.jdict['iiwa_gripper_finger2_joint'].jointIndex,
                 ]
         # reset arm poses
-        # self.kuka_rest_pose = self.compute_ik(bullet_client, self.end_effector_tip_initial_position)
-        self.set_kuka_joint_state(self.kuka_rest_pose, np.zeros(7))
+        self.kuka_rest_pose = self.compute_ik(bullet_client, self.end_effector_tip_initial_position)
+        self.set_kuka_joint_state(self.kuka_rest_pose)
         self.set_finger_joint_state(self.gripper_abs_joint_limit)
         self.move_finger(bullet_client=bullet_client, grip_ctrl=self.gripper_abs_joint_limit)
         self.end_effector_target = self.parts['iiwa_gripper_tip'].get_position()
