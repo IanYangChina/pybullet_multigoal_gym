@@ -4,7 +4,7 @@ import numpy as np
 
 
 class Kuka(URDFBasedRobot):
-    def __init__(self, gripper_type='parallel_jaw', grasping=False, end_effector_start_on_table=False,
+    def __init__(self, gripper_type='parallel_jaw', joint_control=False, grasping=False, end_effector_start_on_table=False,
                  obj_range=0.15, target_range=0.15):
         self.gripper_type = gripper_type
         if self.gripper_type == 'robotiq85':
@@ -20,6 +20,7 @@ class Kuka(URDFBasedRobot):
         self.kuka_joint_index = None
         # initial robot joint states
         self.kuka_rest_pose = [0, -0.5592432, 0, 1.733180, 0, -0.8501557, 0]
+        self.joint_state_target = None
         self.end_effector_tip_joint_index = None
         self.end_effector_target = None
         self.end_effector_tip_initial_position = np.array([-0.52, 0.0, 0.25])
@@ -63,11 +64,19 @@ class Kuka(URDFBasedRobot):
         self.gripper_num_joint = len(self.gripper_joint_name)
         self.gripper_tip_offset = 0.0
 
+        # action space
+        self.joint_control = joint_control
         self.grasping = grasping
-        if self.grasping:
-            self.action_space = spaces.Box(-np.ones([4]), np.ones([4]))
+        if self.joint_control:
+            if self.grasping:
+                self.action_space = spaces.Box(-np.ones([8]), np.ones([8]))
+            else:
+                self.action_space = spaces.Box(-np.ones([7]), np.ones([7]))
         else:
-            self.action_space = spaces.Box(-np.ones([3]), np.ones([3]))
+            if self.grasping:
+                self.action_space = spaces.Box(-np.ones([4]), np.ones([4]))
+            else:
+                self.action_space = spaces.Box(-np.ones([3]), np.ones([3]))
 
     def robot_specific_reset(self, bullet_client):
         if self.kuka_body_index is None:
@@ -106,22 +115,28 @@ class Kuka(URDFBasedRobot):
         self.set_finger_joint_state(self.gripper_abs_joint_limit)
         self.move_finger(bullet_client=bullet_client, grip_ctrl=self.gripper_abs_joint_limit)
         self.end_effector_target = self.parts['iiwa_gripper_tip'].get_position()
+        self.joint_state_target, _ = self.get_kuka_joint_state()
 
     def apply_action(self, a, bullet_client):
+
         if self.grasping:
-            assert a.shape == (4,)
             # map action in [-1, 1] to gripper joint range
             grip_ctrl = (a[-1] + 1.0) * (self.gripper_abs_joint_limit / 2)
             self.move_finger(bullet_client=bullet_client,
                              grip_ctrl=grip_ctrl)
-        # actions alter the ee target pose
-        self.end_effector_target += (a[:3] * 0.05)
-        self.end_effector_target = np.clip(self.end_effector_target,
-                                           self.end_effector_xyz_lower,
-                                           self.end_effector_xyz_upper)
 
-        joint_poses = self.compute_ik(bullet_client=bullet_client,
-                                      target_ee_pos=self.end_effector_target)
+        if self.joint_control:
+            self.joint_state_target = (a[:7] * 0.05) + self.joint_state_target
+            joint_poses = self.joint_state_target.copy()
+        else:
+            # actions alter the ee target pose
+            self.end_effector_target += (a[:3] * 0.05)
+            self.end_effector_target = np.clip(self.end_effector_target,
+                                               self.end_effector_xyz_lower,
+                                               self.end_effector_xyz_upper)
+            joint_poses = self.compute_ik(bullet_client=bullet_client,
+                                          target_ee_pos=self.end_effector_target)
+
         self.move_arm(bullet_client=bullet_client, joint_poses=joint_poses)
         for _ in range(5):
             # ensure the action is finished
@@ -147,7 +162,11 @@ class Kuka(URDFBasedRobot):
             # symmetric gripper
             gripper_finger_closeness = np.array([0.0])
             gripper_finger_vel = np.array([0.0])
-        return gripper_xyz, gripper_rpy, gripper_finger_closeness, gripper_vel_xyz, gripper_vel_rpy, gripper_finger_vel
+        if self.joint_control:
+            joint_poses, _ = self.get_kuka_joint_state()
+        else:
+            joint_poses = None
+        return gripper_xyz, gripper_rpy, gripper_finger_closeness, gripper_vel_xyz, gripper_vel_rpy, gripper_finger_vel, joint_poses
 
     def compute_ik(self, bullet_client, target_ee_pos, target_ee_quat=None):
         assert target_ee_pos.shape == (3,)

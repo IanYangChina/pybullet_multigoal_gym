@@ -14,7 +14,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                  camera_setup=None, observation_cam_id=0, goal_cam_id=0,
                  gripper_type='parallel_jaw', table_type='table', obj_range=0.15, target_range=0.15,
                  target_in_the_air=True, end_effector_start_on_table=False,
-                 distance_threshold=0.05, grasping=False, has_obj=False):
+                 distance_threshold=0.05, joint_control=False, grasping=False, has_obj=False):
         self.binary_reward = binary_reward
         self.image_observation = image_observation
         self.goal_image = goal_image
@@ -30,6 +30,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
         assert self.table_type in ['table', 'long_table']
         self.target_in_the_air = target_in_the_air
         self.distance_threshold = distance_threshold
+        self.joint_control = joint_control
         self.grasping = grasping
         self.has_obj = has_obj
         self.obj_range = obj_range
@@ -56,6 +57,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
         self.desired_goal_image = None
 
         robot = Kuka(grasping=grasping,
+                     joint_control=joint_control,
                      gripper_type=gripper_type,
                      end_effector_start_on_table=end_effector_start_on_table,
                      obj_range=self.obj_range, target_range=self.target_range)
@@ -188,7 +190,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
 
     def _get_obs(self):
         # robot state contains gripper xyz coordinates, orientation (and finger width)
-        gripper_xyz, gripper_rpy, gripper_finger_closeness, gripper_vel_xyz, gripper_vel_rpy, gripper_finger_vel = self.robot.calc_robot_state()
+        gripper_xyz, gripper_rpy, gripper_finger_closeness, gripper_vel_xyz, gripper_vel_rpy, gripper_finger_vel, joint_poses = self.robot.calc_robot_state()
         assert self.desired_goal is not None
         policy_state = state = gripper_xyz
         achieved_goal = gripper_xyz.copy()
@@ -206,6 +208,10 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             policy_state = np.concatenate((gripper_xyz, gripper_finger_closeness, block_rel_xyz))
         else:
             assert not self.grasping, "grasping should not be true when there is no objects"
+
+        if self.joint_control:
+            state = np.concatenate((joint_poses, state))
+            policy_state = np.concatenate((joint_poses, policy_state))
 
         if not self.image_observation:
             return {

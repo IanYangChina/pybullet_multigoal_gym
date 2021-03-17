@@ -14,7 +14,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                  image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
                  camera_setup=None, observation_cam_id=0, goal_cam_id=0,
                  gripper_type='parallel_jaw', end_effector_start_on_table=False,
-                 num_block=3, grasping=False, chest=False, chest_door='front_sliding',
+                 num_block=3, joint_control=False, grasping=False, chest=False, chest_door='front_sliding',
                  obj_range=0.15, target_range=0.15, distance_threshold=0.05,
                  use_curriculum=False, num_curriculum=5, base_curriculum_episode_steps=50, num_goals_to_generate=1e5):
         self.binary_reward = binary_reward
@@ -29,6 +29,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         self.goal_cam_id = goal_cam_id
 
         self.num_block = num_block
+        self.joint_control = joint_control
         self.grasping = grasping
         self.chest = chest
         self.obj_range = obj_range
@@ -76,6 +77,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         self.desired_goal_image = None
 
         robot = Kuka(grasping=self.grasping,
+                     joint_control=joint_control,
                      gripper_type=gripper_type,
                      end_effector_start_on_table=end_effector_start_on_table,
                      obj_range=self.obj_range, target_range=self.target_range)
@@ -263,7 +265,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
 
     def _get_obs(self):
         # robot state contains gripper xyz coordinates, orientation (and finger width)
-        gripper_xyz, gripper_rpy, gripper_finger_closeness, gripper_vel_xyz, gripper_vel_rpy, gripper_finger_vel = self.robot.calc_robot_state()
+        gripper_xyz, gripper_rpy, gripper_finger_closeness, gripper_vel_xyz, gripper_vel_rpy, gripper_finger_vel, joint_poses = self.robot.calc_robot_state()
         assert self.desired_goal is not None
 
         block_states = []
@@ -288,6 +290,10 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
 
         state = [gripper_xyz, gripper_finger_closeness, gripper_vel_xyz, gripper_finger_vel] + block_states
         policy_state = [gripper_xyz, gripper_finger_closeness] + policy_block_states
+
+        if self.joint_control:
+            state = [joint_poses] + state
+            policy_state = [joint_poses] + policy_state
 
         if self.chest:
             door_joint_pos, door_joint_vel, keypoint_state = self.chest_robot.calc_robot_state()

@@ -134,3 +134,5 @@ See the above example.
 2021.03.09 --- Add multi-block stacking and re-arranging tasks
 
 2021.03.12 --- Add multi-block tasks with a chest
+
+2021.03.17 --- Joint space control support
