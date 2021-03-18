@@ -16,33 +16,62 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
                                          num_block=num_block, joint_control=joint_control, grasping=True, chest=False,
                                          obj_range=0.15, target_range=0.15,
                                          use_curriculum=use_curriculum,
-                                         num_curriculum=num_block-1,
+                                         num_curriculum=num_block,
                                          num_goals_to_generate=num_goals_to_generate)
 
     def _generate_goal(self, block_poses):
-        desired_goal = []
+        desired_goal = [None for _ in range(self.num_block)]
 
         # generate a random order of blocks to be stacked
         new_order = np.arange(self.num_block, dtype=np.int)
         self.np_random.shuffle(new_order)
         new_order = new_order.tolist()
+
         # generate a random base block position
-        base_target_xyz = self.np_random.uniform(self.robot.target_bound_lower,
-                                                 self.robot.target_bound_upper)
-        # make sure the block is on the table surface
-        base_target_xyz[-1] = 0.175
+        base_target_xyz = None
+        done = False
+        while not done:
+            base_target_xy = self.np_random.uniform(self.robot.target_bound_lower[:-1],
+                                                    self.robot.target_bound_upper[:-1])
+            target_not_overlap = []
+            for pos in block_poses:
+                target_not_overlap.append((np.linalg.norm(base_target_xy - pos[:-1]) > 0.08))
+            if all(target_not_overlap):
+                # put the block is on the table surface
+                base_target_xyz = np.concatenate((base_target_xy, [0.175]))
+                done = True
+
         # generate the stacked target poses
         target_xyzs = [base_target_xyz]
         for _ in range(self.num_block - 1):
             next_target_xyz = base_target_xyz.copy()
             next_target_xyz[-1] = 0.175 + self.block_size * (_ + 1)
             target_xyzs.append(next_target_xyz.copy())
-        # generate goal and set target poses according to the order
+
+        if not self.curriculum:
+            # generate goal and set target poses according to the order
+            for _ in range(self.num_block):
+                desired_goal[new_order.index(_)] = target_xyzs[_]
+        else:
+            curriculum_level = self.np_random.choice(self.num_curriculum, p=self.curriculum_prob)
+            self.curriculum_goal_step = curriculum_level * 25 + self.base_curriculum_episode_steps
+
+            for _ in range(self.num_block):
+                if _ <= curriculum_level:
+                    desired_goal[new_order.index(_)] = target_xyzs[_]
+                else:
+                    desired_goal[new_order.index(_)] = block_poses[new_order.index(_)]
+
+            if self.curriculum_update:
+                self.num_generated_goals_per_curriculum[curriculum_level] += 1
+                self.update_curriculum_prob()
+                # print(self.num_generated_goals_per_curriculum)
+                # print(self.curriculum_prob)
+
         for _ in range(self.num_block):
-            desired_goal.append(target_xyzs[new_order.index(_)])
             if self.visualize_target:
                 self.set_object_pose(self.object_bodies[self.target_keys[_]],
-                                     desired_goal[-1],
+                                     desired_goal[_],
                                      self.object_initial_pos[self.target_keys[_]][3:])
 
         self.desired_goal = np.concatenate(desired_goal)
