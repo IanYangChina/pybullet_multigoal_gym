@@ -136,3 +136,5 @@ See the above example.
 2021.03.12 --- Add multi-block tasks with a chest
 
 2021.03.17 --- Joint space control support
+
+2021.03.18 --- Finish curriculum; add on-hand camera observation

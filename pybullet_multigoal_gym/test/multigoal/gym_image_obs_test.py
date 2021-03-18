@@ -22,10 +22,10 @@ camera_setup = [
 
 env = pmg.make_env(
     # task args
-    task='block_rearrange',
+    task='push',
     gripper='parallel_jaw',
     num_block=4,  # only meaningful for multi-block tasks
-    render=False,
+    render=True,
     binary_reward=True,
     max_episode_steps=5,
     # image observation args
@@ -34,7 +34,7 @@ env = pmg.make_env(
     goal_image=True,
     visualize_target=True,
     camera_setup=camera_setup,
-    observation_cam_id=0,
+    observation_cam_id=-1,
     goal_cam_id=1,
     # curriculum args
     use_curriculum=True,
@@ -44,11 +44,11 @@ obs = env.reset()
 time_done = False
 f, axarr = plt.subplots(1, 2)
 while True:
-    # action = env.action_space.sample()
-    # obs, reward, time_done, info = env.step(action)
+    action = env.action_space.sample()
+    obs, reward, time_done, info = env.step(action)
     axarr[0].imshow(obs['desired_goal_img'])
     axarr[1].imshow(obs['achieved_goal_img'])
     plt.pause(0.00001)
-    # if time_done:
-    #     obs = env.reset()
-    obs = env.reset()
+    if time_done:
+        obs = env.reset()
+    # obs = env.reset()
