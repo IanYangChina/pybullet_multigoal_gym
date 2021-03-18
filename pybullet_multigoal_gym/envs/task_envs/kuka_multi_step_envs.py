@@ -81,10 +81,10 @@ class KukaBlockRearrangeEnv(KukaBulletMultiBlockEnv):
                         desired_goal.append(np.concatenate((new_target_xy.copy(), [0.175])))
                         done = True
         else:
-            curriculum_level = self.np_random.choice(self.num_block, p=self.curriculum_prob)
+            curriculum_level = self.np_random.choice(self.num_curriculum, p=self.curriculum_prob)
             self.curriculum_goal_step = curriculum_level * 25 + self.base_curriculum_episode_steps
             ind_block_to_move = np.sort(self.np_random.choice(np.arange(self.num_block), size=curriculum_level+1),
-                                        kind='stable')
+                                        kind='stable').tolist()
             targets = []
             for _ in range(curriculum_level + 1):
                 done = False
@@ -108,8 +108,6 @@ class KukaBlockRearrangeEnv(KukaBulletMultiBlockEnv):
             if self.curriculum_update:
                 self.num_generated_goals_per_curriculum[curriculum_level] += 1
                 self.update_curriculum_prob()
-                # print(self.curriculum_prob)
-                # print(self.num_generated_goals_per_curriculum)
 
         if self.visualize_target:
             for _ in range(self.num_block):
@@ -138,19 +136,39 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                                          num_goals_to_generate=num_goals_to_generate)
 
     def _generate_goal(self, block_poses):
-        desired_goal = []
+        # the first element is the largest openness of the door (equal to the door joint pose upper limit)
+        desired_goal = [[0.10]]
 
-        # chest pick and place
+        # all blocks should go into the sphere of 0.05 radius centred at the chest centre
         chest_center_xyz, _ = self.chest_robot.get_base_pos(self._p)
         chest_center_xyz = np.array(chest_center_xyz)
         chest_center_xyz[0] += 0.05
         chest_center_xyz[2] = 0.175
+
+        if not self.curriculum:
+            for _ in range(self.num_block):
+                desired_goal.append(chest_center_xyz)
+        else:
+            curriculum_level = self.np_random.choice(self.num_curriculum, p=self.curriculum_prob)
+            self.curriculum_goal_step = curriculum_level * 25 + self.base_curriculum_episode_steps
+            ind_block_to_move = np.sort(self.np_random.choice(np.arange(self.num_block), size=curriculum_level),
+                                        kind='stable').tolist()
+
+            for i in range(self.num_block):
+                if i in ind_block_to_move:
+                    desired_goal.append(chest_center_xyz)
+                else:
+                    desired_goal.append(block_poses[i])
+
+            if self.curriculum_update:
+                self.num_generated_goals_per_curriculum[curriculum_level] += 1
+                self.update_curriculum_prob()
+
         if self.visualize_target:
-            self.set_object_pose(self.object_bodies['target_chest'],
-                                 chest_center_xyz,
-                                 self.object_initial_pos['target_chest'][3:])
-        for _ in range(self.num_block):
-            desired_goal.append(chest_center_xyz)
+            for _ in range(self.num_block):
+                self.set_object_pose(self.object_bodies[self.target_keys[_]],
+                                     desired_goal[_+1],
+                                     self.object_initial_pos[self.target_keys[_]][3:])
 
         self.desired_goal = np.concatenate(desired_goal)
 
@@ -173,18 +191,38 @@ class KukaChestPushEnv(KukaBulletMultiBlockEnv):
                                          num_goals_to_generate=num_goals_to_generate)
 
     def _generate_goal(self, block_poses):
-        desired_goal = []
+        # the first element is the largest openness of the door (equal to the door joint pose upper limit)
+        desired_goal = [[0.12]]
 
-        # chest pick and place
+        # all blocks should go into the sphere of 0.05 radius centred at the chest centre
         chest_center_xyz, _ = self.chest_robot.get_base_pos(self._p)
         chest_center_xyz = np.array(chest_center_xyz)
         chest_center_xyz[0] += 0.05
         chest_center_xyz[2] = 0.175
+
+        if not self.curriculum:
+            for _ in range(self.num_block):
+                desired_goal.append(chest_center_xyz)
+        else:
+            curriculum_level = self.np_random.choice(self.num_curriculum, p=self.curriculum_prob)
+            self.curriculum_goal_step = curriculum_level * 25 + self.base_curriculum_episode_steps
+            ind_block_to_move = np.sort(self.np_random.choice(np.arange(self.num_block), size=curriculum_level),
+                                        kind='stable').tolist()
+
+            for i in range(self.num_block):
+                if i in ind_block_to_move:
+                    desired_goal.append(chest_center_xyz)
+                else:
+                    desired_goal.append(block_poses[i])
+
+            if self.curriculum_update:
+                self.num_generated_goals_per_curriculum[curriculum_level] += 1
+                self.update_curriculum_prob()
+
         if self.visualize_target:
-            self.set_object_pose(self.object_bodies['target_chest'],
-                                 chest_center_xyz,
-                                 self.object_initial_pos['target_chest'][3:])
-        for _ in range(self.num_block):
-            desired_goal.append(chest_center_xyz)
+            for _ in range(self.num_block):
+                self.set_object_pose(self.object_bodies[self.target_keys[_]],
+                                     desired_goal[_+1],
+                                     self.object_initial_pos[self.target_keys[_]][3:])
 
         self.desired_goal = np.concatenate(desired_goal)

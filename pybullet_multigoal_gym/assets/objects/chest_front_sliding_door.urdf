@@ -115,7 +115,7 @@
         <parent link="chest_back_wall"/>
         <child link="chest_door"/>
         <axis xyz="0 1 0"/>
-        <limit effort="200" lower="-0.12" upper="0.12" velocity="10"/>
+        <limit effort="200" lower="0" upper="0.12" velocity="1"/>
     </joint>
     <link name="chest_door">
         <inertial>

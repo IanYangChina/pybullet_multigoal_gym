@@ -35,7 +35,7 @@ model_path = os.path.join(cwd, '..', '..', 'assets', 'robots', 'kuka', 'iiwa14_p
 kukaId = p.loadURDF(model_path, [0, 0, 0])
 p.loadURDF(os.path.join(cwd, '..', '..', 'assets', 'objects', 'table.urdf'),
            [-0.4, 0.0, 0.08])
-p.loadURDF(os.path.join(cwd, '..', '..', 'assets', 'objects', 'chest_front_sliding_door.urdf'),
+p.loadURDF(os.path.join(cwd, '..', '..', 'assets', 'objects', 'chest_up_sliding_door.urdf'),
            [-0.58, 0.18, 0.21], flags=p.URDF_USE_SELF_COLLISION)
 p.loadURDF(os.path.join(cwd, '..', '..', 'assets', 'objects', 'block.urdf'),
            [-0.415, 0.0, 0.18])

@@ -83,8 +83,8 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                      obj_range=self.obj_range, target_range=self.target_range)
         if self.chest:
             self.chest_robot = Chest(base_position=self.object_initial_pos['chest'][:3],
-                                     door=chest_door, rest_door_state=0.0)
-            self.distance_threshold = 0.08
+                                     door=chest_door, rest_door_state=0)
+            self.distance_threshold = 0.1
             self.chest_pos_y_range = 0.15
             robot.object_bound_lower[0] += 0.05
             robot.object_bound_upper[0] += 0.05
@@ -120,14 +120,6 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                 baseOrientation=self.object_initial_pos['table'][3:])
             if self.chest:
                 self.chest_robot.reset(bullet_client=self._p)
-                self.object_bodies['target_chest'] = self._p.loadURDF(
-                    os.path.join(self.object_assets_path, 'target_chest' + ".urdf"),
-                    basePosition=self.object_initial_pos['target_chest'][:3],
-                    baseOrientation=self.object_initial_pos['target_chest'][3:])
-                if not self.visualize_target:
-                    self.set_object_pose(self.object_bodies['target_chest'],
-                                         [0.0, 0.0, -3.0],
-                                         self.object_initial_pos['target_chest'][3:])
 
             for n in range(self.num_block):
                 block_name = self.block_keys[n]
@@ -136,28 +128,25 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                     basePosition=self.object_initial_pos[block_name][:3],
                     baseOrientation=self.object_initial_pos[block_name][3:])
                 target_name = self.target_keys[n]
-                if not self.chest:
-                    self.object_bodies[target_name] = self._p.loadURDF(
-                        os.path.join(self.object_assets_path, target_name + ".urdf"),
-                        basePosition=self.object_initial_pos[target_name][:3],
-                        baseOrientation=self.object_initial_pos[target_name][3:])
-                    if not self.visualize_target:
-                        self.set_object_pose(self.object_bodies[target_name],
-                                             [0.0, 0.0, -3.0],
-                                             self.object_initial_pos[target_name][3:])
+
+                self.object_bodies[target_name] = self._p.loadURDF(
+                    os.path.join(self.object_assets_path, target_name + ".urdf"),
+                    basePosition=self.object_initial_pos[target_name][:3],
+                    baseOrientation=self.object_initial_pos[target_name][3:])
+                if not self.visualize_target:
+                    self.set_object_pose(self.object_bodies[target_name],
+                                         [0.0, 0.0, -3.0],
+                                         self.object_initial_pos[target_name][3:])
 
         # randomize object positions
         block_poses = []
-        new_object_xy = self.np_random.uniform(self.robot.object_bound_lower[:-1],
-                                               self.robot.object_bound_upper[:-1])
-        block_poses.append(np.concatenate((new_object_xy, [0.175])))
-        for _ in range(self.num_block - 1):
+        for _ in range(self.num_block):
             done = False
             while not done:
                 new_object_xy = self.np_random.uniform(self.robot.object_bound_lower[:-1],
                                                        self.robot.object_bound_upper[:-1])
                 object_not_overlap = []
-                for pos in block_poses:
+                for pos in block_poses + [self.robot.end_effector_tip_initial_position]:
                     object_not_overlap.append((np.linalg.norm(new_object_xy - pos[:-1]) > 0.06))
                 if all(object_not_overlap):
                     block_poses.append(np.concatenate((new_object_xy.copy(), [0.175])))
@@ -296,8 +285,10 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             policy_state = [joint_poses] + policy_state
 
         if self.chest:
+            # door joint state represents the openness and velocity of the door
             door_joint_pos, door_joint_vel, keypoint_state = self.chest_robot.calc_robot_state()
             state = state + [[door_joint_pos], [door_joint_vel]] + keypoint_state
+            achieved_goal.insert(0, [door_joint_pos])
 
         state = np.concatenate(state)
         policy_state = np.concatenate(policy_state)
