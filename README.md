@@ -49,7 +49,9 @@ Use the `make_env(...)` method to make your environments. Due to backend differe
 should not need to be called by users. 
 To run experiment headless, make environment with `render=False`. 
 To run experiment with image observations, make environment with `image_observation=True`. 
-Only the Reach, PickAndPlace and Push envs support image observation. See examples below.
+Only the Reach, PickAndPlace and Push envs support image observation. Users can define their
+own camera for observation and goal images. The camera id `-1` stands for a on-hand camera. 
+See examples below.
 
 ### Try it out
 
