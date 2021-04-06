@@ -73,6 +73,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         self.block_keys = ['block_blue', 'block_green', 'block_purple', 'block_red', 'block_yellow']
         self.target_keys = ['target_blue', 'target_green', 'target_purple', 'target_red', 'target_yellow']
 
+        self.sub_goals = None
         self.desired_goal = None
         self.desired_goal_image = None
 
@@ -206,8 +207,28 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         if mask_finished[-2]:
             self.curriculum_prob[-1] = 1.0
 
+    def set_sub_goal(self, sub_goal_ind):
+        self.desired_goal = self.sub_goals[sub_goal_ind].copy()
+        if self.visualize_target:
+            index_offset = 0
+            if self.chest:
+                index_offset = 1
+            block_target_pos = []
+            for _ in range(self.num_block):
+                block_target_pos.append(
+                    self.desired_goal[index_offset+_*3:index_offset+_*3+3]
+                )
+            self._update_block_target(block_target_pos)
+        return self.desired_goal
+
     def _generate_goal(self, block_poses):
         raise NotImplementedError
+
+    def _update_block_target(self, desired_goal, index_offset=0):
+        for _ in range(self.num_block):
+            self.set_object_pose(self.object_bodies[self.target_keys[_]],
+                                 desired_goal[_+index_offset],
+                                 self.object_initial_pos[self.target_keys[_]][3:])
 
     def _generate_goal_image(self, block_poses):
         target_obj_pos = self.desired_goal.copy()

@@ -41,6 +41,7 @@ def print_id():
 
 
 def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, binary_reward=True,
+             task_decomposition=False, abstract_demonstration=False,
              joint_control=False, max_episode_steps=50,
              image_observation=False, depth_image=False, goal_image=False, visualize_target=True,
              camera_setup=None, observation_cam_id=0, goal_cam_id=0,
@@ -137,6 +138,8 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
                         'render': render,
                         'binary_reward': binary_reward,
                         'joint_control': joint_control,
+                        'task_decomposition': task_decomposition,
+                        'abstract_demonstration': abstract_demonstration,
                         'image_observation': image_observation,
                         'depth_image': depth_image,
                         'goal_image': goal_image,

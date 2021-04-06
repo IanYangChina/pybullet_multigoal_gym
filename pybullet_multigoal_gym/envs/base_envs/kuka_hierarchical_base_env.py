@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from pybullet_multigoal_gym.envs.env_bases.hierarchical_env_bases import HierarchicalBaseBulletMGEnv
+from pybullet_multigoal_gym.envs.base_envs.hierarchical_base_env import HierarchicalBaseBulletMGEnv
 from pybullet_multigoal_gym.robots.kuka import Kuka
 
 

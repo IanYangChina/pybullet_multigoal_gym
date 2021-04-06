@@ -1,4 +1,5 @@
 import numpy as np
+from pybullet_multigoal_gym.utils.demonstrator import StepDemonstrator
 from pybullet_multigoal_gym.envs.base_envs.kuka_multi_step_base_env import KukaBulletMultiBlockEnv
 
 
@@ -7,13 +8,22 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
                  image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
                  camera_setup=None, observation_cam_id=0, goal_cam_id=0,
                  gripper_type='parallel_jaw', num_block=5, joint_control=False,
+                 task_decomposition=False, abstract_demonstration=False,
                  use_curriculum=False, num_goals_to_generate=1e5):
+        self.task_decomposition = task_decomposition
+        self.num_steps = num_block
+        self.abstract_demonstration = abstract_demonstration
+        if self.abstract_demonstration:
+            self.step_demonstrator = StepDemonstrator([
+                [_ for _ in range(num_block)]
+            ])
         KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward,
                                          image_observation=image_observation, goal_image=goal_image, depth_image=depth_image,
                                          visualize_target=visualize_target,
                                          camera_setup=camera_setup, observation_cam_id=observation_cam_id, goal_cam_id=goal_cam_id,
                                          gripper_type=gripper_type, end_effector_start_on_table=False,
-                                         num_block=num_block, joint_control=joint_control, grasping=True, chest=False,
+                                         num_block=num_block,joint_control=joint_control,
+                                         grasping=True, chest=False,
                                          obj_range=0.15, target_range=0.15,
                                          use_curriculum=use_curriculum,
                                          num_curriculum=num_block,
@@ -52,6 +62,17 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
             # generate goal and set target poses according to the order
             for _ in range(self.num_block):
                 desired_goal[new_order.index(_)] = target_xyzs[_]
+
+            if self.task_decomposition:
+                self.sub_goals = []
+                for _ in range(self.num_steps):
+                    sub_goal = [None for _ in range(self.num_block)]
+                    for i in range(self.num_block):
+                        if i <= _:
+                            sub_goal[new_order.index(i)] = target_xyzs[i]
+                        else:
+                            sub_goal[new_order.index(i)] = block_poses[new_order.index(_)]
+                    self.sub_goals.append(np.concatenate(sub_goal))
         else:
             curriculum_level = self.np_random.choice(self.num_curriculum, p=self.curriculum_prob)
             self.curriculum_goal_step = curriculum_level * 25 + self.base_curriculum_episode_steps
@@ -65,14 +86,9 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
             if self.curriculum_update:
                 self.num_generated_goals_per_curriculum[curriculum_level] += 1
                 self.update_curriculum_prob()
-                # print(self.num_generated_goals_per_curriculum)
-                # print(self.curriculum_prob)
 
-        for _ in range(self.num_block):
-            if self.visualize_target:
-                self.set_object_pose(self.object_bodies[self.target_keys[_]],
-                                     desired_goal[_],
-                                     self.object_initial_pos[self.target_keys[_]][3:])
+        if self.visualize_target:
+            self._update_block_target(desired_goal)
 
         self.desired_goal = np.concatenate(desired_goal)
 
@@ -139,10 +155,7 @@ class KukaBlockRearrangeEnv(KukaBulletMultiBlockEnv):
                 self.update_curriculum_prob()
 
         if self.visualize_target:
-            for _ in range(self.num_block):
-                self.set_object_pose(self.object_bodies[self.target_keys[_]],
-                                     desired_goal[_],
-                                     self.object_initial_pos[self.target_keys[_]][3:])
+            self._update_block_target(desired_goal)
 
         self.desired_goal = np.concatenate(desired_goal)
 
@@ -194,10 +207,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                 self.update_curriculum_prob()
 
         if self.visualize_target:
-            for _ in range(self.num_block):
-                self.set_object_pose(self.object_bodies[self.target_keys[_]],
-                                     desired_goal[_+1],
-                                     self.object_initial_pos[self.target_keys[_]][3:])
+            self._update_block_target(desired_goal, index_offset=1)
 
         self.desired_goal = np.concatenate(desired_goal)
 
@@ -249,9 +259,6 @@ class KukaChestPushEnv(KukaBulletMultiBlockEnv):
                 self.update_curriculum_prob()
 
         if self.visualize_target:
-            for _ in range(self.num_block):
-                self.set_object_pose(self.object_bodies[self.target_keys[_]],
-                                     desired_goal[_+1],
-                                     self.object_initial_pos[self.target_keys[_]][3:])
+            self._update_block_target(desired_goal, index_offset=1)
 
         self.desired_goal = np.concatenate(desired_goal)
