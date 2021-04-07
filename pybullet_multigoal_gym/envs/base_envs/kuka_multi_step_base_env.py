@@ -85,7 +85,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         if self.chest:
             self.chest_robot = Chest(base_position=self.object_initial_pos['chest'][:3],
                                      door=chest_door, rest_door_state=0)
-            self.distance_threshold = 0.1
+            # self.distance_threshold = 0.1
             self.chest_pos_y_range = 0.15
             robot.object_bound_lower[0] += 0.05
             robot.object_bound_upper[0] += 0.05
