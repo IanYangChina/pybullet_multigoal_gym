@@ -4,9 +4,9 @@ import time
 import pybullet_multigoal_gym as pmg
 
 num_episodes = 300
-env = pmg.make_env(task='chest_push',
+env = pmg.make_env(task='chest_pick_and_place',
                    gripper='parallel_jaw',
-                   num_block=1,
+                   num_block=3,
                    render=True,
                    visualize_target=True,
                    binary_reward=True,
@@ -19,7 +19,7 @@ env = pmg.make_env(task='chest_push',
                    num_goals_to_generate=num_episodes)
 
 # env = pmg.make('KukaParallelGripBlockStackRenderSparseEnv-v0')
-env.activate_curriculum_update()
+# env.activate_curriculum_update()
 obs = env.reset()
 time_done = False
 while True:
@@ -28,4 +28,12 @@ while True:
     # obs, reward, time_done, info = env.step(action)
     # if time_done:
     #     env.reset()
+    env.set_sub_goal(0)
+    print(env.desired_goal)
+    env.set_sub_goal(1)
+    print(env.desired_goal)
+    env.set_sub_goal(2)
+    print(env.desired_goal)
+    env.set_sub_goal(3)
+    print(env.desired_goal)
     env.reset()

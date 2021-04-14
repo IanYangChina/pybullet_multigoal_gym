@@ -165,7 +165,15 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                  image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
                  camera_setup=None, observation_cam_id=0, goal_cam_id=0,
                  gripper_type='parallel_jaw', num_block=5, joint_control=False,
+                 task_decomposition=False, abstract_demonstration=False,
                  use_curriculum=False, num_goals_to_generate=1e5):
+        self.task_decomposition = task_decomposition
+        self.num_steps = num_block+1
+        self.abstract_demonstration = abstract_demonstration
+        if self.abstract_demonstration:
+            self.step_demonstrator = StepDemonstrator([
+                [_ for _ in range(self.num_steps)]
+            ])
         KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward,
                                          image_observation=image_observation, goal_image=goal_image, depth_image=depth_image,
                                          visualize_target=visualize_target,
@@ -190,6 +198,17 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
         if not self.curriculum:
             for _ in range(self.num_block):
                 desired_goal.append(chest_center_xyz)
+            if self.task_decomposition:
+                self.sub_goals = []
+                for _ in range(self.num_steps):
+                    sub_goal = [[0.12]]
+                    for i in range(self.num_block):
+                        if i < _:
+                            sub_goal.append(chest_center_xyz)
+                        else:
+                            sub_goal.append(block_poses[i])
+                    self.sub_goals.append(np.concatenate(sub_goal))
+
         else:
             curriculum_level = self.np_random.choice(self.num_curriculum, p=self.curriculum_prob)
             self.curriculum_goal_step = curriculum_level * 25 + self.base_curriculum_episode_steps
