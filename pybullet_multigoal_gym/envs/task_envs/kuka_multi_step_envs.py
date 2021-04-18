@@ -11,13 +11,16 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
                  task_decomposition=False, abstract_demonstration=False,
                  use_curriculum=False, num_goals_to_generate=1e5):
         self.task_decomposition = task_decomposition
+        grip_informed_goal = False
+        if task_decomposition:
+            grip_informed_goal = True
         self.num_steps = num_block
         self.abstract_demonstration = abstract_demonstration
         if self.abstract_demonstration:
             self.step_demonstrator = StepDemonstrator([
                 [_ for _ in range(self.num_steps)]
             ])
-        KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward,
+        KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward, grip_informed_goal=grip_informed_goal,
                                          image_observation=image_observation, goal_image=goal_image, depth_image=depth_image,
                                          visualize_target=visualize_target,
                                          camera_setup=camera_setup, observation_cam_id=observation_cam_id, goal_cam_id=goal_cam_id,
@@ -71,7 +74,9 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
                         if i <= _:
                             sub_goal[new_order.index(i)] = target_xyzs[i]
                         else:
-                            sub_goal[new_order.index(i)] = block_poses[new_order.index(_)]
+                            sub_goal[new_order.index(i)] = block_poses[new_order.index(i)]
+                    sub_goal.append(target_xyzs[_].copy())
+                    sub_goal.append([0.03])
                     self.sub_goals.append(np.concatenate(sub_goal))
         else:
             curriculum_level = self.np_random.choice(self.num_curriculum, p=self.curriculum_prob)

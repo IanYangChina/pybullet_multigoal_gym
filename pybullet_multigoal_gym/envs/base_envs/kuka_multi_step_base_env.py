@@ -10,7 +10,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
     Base class for multi-block long-horizon manipulation tasks with a Kuka iiwa 14 robot
     """
 
-    def __init__(self, render=True, binary_reward=True,
+    def __init__(self, render=True, binary_reward=True, grip_informed_goal=False,
                  image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
                  camera_setup=None, observation_cam_id=0, goal_cam_id=0,
                  gripper_type='parallel_jaw', end_effector_start_on_table=False,
@@ -18,6 +18,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                  obj_range=0.15, target_range=0.15, distance_threshold=0.05,
                  use_curriculum=False, num_curriculum=5, base_curriculum_episode_steps=50, num_goals_to_generate=1e5):
         self.binary_reward = binary_reward
+        self.grip_informed_goal = grip_informed_goal
         self.image_observation = image_observation
         self.goal_image = goal_image
         if depth_image:
@@ -310,6 +311,10 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             door_joint_pos, door_joint_vel, keypoint_state = self.chest_robot.calc_robot_state()
             state = state + [[door_joint_pos], [door_joint_vel]] + keypoint_state
             achieved_goal.insert(0, [door_joint_pos])
+
+        if self.grip_informed_goal:
+            achieved_goal.append(gripper_xyz)
+            achieved_goal.append(gripper_finger_closeness)
 
         state = np.concatenate(state)
         policy_state = np.concatenate(policy_state)
