@@ -11,10 +11,8 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
                  task_decomposition=False, abstract_demonstration=False,
                  use_curriculum=False, num_goals_to_generate=1e5):
         self.task_decomposition = task_decomposition
-        self.grip_informed_goal = False
-        if task_decomposition:
-            self.grip_informed_goal = True
-        self.num_steps = num_block
+        self.grip_informed_goal = task_decomposition
+        self.num_steps = num_block * 2
         self.abstract_demonstration = abstract_demonstration
         if self.abstract_demonstration:
             self.step_demonstrator = StepDemonstrator([
@@ -71,17 +69,26 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
 
             if self.task_decomposition:
                 self.sub_goals = []
-                for _ in range(self.num_steps):
-                    sub_goal = [None for _ in range(self.num_steps)]
+                for _ in range(int(self.num_steps/2)):
+                    sub_goal_pick = [None for _ in range(self.num_block)]
+                    for i in range(self.num_block):
+                        if i <= (_-1):
+                            sub_goal_pick[new_order.index(i)] = target_xyzs[i]
+                        else:
+                            sub_goal_pick[new_order.index(i)] = block_poses[new_order.index(i)]
+                    sub_goal_pick.append(block_poses[new_order.index(_)].copy())
+                    sub_goal_pick.append([0.03])
+                    self.sub_goals.append(np.concatenate(sub_goal_pick))
+
+                    sub_goal_place = [None for _ in range(self.num_block)]
                     for i in range(self.num_block):
                         if i <= _:
-                            sub_goal[new_order.index(i)] = target_xyzs[i]
+                            sub_goal_place[new_order.index(i)] = target_xyzs[i]
                         else:
-                            sub_goal[new_order.index(i)] = block_poses[new_order.index(i)]
-                    if self.grip_informed_goal:
-                        sub_goal.append(target_xyzs[_].copy())
-                        sub_goal.append([0.03])
-                    self.sub_goals.append(np.concatenate(sub_goal))
+                            sub_goal_place[new_order.index(i)] = block_poses[new_order.index(i)]
+                    sub_goal_place.append(target_xyzs[_].copy())
+                    sub_goal_place.append([0.03])
+                    self.sub_goals.append(np.concatenate(sub_goal_place))
         else:
             curriculum_level = self.np_random.choice(self.num_curriculum, p=self.curriculum_prob)
             self.curriculum_goal_step = curriculum_level * 25 + self.base_curriculum_episode_steps
