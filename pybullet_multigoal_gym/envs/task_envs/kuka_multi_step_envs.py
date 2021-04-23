@@ -4,7 +4,7 @@ from pybullet_multigoal_gym.envs.base_envs.kuka_multi_step_base_env import KukaB
 
 
 class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
-    def __init__(self, render=True, binary_reward=True,
+    def __init__(self, render=True, binary_reward=True, distance_threshold=0.05,
                  image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
                  camera_setup=None, observation_cam_id=0, goal_cam_id=0,
                  gripper_type='parallel_jaw', num_block=5, joint_control=False,
@@ -18,7 +18,8 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
             self.step_demonstrator = StepDemonstrator([
                 [_ for _ in range(self.num_steps)]
             ])
-        KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward, grip_informed_goal=self.grip_informed_goal,
+        KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward, distance_threshold=distance_threshold,
+                                         grip_informed_goal=self.grip_informed_goal,
                                          image_observation=image_observation, goal_image=goal_image, depth_image=depth_image,
                                          visualize_target=visualize_target,
                                          camera_setup=camera_setup, observation_cam_id=observation_cam_id, goal_cam_id=goal_cam_id,
@@ -110,12 +111,12 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
 
 
 class KukaBlockRearrangeEnv(KukaBulletMultiBlockEnv):
-    def __init__(self, render=True, binary_reward=True,
+    def __init__(self, render=True, binary_reward=True, distance_threshold=0.05,
                  image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
                  camera_setup=None, observation_cam_id=0, goal_cam_id=0,
                  gripper_type='parallel_jaw', num_block=5, joint_control=False,
                  use_curriculum=False, num_goals_to_generate=1e5):
-        KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward,
+        KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward, distance_threshold=distance_threshold,
                                          image_observation=image_observation, goal_image=goal_image, depth_image=depth_image,
                                          visualize_target=visualize_target,
                                          camera_setup=camera_setup, observation_cam_id=observation_cam_id, goal_cam_id=goal_cam_id,
@@ -177,7 +178,7 @@ class KukaBlockRearrangeEnv(KukaBulletMultiBlockEnv):
 
 
 class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
-    def __init__(self, render=True, binary_reward=True,
+    def __init__(self, render=True, binary_reward=True, distance_threshold=0.05,
                  image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
                  camera_setup=None, observation_cam_id=0, goal_cam_id=0,
                  gripper_type='parallel_jaw', num_block=5, joint_control=False,
@@ -190,7 +191,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
             self.step_demonstrator = StepDemonstrator([
                 [_ for _ in range(self.num_steps)]
             ])
-        KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward,
+        KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward, distance_threshold=distance_threshold,
                                          image_observation=image_observation, goal_image=goal_image, depth_image=depth_image,
                                          visualize_target=visualize_target,
                                          camera_setup=camera_setup, observation_cam_id=observation_cam_id, goal_cam_id=goal_cam_id,
@@ -248,7 +249,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
 
 
 class KukaChestPushEnv(KukaBulletMultiBlockEnv):
-    def __init__(self, render=True, binary_reward=True,
+    def __init__(self, render=True, binary_reward=True, distance_threshold=0.05,
                  image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
                  camera_setup=None, observation_cam_id=0, goal_cam_id=0,
                  gripper_type='parallel_jaw', num_block=5, joint_control=False,
@@ -261,7 +262,7 @@ class KukaChestPushEnv(KukaBulletMultiBlockEnv):
             self.step_demonstrator = StepDemonstrator([
                 [_ for _ in range(self.num_steps)]
             ])
-        KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward,
+        KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward, distance_threshold=distance_threshold,
                                          image_observation=image_observation, goal_image=goal_image, depth_image=depth_image,
                                          visualize_target=visualize_target,
                                          camera_setup=camera_setup, observation_cam_id=observation_cam_id, goal_cam_id=goal_cam_id,
