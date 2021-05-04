@@ -129,8 +129,8 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
                     max_episode_steps=max_episode_steps,
                 )
         else:
-            if task == 'block_stack':
-                assert num_block >= 2, "need at least 2 blocks to stack"
+            # if task == 'block_stack':
+            #     assert num_block >= 2, "need at least 2 blocks to stack"
             assert num_block <= 5, "only support up to 5 blocks"
             register(
                     id=env_id,

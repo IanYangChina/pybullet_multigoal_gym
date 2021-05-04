@@ -11,8 +11,10 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
                  task_decomposition=False, abstract_demonstration=False,
                  use_curriculum=False, num_goals_to_generate=1e5):
         self.task_decomposition = task_decomposition
-        self.grip_informed_goal = task_decomposition
-        self.num_steps = num_block * 2
+        self.num_steps = num_block
+        if self.task_decomposition:
+            self.grip_informed_goal = True
+            self.num_steps = num_block * 2
         self.abstract_demonstration = abstract_demonstration
         if self.abstract_demonstration:
             self.step_demonstrator = StepDemonstrator([

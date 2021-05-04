@@ -6,7 +6,7 @@ import pybullet_multigoal_gym as pmg
 num_episodes = 300
 env = pmg.make_env(task='block_stack',
                    gripper='parallel_jaw',
-                   num_block=4,
+                   num_block=1,
                    render=True,
                    visualize_target=True,
                    binary_reward=True,
@@ -32,8 +32,8 @@ while True:
     print(env.desired_goal)
     env.set_sub_goal(1)
     print(env.desired_goal)
-    env.set_sub_goal(2)
-    print(env.desired_goal)
-    env.set_sub_goal(3)
-    print(env.desired_goal)
+    # env.set_sub_goal(2)
+    # print(env.desired_goal)
+    # env.set_sub_goal(3)
+    # print(env.desired_goal)
     env.reset()
