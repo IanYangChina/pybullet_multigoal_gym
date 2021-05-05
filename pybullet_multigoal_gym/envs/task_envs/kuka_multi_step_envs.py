@@ -17,9 +17,10 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
             self.num_steps = num_block * 2
         self.abstract_demonstration = abstract_demonstration
         if self.abstract_demonstration:
-            self.step_demonstrator = StepDemonstrator([
-                [_ for _ in range(self.num_steps)]
-            ])
+            demonstrations = []
+            for i in range(self.num_steps):
+                demonstrations.append([_ for _ in range(i+1)])
+            self.step_demonstrator = StepDemonstrator(demonstrations)
         KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward, distance_threshold=distance_threshold,
                                          grip_informed_goal=self.grip_informed_goal,
                                          image_observation=image_observation, goal_image=goal_image, depth_image=depth_image,
@@ -190,9 +191,10 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
         self.num_steps = num_block+1
         self.abstract_demonstration = abstract_demonstration
         if self.abstract_demonstration:
-            self.step_demonstrator = StepDemonstrator([
-                [_ for _ in range(self.num_steps)]
-            ])
+            demonstrations = []
+            for i in range(self.num_steps):
+                demonstrations.append([_ for _ in range(i+1)])
+            self.step_demonstrator = StepDemonstrator(demonstrations)
         KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward, distance_threshold=distance_threshold,
                                          image_observation=image_observation, goal_image=goal_image, depth_image=depth_image,
                                          visualize_target=visualize_target,
@@ -261,9 +263,10 @@ class KukaChestPushEnv(KukaBulletMultiBlockEnv):
         self.num_steps = num_block+1
         self.abstract_demonstration = abstract_demonstration
         if self.abstract_demonstration:
-            self.step_demonstrator = StepDemonstrator([
-                [_ for _ in range(self.num_steps)]
-            ])
+            demonstrations = []
+            for i in range(self.num_steps):
+                demonstrations.append([_ for _ in range(i+1)])
+            self.step_demonstrator = StepDemonstrator(demonstrations)
         KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward, distance_threshold=distance_threshold,
                                          image_observation=image_observation, goal_image=goal_image, depth_image=depth_image,
                                          visualize_target=visualize_target,
