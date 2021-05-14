@@ -13,8 +13,17 @@ original Gym environment. There are DDPG-HER, SAC-HER, and others.
 Expired mujoco license got me here. I will also retrain those agents and pose performance ASAP.
 
 This package also provides some harder tasks for long-horizon sparse reward robotic arm manipulation tasks
-on this package as well. All the environments have been summarised in a [paper](https://arxiv.org/abs/2105.05985).
-There are still on-going updates for this package.
+on this package as well. All the environments have been summarised in a paper.
+There are still on-going updates for this package, the [v1.0 release] is the one published on Taros 2021 and [ArXiv](https://arxiv.org/abs/2105.05985).
+
+```
+@article{xyangPMG,
+  title={An Open-Source Multi-Goal Reinforcement Learning Environment for Robotic Manipulation with Pybullet},
+  author={Xintong Yang, Ze Ji, Jing Wu, Yu-Kun Lai},
+  journal={arXiv preprint arXiv:2105.05985},
+  year={2021}
+}
+```
 
 ### Installation
 
