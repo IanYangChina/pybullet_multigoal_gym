@@ -75,6 +75,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         self.target_keys = ['target_blue', 'target_green', 'target_purple', 'target_red', 'target_yellow']
 
         self.sub_goals = None
+        self.sub_goal_ind = -1
         self.desired_goal = None
         self.desired_goal_image = None
 
@@ -167,7 +168,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             self.chest_robot.set_base_pos(self._p, position=chest_xyz)
 
         # generate goals & images
-        self._generate_goal(block_poses)
+        self._generate_goal(block_poses, new_target=True)
         if self.goal_image:
             self._generate_goal_image(block_poses)
 
@@ -209,6 +210,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             self.curriculum_prob[-1] = 1.0
 
     def set_sub_goal(self, sub_goal_ind):
+        self.sub_goal_ind = sub_goal_ind
         self.desired_goal = self.sub_goals[sub_goal_ind].copy()
         if self.visualize_target:
             index_offset = 0
@@ -222,7 +224,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             self._update_block_target(block_target_pos)
         return self.desired_goal
 
-    def _generate_goal(self, block_poses):
+    def _generate_goal(self, block_poses, new_target=True):
         raise NotImplementedError
 
     def _update_block_target(self, desired_goal, index_offset=0):
@@ -279,12 +281,14 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         gripper_xyz, gripper_rpy, gripper_finger_closeness, gripper_vel_xyz, gripper_vel_rpy, gripper_finger_vel, joint_poses = self.robot.calc_robot_state()
         assert self.desired_goal is not None
 
+        block_xyzs = []
         block_states = []
         policy_block_states = []
         achieved_goal = []
         for n in range(self.num_block):
             block_name = self.block_keys[n]
             block_xyz, block_rpy = self._p.getBasePositionAndOrientation(self.object_bodies[block_name])
+            block_xyzs.append(np.array(block_xyz))
             block_rel_xyz = gripper_xyz - np.array(block_xyz)
             block_vel_xyz, block_vel_rpy = self._p.getBaseVelocity(self.object_bodies[block_name])
             block_rel_vel_xyz = gripper_vel_xyz - np.array(block_vel_xyz)
@@ -321,6 +325,9 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         state = np.concatenate(state)
         policy_state = np.concatenate(policy_state)
         achieved_goal = np.concatenate(achieved_goal)
+
+        self._generate_goal(block_poses=block_xyzs, new_target=False)
+        self.set_sub_goal(sub_goal_ind=self.sub_goal_ind)
 
         assert achieved_goal.shape == self.desired_goal.shape
 

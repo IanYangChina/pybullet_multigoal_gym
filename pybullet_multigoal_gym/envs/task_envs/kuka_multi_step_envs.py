@@ -21,6 +21,8 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
             for i in range(self.num_steps):
                 demonstrations.append([_ for _ in range(i+1)])
             self.step_demonstrator = StepDemonstrator(demonstrations)
+        self.last_order = None
+        self.last_target_poses = None
         KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward, distance_threshold=distance_threshold,
                                          grip_informed_goal=self.grip_informed_goal,
                                          image_observation=image_observation, goal_image=goal_image, depth_image=depth_image,
@@ -34,34 +36,41 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
                                          num_curriculum=num_block,
                                          num_goals_to_generate=num_goals_to_generate)
 
-    def _generate_goal(self, block_poses):
+    def _generate_goal(self, block_poses, new_target=True):
         desired_goal = [None for _ in range(self.num_block)]
 
-        # generate a random order of blocks to be stacked
-        new_order = np.arange(self.num_block, dtype=np.int)
-        self.np_random.shuffle(new_order)
-        new_order = new_order.tolist()
+        if new_target:
+            # generate a random order of blocks to be stacked
+            new_order = np.arange(self.num_block, dtype=np.int)
+            self.np_random.shuffle(new_order)
+            new_order = new_order.tolist()
 
-        # generate a random base block position
-        base_target_xyz = None
-        done = False
-        while not done:
-            base_target_xy = self.np_random.uniform(self.robot.target_bound_lower[:-1],
-                                                    self.robot.target_bound_upper[:-1])
-            target_not_overlap = []
-            for pos in block_poses:
-                target_not_overlap.append((np.linalg.norm(base_target_xy - pos[:-1]) > 0.08))
-            if all(target_not_overlap):
-                # put the block is on the table surface
-                base_target_xyz = np.concatenate((base_target_xy, [0.175]))
-                done = True
+            # generate a random base block position
+            base_target_xyz = None
+            done = False
+            while not done:
+                base_target_xy = self.np_random.uniform(self.robot.target_bound_lower[:-1],
+                                                        self.robot.target_bound_upper[:-1])
+                target_not_overlap = []
+                for pos in block_poses:
+                    target_not_overlap.append((np.linalg.norm(base_target_xy - pos[:-1]) > 0.08))
+                if all(target_not_overlap):
+                    # put the block is on the table surface
+                    base_target_xyz = np.concatenate((base_target_xy, [0.175]))
+                    done = True
 
-        # generate the stacked target poses
-        target_xyzs = [base_target_xyz]
-        for _ in range(self.num_block - 1):
-            next_target_xyz = base_target_xyz.copy()
-            next_target_xyz[-1] = 0.175 + self.block_size * (_ + 1)
-            target_xyzs.append(next_target_xyz.copy())
+            # generate the stacked target poses
+            target_xyzs = [base_target_xyz]
+            for _ in range(self.num_block - 1):
+                next_target_xyz = base_target_xyz.copy()
+                next_target_xyz[-1] = 0.175 + self.block_size * (_ + 1)
+                target_xyzs.append(next_target_xyz.copy())
+
+            self.last_order = new_order
+            self.last_target_poses = target_xyzs
+        else:
+            new_order = self.last_order
+            target_xyzs = self.last_target_poses
 
         if not self.curriculum:
             # generate goal and set target poses according to the order
@@ -130,7 +139,7 @@ class KukaBlockRearrangeEnv(KukaBulletMultiBlockEnv):
                                          num_curriculum=num_block,
                                          num_goals_to_generate=num_goals_to_generate)
 
-    def _generate_goal(self, block_poses):
+    def _generate_goal(self, block_poses, new_target=True):
         desired_goal = []
 
         if not self.curriculum:
@@ -206,7 +215,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                                          num_curriculum=num_block+1,
                                          num_goals_to_generate=num_goals_to_generate)
 
-    def _generate_goal(self, block_poses):
+    def _generate_goal(self, block_poses, new_target=True):
         # the first element is the largest openness of the door (equal to the door joint pose upper limit)
         desired_goal = [[0.10]]
 
@@ -278,7 +287,7 @@ class KukaChestPushEnv(KukaBulletMultiBlockEnv):
                                          num_curriculum=num_block+1,
                                          num_goals_to_generate=num_goals_to_generate)
 
-    def _generate_goal(self, block_poses):
+    def _generate_goal(self, block_poses, new_target=True):
         # the first element is the largest openness of the door (equal to the door joint pose upper limit)
         desired_goal = [[0.12]]
 
