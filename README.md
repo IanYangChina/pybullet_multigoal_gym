@@ -12,9 +12,18 @@ original Gym environment. There are DDPG-HER, SAC-HER, and others.
 <a href="https://github.com/IanYangChina/DRL_Implementation.git" target="_blank">DRL_Implementation.</a>
 Expired mujoco license got me here. I will also retrain those agents and pose performance ASAP.
 
-Our team is preparing some harder tasks for long-horizon sparse reward robotic arm manipulation tasks
-on this package as well. All the environments will be summarised in a paper for references ASAP. We will
-release a stable version when everything is set, but feel free to play with the current branch.
+This package also provides some harder tasks for long-horizon sparse reward robotic arm manipulation tasks
+on this package as well. All the environments have been summarised in a paper.
+There are still on-going updates for this package, the [v1.0 release] is the one published on Taros 2021 and [ArXiv](https://arxiv.org/abs/2105.05985).
+
+```
+@article{xyangPMG,
+  title={An Open-Source Multi-Goal Reinforcement Learning Environment for Robotic Manipulation with Pybullet},
+  author={Xintong Yang, Ze Ji, Jing Wu, Yu-Kun Lai},
+  journal={arXiv preprint arXiv:2105.05985},
+  year={2021}
+}
+```
 
 ### Installation
 
