@@ -314,7 +314,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             # door joint state represents the openness and velocity of the door
             door_joint_pos, door_joint_vel, keypoint_state = self.chest_robot.calc_robot_state()
             state = state + [[door_joint_pos], [door_joint_vel]] + keypoint_state
-            policy_state = policy_state + [door_joint_pos] + keypoint_state
+            policy_state = policy_state + [[door_joint_pos]] + keypoint_state
             achieved_goal.insert(0, [door_joint_pos])
 
         if self.grip_informed_goal:
