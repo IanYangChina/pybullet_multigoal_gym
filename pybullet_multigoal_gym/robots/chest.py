@@ -64,3 +64,6 @@ class Chest(URDFBasedRobot):
     def get_base_pos(self, bullet_client):
         xyz, quat = bullet_client.getBasePositionAndOrientation(self.body_id)
         return xyz, quat
+
+    def get_part_xyz(self, part_name):
+        return self.parts[part_name].get_position()

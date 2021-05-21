@@ -73,6 +73,10 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         self.block_size = 0.03
         self.block_keys = ['block_blue', 'block_green', 'block_purple', 'block_red', 'block_yellow']
         self.target_keys = ['target_blue', 'target_green', 'target_purple', 'target_red', 'target_yellow']
+        if self.grip_informed_goal:
+            self.object_bodies.update({'target_gripper_tip': None})
+            self.object_initial_pos.update({'target_gripper_tip': [-0.52, 0.0, 0.186, 0.0, 0.0, 0.0, 1.0]})
+            self.grip_target_key = 'target_gripper_tip'
 
         self.sub_goals = None
         self.sub_goal_ind = -1
@@ -130,16 +134,27 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                     os.path.join(self.object_assets_path, block_name + ".urdf"),
                     basePosition=self.object_initial_pos[block_name][:3],
                     baseOrientation=self.object_initial_pos[block_name][3:])
-                target_name = self.target_keys[n]
 
+                target_name = self.target_keys[n]
                 self.object_bodies[target_name] = self._p.loadURDF(
                     os.path.join(self.object_assets_path, target_name + ".urdf"),
                     basePosition=self.object_initial_pos[target_name][:3],
                     baseOrientation=self.object_initial_pos[target_name][3:])
+
                 if not self.visualize_target:
                     self.set_object_pose(self.object_bodies[target_name],
                                          [0.0, 0.0, -3.0],
                                          self.object_initial_pos[target_name][3:])
+
+            if self.grip_informed_goal:
+                self.object_bodies[self.grip_target_key] = self._p.loadURDF(
+                    os.path.join(self.object_assets_path, "target_gripper_tip.urdf"),
+                    basePosition=self.object_initial_pos[self.grip_target_key][:3],
+                    baseOrientation=self.object_initial_pos[self.grip_target_key][3:])
+                if not self.visualize_target:
+                    self.set_object_pose(self.object_bodies[self.grip_target_key],
+                                         [0.0, 0.0, -3.0],
+                                         self.object_initial_pos[self.grip_target_key][3:])
 
         # randomize object positions
         block_poses = []
@@ -222,6 +237,8 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                     self.desired_goal[index_offset+_*3:index_offset+_*3+3]
                 )
             self._update_block_target(block_target_pos)
+            if self.grip_informed_goal:
+                self._update_gripper_target(self.desired_goal[-4:-1])
         return self.desired_goal
 
     def _generate_goal(self, block_poses, new_target=True):
@@ -232,6 +249,11 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             self.set_object_pose(self.object_bodies[self.target_keys[_]],
                                  desired_goal[_+index_offset],
                                  self.object_initial_pos[self.target_keys[_]][3:])
+
+    def _update_gripper_target(self, pos):
+        self.set_object_pose(self.object_bodies[self.grip_target_key],
+                             pos,
+                             self.object_initial_pos[self.grip_target_key][3:])
 
     def _generate_goal_image(self, block_poses):
         target_obj_pos = self.desired_goal.copy()

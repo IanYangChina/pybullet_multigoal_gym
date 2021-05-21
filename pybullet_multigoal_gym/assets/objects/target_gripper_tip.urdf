@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+
+<robot name="gripper_tip_target">
+    <material name="Grey">
+        <color rgba="0.8 0.8 0.8 0.5"/>
+    </material>
+    <link name="gripper_tip_target">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0.0"/>
+            <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.02 0.02 0.02"/>
+            </geometry>
+            <material name="Grey"/>
+        </visual>
+    </link>
+</robot>
