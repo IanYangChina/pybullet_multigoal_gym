@@ -75,7 +75,7 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
         if not self.curriculum:
             # generate goal and set target poses according to the order
             for _ in range(self.num_block):
-                desired_goal[new_order.index(_)] = target_xyzs[_]
+                desired_goal[new_order[_]] = target_xyzs[_]
             if self.grip_informed_goal:
                 desired_goal.append(target_xyzs[-1].copy())
                 desired_goal.append([0.03])
@@ -86,19 +86,19 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
                     sub_goal_pick = [None for _ in range(self.num_block)]
                     for i in range(self.num_block):
                         if i <= (_-1):
-                            sub_goal_pick[new_order.index(i)] = target_xyzs[i]
+                            sub_goal_pick[new_order[i]] = target_xyzs[i]
                         else:
-                            sub_goal_pick[new_order.index(i)] = block_poses[new_order.index(i)]
-                    sub_goal_pick.append(block_poses[new_order.index(_)].copy())
+                            sub_goal_pick[new_order[i]] = block_poses[new_order[i]]
+                    sub_goal_pick.append(block_poses[new_order[_]].copy())
                     sub_goal_pick.append([0.03])
                     self.sub_goals.append(np.concatenate(sub_goal_pick))
 
                     sub_goal_place = [None for _ in range(self.num_block)]
                     for i in range(self.num_block):
                         if i <= _:
-                            sub_goal_place[new_order.index(i)] = target_xyzs[i]
+                            sub_goal_place[new_order[i]] = target_xyzs[i]
                         else:
-                            sub_goal_place[new_order.index(i)] = block_poses[new_order.index(i)]
+                            sub_goal_place[new_order[i]] = block_poses[new_order[i]]
                     sub_goal_place.append(target_xyzs[_].copy())
                     sub_goal_place.append([0.03])
                     self.sub_goals.append(np.concatenate(sub_goal_place))
@@ -108,9 +108,9 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
 
             for _ in range(self.num_block):
                 if _ <= curriculum_level:
-                    desired_goal[new_order.index(_)] = target_xyzs[_]
+                    desired_goal[new_order[_]] = target_xyzs[_]
                 else:
-                    desired_goal[new_order.index(_)] = block_poses[new_order.index(_)]
+                    desired_goal[new_order[_]] = block_poses[new_order[_]]
 
             if self.curriculum_update:
                 self.num_generated_goals_per_curriculum[curriculum_level] += 1
@@ -221,7 +221,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
 
     def _generate_goal(self, block_poses, new_target=True):
         # the first element is the largest openness of the door (equal to the door joint pose upper limit)
-        desired_goal = [[0.10]]
+        desired_goal = [[0.12]]
 
         # all blocks should go into the sphere of 0.05 radius centred at the chest centre
         chest_center_xyz, _ = self.chest_robot.get_base_pos(self._p)
