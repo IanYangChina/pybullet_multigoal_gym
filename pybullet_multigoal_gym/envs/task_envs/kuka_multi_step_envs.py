@@ -233,10 +233,12 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
         chest_top_xyz[-1] = 0.3
 
         if not self.curriculum:
+            current_gripper_tip_xyz = self.robot.parts['iiwa_gripper_tip'].get_position()
+
             for _ in range(self.num_block):
                 desired_goal.append(chest_center_xyz)
                 if self.grip_informed_goal:
-                    desired_goal.append(chest_top_xyz.copy())
+                    desired_goal.append(current_gripper_tip_xyz.copy())
                     desired_goal.append([0.03])
 
             if self.task_decomposition:
@@ -244,8 +246,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
 
                 sub_goal_open_door = [[0.12]]
                 sub_goal_open_door = sub_goal_open_door + block_poses
-                sub_goal_open_door.append(self.chest_robot.get_part_xyz('chest_door_left_keypoint'))
-                sub_goal_open_door[-1][0] = -0.58
+                sub_goal_open_door.append(current_gripper_tip_xyz.copy())
                 sub_goal_open_door.append([0.03])
                 self.sub_goals.append(np.concatenate(sub_goal_open_door))
 
@@ -279,8 +280,8 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                         if i < _:
                             sub_goal_drop[i] = chest_center_xyz.copy()
                     sub_goal_drop[_] = chest_center_xyz.copy()
-                    sub_goal_drop.append(chest_top_xyz.copy())
-                    sub_goal_drop.append([0.03])
+                    sub_goal_drop.append(current_gripper_tip_xyz.copy())
+                    sub_goal_drop.append([0.05])
                     sub_goal_drop = [[0.12]] + sub_goal_drop
                     self.sub_goals.append(np.concatenate(sub_goal_drop))
         else:
