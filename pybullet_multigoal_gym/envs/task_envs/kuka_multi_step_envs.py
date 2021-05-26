@@ -221,7 +221,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
 
     def _generate_goal(self, block_poses, new_target=True):
         # the first element is the largest openness of the door (equal to the door joint pose upper limit)
-        desired_goal = [[0.12]]
+        desired_goal = [[0.10]]
 
         # all blocks should go into the sphere of 0.05 radius centred at the chest centre
         chest_center_xyz, _ = self.chest_robot.get_base_pos(self._p)
@@ -244,7 +244,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
             if self.task_decomposition:
                 self.sub_goals = []
 
-                sub_goal_open_door = [[0.12]]
+                sub_goal_open_door = [[0.10]]
                 sub_goal_open_door = sub_goal_open_door + block_poses
                 sub_goal_open_door.append(current_gripper_tip_xyz.copy())
                 sub_goal_open_door.append([0.03])
@@ -262,7 +262,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                     # finger width
                     sub_goal_pick.append([0.03])
                     # chest door joint state
-                    sub_goal_pick = [[0.12]] + sub_goal_pick
+                    sub_goal_pick = [[0.10]] + sub_goal_pick
                     self.sub_goals.append(np.concatenate(sub_goal_pick))
 
                     sub_goal_move_to_chest_top = block_poses.copy()
@@ -272,7 +272,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                     sub_goal_move_to_chest_top[_] = chest_top_xyz.copy()
                     sub_goal_move_to_chest_top.append(chest_top_xyz.copy())
                     sub_goal_move_to_chest_top.append([0.03])
-                    sub_goal_move_to_chest_top = [[0.12]] + sub_goal_move_to_chest_top
+                    sub_goal_move_to_chest_top = [[0.10]] + sub_goal_move_to_chest_top
                     self.sub_goals.append(np.concatenate(sub_goal_move_to_chest_top))
 
                     sub_goal_drop = block_poses.copy()
@@ -282,7 +282,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                     sub_goal_drop[_] = chest_center_xyz.copy()
                     sub_goal_drop.append(current_gripper_tip_xyz.copy())
                     sub_goal_drop.append([0.05])
-                    sub_goal_drop = [[0.12]] + sub_goal_drop
+                    sub_goal_drop = [[0.10]] + sub_goal_drop
                     self.sub_goals.append(np.concatenate(sub_goal_drop))
         else:
             curriculum_level = self.np_random.choice(self.num_curriculum, p=self.curriculum_prob)
