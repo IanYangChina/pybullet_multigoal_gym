@@ -4,7 +4,7 @@ from pybullet_multigoal_gym.envs.base_envs.kuka_multi_step_base_env import KukaB
 
 
 class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
-    def __init__(self, render=True, binary_reward=True, distance_threshold=0.05,
+    def __init__(self, render=True, binary_reward=True, distance_threshold=0.05, random_order=False,
                  image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
                  camera_setup=None, observation_cam_id=0, goal_cam_id=0,
                  gripper_type='parallel_jaw', num_block=5, joint_control=False,
@@ -21,6 +21,7 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
             for i in range(self.num_steps):
                 demonstrations.append([_ for _ in range(i+1)])
             self.step_demonstrator = StepDemonstrator(demonstrations)
+        self.random_order = random_order
         self.last_order = None
         self.last_target_poses = None
         KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward, distance_threshold=distance_threshold,
@@ -42,7 +43,8 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
         if new_target:
             # generate a random order of blocks to be stacked
             new_order = np.arange(self.num_block, dtype=np.int)
-            self.np_random.shuffle(new_order)
+            if self.random_order:
+                self.np_random.shuffle(new_order)
             new_order = new_order.tolist()
 
             # generate a random base block position
