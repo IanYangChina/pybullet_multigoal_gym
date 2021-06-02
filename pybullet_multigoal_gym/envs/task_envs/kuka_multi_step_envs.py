@@ -212,7 +212,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                                          image_observation=image_observation, goal_image=goal_image, depth_image=depth_image,
                                          visualize_target=visualize_target,
                                          camera_setup=camera_setup, observation_cam_id=observation_cam_id, goal_cam_id=goal_cam_id,
-                                         gripper_type=gripper_type, end_effector_start_on_table=False,
+                                         gripper_type=gripper_type, end_effector_start_on_table=True,
                                          num_block=num_block, joint_control=joint_control, grasping=True, chest=True, chest_door='up_sliding',
                                          obj_range=0.1,
                                          use_curriculum=use_curriculum,
