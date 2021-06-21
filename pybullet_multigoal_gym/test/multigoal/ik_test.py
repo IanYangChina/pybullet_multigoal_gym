@@ -62,7 +62,7 @@ rp = [0, -0.52563, 0, 2.09435, 0, -0.495188, 0]
 jd = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
 
 orn = p.getQuaternionFromEuler([0, -math.pi, 0])
-start_pos = [-0.33, 0.2, 0.26]
+start_pos = [-0.4, 0.2, 0.26]
 jointPoses = p.calculateInverseKinematics(kukaId, kukaEndEffectorIndex,
                                           start_pos, orn, ll, ul, jr, rp,
                                           maxNumIterations=40,
@@ -82,7 +82,7 @@ for i in range(numJoints):
 robotiq_gripper_joint_index = [12, 14, 16, 17, 19, 20]
 robotiq_gripper_ctrl_multiplier = np.array([1.0, 1.0, 1.0, -1.0, 1.0, -1.0])
 
-gripper_joint_index = [12, 14]
+gripper_joint_index = [13, 15]
 gripper_ctrl_multiplier = np.array([1, 1])
 
 for i in range(len(gripper_joint_index)):
@@ -96,10 +96,10 @@ p.setPhysicsEngineParameter(fixedTimeStep=0.002 * 20, numSolverIterations=5, num
 
 i = 0
 mp = 1
-g = 0.03
+g = 0.2
 start_time = time.process_time()
 while True:
-    time.sleep(0.05)
+    time.sleep(0.1)
     p.stepSimulation()
 
     # grip_ctrl_bound = 1.0
@@ -109,9 +109,9 @@ while True:
     # g = (a+grip_ctrl_bound) * 0.4
 
     pos = start_pos
-    # pos[0] -= 0.00002 * i
+    pos[0] -= 0.002 * i
     # last_z = pos[2]
-    # pos[2] += 0.00002 * i
+    # pos[2] += 0.0002 * i
     # if pos[2] >= 0.5:
     #     pos[2] = last_z
 
@@ -125,13 +125,13 @@ while True:
                                               pos, orn, ll, ul, jr, rp,
                                               maxNumIterations=40,
                                               residualThreshold=0.00001)
-
+    #
     p.setJointMotorControlArray(bodyUniqueId=kukaId,
                                 jointIndices=[1, 2, 3, 4, 5, 6, 7],
                                 controlMode=p.POSITION_CONTROL,
                                 targetPositions=jointPoses[:7],
                                 targetVelocities=[0, 0, 0, 0, 0, 0, 0],
-                                forces=[500, 500, 500, 500, 500, 500, 500],
+                                forces=np.ones((7,)) * 15,
                                 positionGains=[0.03, 0.03, 0.03, 0.03, 0.03, 0.03, 0.03],
                                 velocityGains=[1, 1, 1, 1, 1, 1, 1])
 
@@ -141,7 +141,7 @@ while True:
                                 controlMode=p.POSITION_CONTROL,
                                 targetPositions=g * gripper_ctrl_multiplier,
                                 targetVelocities=np.zeros((2,)),
-                                forces=np.ones((2,)) * 500,
+                                forces=np.ones((2,)) * 50,
                                 positionGains=np.ones((2,)) * 0.03,
                                 velocityGains=np.ones((2,)))
 

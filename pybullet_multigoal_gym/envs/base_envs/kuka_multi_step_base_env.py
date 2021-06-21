@@ -180,10 +180,10 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                                  self.object_initial_pos[self.block_keys[i]][3:])
 
         if self.chest:
-            if self.np_random.uniform(0, 1) <= 0.5:
-                self.chest_robot.rest_joint_state = self.chest_door_opened_state
-            else:
-                self.chest_robot.rest_joint_state = 0
+            # if self.np_random.uniform(0, 1) <= 0.5:
+            #     self.chest_robot.rest_joint_state = self.chest_door_opened_state
+            # else:
+            #     self.chest_robot.rest_joint_state = 0
             self.chest_robot.robot_specific_reset(self._p)
             new_y = self.np_random.uniform(-self.chest_pos_y_range, self.chest_pos_y_range)
             chest_xyz = self.object_initial_pos['chest'][:3].copy()

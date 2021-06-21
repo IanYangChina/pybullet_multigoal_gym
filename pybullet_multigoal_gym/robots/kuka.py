@@ -199,7 +199,7 @@ class Kuka(URDFBasedRobot):
                                                 controlMode=bullet_client.POSITION_CONTROL,
                                                 targetPositions=joint_poses,
                                                 targetVelocities=np.zeros((7,)),
-                                                forces=np.ones((7,)) * 100,
+                                                forces=np.ones((7,)) * 15,
                                                 positionGains=np.ones((7,)) * 0.03,
                                                 velocityGains=np.ones((7,)))
 
@@ -210,7 +210,7 @@ class Kuka(URDFBasedRobot):
                                                 controlMode=bullet_client.POSITION_CONTROL,
                                                 targetPositions=target_joint_poses,
                                                 targetVelocities=np.zeros((self.gripper_num_joint,)),
-                                                forces=np.ones((self.gripper_num_joint,)) * 500,
+                                                forces=np.ones((self.gripper_num_joint,)) * 50,
                                                 positionGains=np.ones((self.gripper_num_joint,)) * 0.03,
                                                 velocityGains=np.ones((self.gripper_num_joint,)))
 
