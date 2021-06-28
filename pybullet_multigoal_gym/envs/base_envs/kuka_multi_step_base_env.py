@@ -180,10 +180,17 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                                  self.object_initial_pos[self.block_keys[i]][3:])
 
         if self.chest:
-            # if self.np_random.uniform(0, 1) <= 0.5:
-            #     self.chest_robot.rest_joint_state = self.chest_door_opened_state
-            # else:
-            #     self.chest_robot.rest_joint_state = 0
+            if self.np_random.uniform(0, 1) <= 0.5:
+                self.chest_robot.rest_joint_state = self.chest_door_opened_state
+                if self.grasping:
+                    self.robot.set_finger_joint_state(pos=self.robot.gripper_grasp_block_state)
+                    self.robot.set_kuka_joint_state(pos=None, vel=None, gripper_tip_pos=block_poses[0], bullet_client=self._p)
+                else:
+                    grip_pos = block_poses[0].copy()
+                    grip_pos[0] += 0.03
+                    self.robot.set_kuka_joint_state(pos=None, vel=None, gripper_tip_pos=grip_pos, bullet_client=self._p)
+            else:
+                self.chest_robot.rest_joint_state = 0
             self.chest_robot.robot_specific_reset(self._p)
             new_y = self.np_random.uniform(-self.chest_pos_y_range, self.chest_pos_y_range)
             chest_xyz = self.object_initial_pos['chest'][:3].copy()
@@ -192,6 +199,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
 
         # generate goals & images
         self._generate_goal(block_poses, new_target=True)
+        self.sub_goal_ind = -1
         if self.goal_image:
             self._generate_goal_image(block_poses)
 
@@ -352,8 +360,8 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             achieved_goal.append(gripper_xyz)
             achieved_goal.append(gripper_finger_closeness)
 
-        state = np.concatenate(state)
-        policy_state = np.concatenate(policy_state)
+        state = np.clip(np.concatenate(state), -5.0, 5.0)
+        policy_state = np.clip(np.concatenate(policy_state), -5.0, 5.0)
         achieved_goal = np.concatenate(achieved_goal)
 
         self._generate_goal(block_poses=block_xyzs, new_target=False)

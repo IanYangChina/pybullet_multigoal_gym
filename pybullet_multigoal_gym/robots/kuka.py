@@ -223,7 +223,11 @@ class Kuka(URDFBasedRobot):
             kuka_joint_vel.append(vx)
         return kuka_joint_pos, kuka_joint_vel
 
-    def set_kuka_joint_state(self, pos, vel=None):
+    def set_kuka_joint_state(self, pos=None, vel=None, gripper_tip_pos=None, bullet_client=None):
+        if gripper_tip_pos is not None:
+            assert bullet_client is not None
+            pos = self.compute_ik(bullet_client=bullet_client,
+                                  target_ee_pos=gripper_tip_pos)
         pos = np.array(pos)
         if vel is None:
             vel = np.zeros(pos.shape[0])
