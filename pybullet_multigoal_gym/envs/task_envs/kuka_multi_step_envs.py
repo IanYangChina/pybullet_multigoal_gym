@@ -202,7 +202,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
         self.num_steps = num_block+1
         if self.task_decomposition:
             # self.grip_informed_goal = True,
-            self.num_steps = num_block * 2 + 1
+            self.num_steps = num_block * 3 + 1
         self.abstract_demonstration = abstract_demonstration
         if self.abstract_demonstration:
             demonstrations = []
@@ -266,6 +266,17 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                     # # chest door joint state
                     # sub_goal_pick = [[0.10]] + sub_goal_pick
                     # self.sub_goals.append(np.concatenate(sub_goal_pick))
+
+                    sub_goal_lift_block = block_poses.copy()
+                    # previous blocks should already be within the chest
+                    for i in range(self.num_block):
+                        if i < _:
+                            sub_goal_lift_block[i] = chest_center_xyz.copy()
+                    sub_goal_lift_block[_][-1] = chest_top_xyz[-1]
+                    # sub_goal_move_to_chest_top.append(chest_top_xyz.copy())
+                    # sub_goal_move_to_chest_top.append([0.03])
+                    sub_goal_lift_block = [[0.10]] + sub_goal_lift_block
+                    self.sub_goals.append(np.concatenate(sub_goal_lift_block))
 
                     sub_goal_move_to_chest_top = block_poses.copy()
                     for i in range(self.num_block):

@@ -121,7 +121,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                                  camera_setup=camera_setup,
                                  seed=0, timestep=0.002, frame_skip=20)
 
-    def _task_reset(self):
+    def _task_reset(self, test=False):
         if not self.objects_urdf_loaded:
             # don't reload object urdf
             self.objects_urdf_loaded = True
@@ -180,7 +180,8 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                                  self.object_initial_pos[self.block_keys[i]][3:])
 
         if self.chest:
-            if self.np_random.uniform(0, 1) <= 0.5:
+            # start the episode with a closed chest if it is during evaluation
+            if (not test) and (self.np_random.uniform(0, 1) <= 0.5):
                 self.chest_robot.rest_joint_state = self.chest_door_opened_state
                 if self.grasping:
                     self.robot.set_finger_joint_state(pos=self.robot.gripper_grasp_block_state)

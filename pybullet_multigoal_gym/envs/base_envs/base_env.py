@@ -106,9 +106,9 @@ class BaseBulletMGEnv(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def reset(self):
+    def reset(self, test=False):
         self.robot.reset(self._p)
-        self._task_reset()
+        self._task_reset(test=test)
         obs = self._get_obs()
         return obs
 
@@ -209,7 +209,7 @@ class BaseBulletMGEnv(gym.Env):
         self.camera_matrices[-1] = {'view_matrix': view_matrix,
                                     'proj_matrix': proj_matrix}
 
-    def _task_reset(self):
+    def _task_reset(self, test=False):
         # method to override, purposed to task specific reset
         #   e.g., object random spawn
         raise NotImplementedError
