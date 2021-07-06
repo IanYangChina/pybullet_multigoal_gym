@@ -71,7 +71,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                                  camera_setup=camera_setup,
                                  seed=0, timestep=0.002, frame_skip=20)
 
-    def _task_reset(self):
+    def _task_reset(self, test=False):
         if not self.objects_urdf_loaded:
             # don't reload object urdf
             self.objects_urdf_loaded = True
