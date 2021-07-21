@@ -356,6 +356,10 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             policy_state = policy_state + [[door_joint_pos]] + keypoint_state
             achieved_goal.insert(0, [door_joint_pos])
 
+            # keep the door opened if the robot have somehow opened it
+            if np.abs(self.chest_door_opened_state - door_joint_pos) <= 0.01:
+                self.chest_robot.apply_action([self.chest_door_opened_state], self._p)
+
         if self.grip_informed_goal:
             # gripper informed goals in addition indicates that goal states of the gripper (coordinates & finger width)
             achieved_goal.append(gripper_xyz)
