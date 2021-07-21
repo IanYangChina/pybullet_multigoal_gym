@@ -8,14 +8,17 @@ class Chest(URDFBasedRobot):
             assert 0.0 <= rest_door_state <= 1.57
             model_urdf = 'objects/chest_revolving_door.urdf'
             self.door_joint_name = 'chest_back_wall_bearing_joint'
+            self.chest_door_opened_state = 1.57
         elif self.door == 'up_sliding':
             assert 0.0 <= rest_door_state <= 0.1
             model_urdf = 'objects/chest_up_sliding_door.urdf'
             self.door_joint_name = 'chest_back_wall_door_joint'
+            self.chest_door_opened_state = 0.1
         elif self.door == 'front_sliding':
-            assert 0.0 <= rest_door_state <= 0.1
+            assert 0.0 <= rest_door_state <= 0.12
             model_urdf = 'objects/chest_front_sliding_door.urdf'
             self.door_joint_name = 'chest_back_wall_door_joint'
+            self.chest_door_opened_state = 0.12
         else:
             raise ValueError('invalid door %s' % door, 'only support \'revolving\' and \'up_ or front_sliding\'.')
         URDFBasedRobot.__init__(self,
@@ -54,7 +57,14 @@ class Chest(URDFBasedRobot):
         return door_joint_pos, door_joint_vel, keypoint_state
 
     def apply_action(self, action, bullet_client):
-        pass
+        bullet_client.setJointMotorControlArray(bodyUniqueId=self.body_id,
+                                                jointIndices=[self.joint_id],
+                                                controlMode=bullet_client.POSITION_CONTROL,
+                                                targetPositions=action,
+                                                targetVelocities=[0],
+                                                forces=[500],
+                                                positionGains=[0.03],
+                                                velocityGains=[1])
 
     def set_base_pos(self, bullet_client, position, orientation=None):
         if orientation is None:

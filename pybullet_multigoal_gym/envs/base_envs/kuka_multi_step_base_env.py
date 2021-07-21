@@ -181,17 +181,17 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
 
         if self.chest:
             # start the episode with a closed chest if it is during evaluation
-            if (not test) and (self.np_random.uniform(0, 1) <= 0.5):
-                self.chest_robot.rest_joint_state = self.chest_door_opened_state
-                if self.grasping:
-                    self.robot.set_finger_joint_state(pos=self.robot.gripper_grasp_block_state)
-                    self.robot.set_kuka_joint_state(pos=None, vel=None, gripper_tip_pos=block_poses[0], bullet_client=self._p)
-                else:
-                    grip_pos = block_poses[0].copy()
-                    grip_pos[0] += 0.03
-                    self.robot.set_kuka_joint_state(pos=None, vel=None, gripper_tip_pos=grip_pos, bullet_client=self._p)
-            else:
-                self.chest_robot.rest_joint_state = 0
+            # if (not test) and (self.np_random.uniform(0, 1) <= 0.5):
+            #     self.chest_robot.rest_joint_state = self.chest_door_opened_state
+            #     if self.grasping:
+            #         self.robot.set_finger_joint_state(pos=self.robot.gripper_grasp_block_state)
+            #         self.robot.set_kuka_joint_state(pos=None, vel=None, gripper_tip_pos=block_poses[0], bullet_client=self._p)
+            #     else:
+            #         grip_pos = block_poses[0].copy()
+            #         grip_pos[0] += 0.03
+            #         self.robot.set_kuka_joint_state(pos=None, vel=None, gripper_tip_pos=grip_pos, bullet_client=self._p)
+            # else:
+            #     self.chest_robot.rest_joint_state = 0
             self.chest_robot.robot_specific_reset(self._p)
             new_y = self.np_random.uniform(-self.chest_pos_y_range, self.chest_pos_y_range)
             chest_xyz = self.object_initial_pos['chest'][:3].copy()
@@ -355,6 +355,10 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             state = state + [[door_joint_pos], [door_joint_vel]] + keypoint_state
             policy_state = policy_state + [[door_joint_pos]] + keypoint_state
             achieved_goal.insert(0, [door_joint_pos])
+
+            # keep the door opened if the robot have somehow opened it
+            if np.abs(self.chest_door_opened_state - door_joint_pos) <= 0.01:
+                self.chest_robot.apply_action([self.chest_door_opened_state], self._p)
 
         if self.grip_informed_goal:
             # gripper informed goals in addition indicates that goal states of the gripper (coordinates & finger width)
