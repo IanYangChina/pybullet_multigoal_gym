@@ -13,7 +13,7 @@ env = pmg.make_env(task='chest_push',
                    joint_control=False,
                    task_decomposition=True,
                    abstract_demonstration=True,
-                   max_episode_steps=50,
+                   max_episode_steps=10000,
                    image_observation=False,
                    use_curriculum=False,
                    num_goals_to_generate=num_episodes)
@@ -23,24 +23,24 @@ env = pmg.make_env(task='chest_push',
 obs = env.reset(test=True)
 time_done = False
 while not time_done:
-    time.sleep(0.1)
-    action = env.action_space.sample()
-    obs, reward, time_done, info = env.step(action)
-    if time_done:
-        env.reset(test=False)
-        time_done = False
-    # env.set_sub_goal(0)
-    # print(env.desired_goal)
-    # env.set_sub_goal(1)
-    # print(env.desired_goal)
-    # env.set_sub_goal(2)
-    # print(env.desired_goal)
-    # env.set_sub_goal(3)
-    # print(env.desired_goal)
-    # env.set_sub_goal(4)
-    # print(env.desired_goal)
-    # env.set_sub_goal(5)
-    # print(env.desired_goal)
-    # env.set_sub_goal(6)
-    # print(env.desired_goal)
-    # env.reset(test=False)
+    # time.sleep(0.1)
+    # action = env.action_space.sample() * 0
+    # obs, reward, time_done, info = env.step(action)
+    # if time_done:
+    #     env.reset(test=False)
+    #     time_done = False
+    env.set_sub_goal(0)
+    print(env.desired_goal)
+    env.set_sub_goal(1)
+    print(env.desired_goal)
+    env.set_sub_goal(2)
+    print(env.desired_goal)
+    env.set_sub_goal(3)
+    print(env.desired_goal)
+    env.set_sub_goal(4)
+    print(env.desired_goal)
+    env.set_sub_goal(5)
+    print(env.desired_goal)
+    env.set_sub_goal(6)
+    print(env.desired_goal)
+    env.reset(test=False)

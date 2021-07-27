@@ -201,8 +201,8 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
         self.task_decomposition = task_decomposition
         self.num_steps = num_block+1
         if self.task_decomposition:
-            # self.grip_informed_goal = True,
-            self.num_steps = num_block * 3 + 1
+            self.grip_informed_goal = True,
+            self.num_steps = num_block * 4 + 1
         self.abstract_demonstration = abstract_demonstration
         if self.abstract_demonstration:
             demonstrations = []
@@ -210,7 +210,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                 demonstrations.append([_ for _ in range(i+1)])
             self.step_demonstrator = StepDemonstrator(demonstrations)
         KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward, distance_threshold=distance_threshold,
-                                         # grip_informed_goal=self.grip_informed_goal,
+                                         grip_informed_goal=self.grip_informed_goal,
                                          image_observation=image_observation, goal_image=goal_image, depth_image=depth_image,
                                          visualize_target=visualize_target,
                                          camera_setup=camera_setup, observation_cam_id=observation_cam_id, goal_cam_id=goal_cam_id,
@@ -239,33 +239,33 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
 
             for _ in range(self.num_block):
                 desired_goal.append(chest_center_xyz)
-                # if self.grip_informed_goal:
-                #     desired_goal.append(current_gripper_tip_xyz.copy())
-                #     desired_goal.append([0.03])
+                if self.grip_informed_goal:
+                    desired_goal.append(current_gripper_tip_xyz.copy())
+                    desired_goal.append([0.03])
 
             if self.task_decomposition:
                 self.sub_goals = []
 
                 sub_goal_open_door = [[0.10]]
                 sub_goal_open_door = sub_goal_open_door + block_poses
-                # sub_goal_open_door.append(current_gripper_tip_xyz.copy())
-                # sub_goal_open_door.append([0.03])
+                sub_goal_open_door.append(current_gripper_tip_xyz.copy())
+                sub_goal_open_door.append([0.03])
                 self.sub_goals.append(np.concatenate(sub_goal_open_door))
 
                 for _ in range(self.num_block):
                     # # block positions
-                    # sub_goal_pick = block_poses.copy()
+                    sub_goal_pick = block_poses.copy()
                     # # previous blocks should already be within the chest
-                    # for i in range(self.num_block):
-                    #     if i < _:
-                    #         sub_goal_pick[i] = chest_center_xyz.copy()
+                    for i in range(self.num_block):
+                        if i < _:
+                            sub_goal_pick[i] = chest_center_xyz.copy()
                     # # gripper position
-                    # sub_goal_pick.append(block_poses[_].copy())
+                    sub_goal_pick.append(block_poses[_].copy())
                     # # finger width
-                    # sub_goal_pick.append([0.03])
+                    sub_goal_pick.append([0.03])
                     # # chest door joint state
-                    # sub_goal_pick = [[0.10]] + sub_goal_pick
-                    # self.sub_goals.append(np.concatenate(sub_goal_pick))
+                    sub_goal_pick = [[0.10]] + sub_goal_pick
+                    self.sub_goals.append(np.concatenate(sub_goal_pick))
 
                     sub_goal_lift_block = block_poses.copy()
                     # previous blocks should already be within the chest
@@ -273,8 +273,8 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                         if i < _:
                             sub_goal_lift_block[i] = chest_center_xyz.copy()
                     sub_goal_lift_block[_][-1] = chest_top_xyz[-1]
-                    # sub_goal_move_to_chest_top.append(chest_top_xyz.copy())
-                    # sub_goal_move_to_chest_top.append([0.03])
+                    sub_goal_lift_block.append(sub_goal_lift_block[_].copy())
+                    sub_goal_lift_block.append([0.03])
                     sub_goal_lift_block = [[0.10]] + sub_goal_lift_block
                     self.sub_goals.append(np.concatenate(sub_goal_lift_block))
 
@@ -283,8 +283,8 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                         if i < _:
                             sub_goal_move_to_chest_top[i] = chest_center_xyz.copy()
                     sub_goal_move_to_chest_top[_] = chest_top_xyz.copy()
-                    # sub_goal_move_to_chest_top.append(chest_top_xyz.copy())
-                    # sub_goal_move_to_chest_top.append([0.03])
+                    sub_goal_move_to_chest_top.append(chest_top_xyz.copy())
+                    sub_goal_move_to_chest_top.append([0.03])
                     sub_goal_move_to_chest_top = [[0.10]] + sub_goal_move_to_chest_top
                     self.sub_goals.append(np.concatenate(sub_goal_move_to_chest_top))
 
@@ -293,8 +293,8 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                         if i < _:
                             sub_goal_drop[i] = chest_center_xyz.copy()
                     sub_goal_drop[_] = chest_center_xyz.copy()
-                    # sub_goal_drop.append(current_gripper_tip_xyz.copy())
-                    # sub_goal_drop.append([0.05])
+                    sub_goal_drop.append(chest_top_xyz.copy())
+                    sub_goal_drop.append([0.05])
                     sub_goal_drop = [[0.10]] + sub_goal_drop
                     self.sub_goals.append(np.concatenate(sub_goal_drop))
         else:

@@ -55,7 +55,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         }
         self.object_initial_pos = {
             'table': [-0.52, 0.0, 0.08, 0.0, 0.0, 0.0, 1.0],
-            'chest': [-0.695, 0.0, 0.21, 0.0, 0.0, 0.0, 1.0],
+            'chest': [-0.7, 0.0, 0.21, 0.0, 0.0, 0.0, 1.0],
             'target_chest': [-0.695, 0.18, 0.175, 0.0, 0.0, 0.0, 1.0],
 
             'block_blue': [-0.52, 0.0, 0.175, 0.0, 0.0, 0.0, 1.0],
@@ -193,10 +193,10 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             # else:
             #     self.chest_robot.rest_joint_state = 0
             self.chest_robot.robot_specific_reset(self._p)
-            new_y = self.np_random.uniform(-self.chest_pos_y_range, self.chest_pos_y_range)
-            chest_xyz = self.object_initial_pos['chest'][:3].copy()
-            chest_xyz[1] = new_y
-            self.chest_robot.set_base_pos(self._p, position=chest_xyz)
+            # new_y = self.np_random.uniform(-self.chest_pos_y_range, self.chest_pos_y_range)
+            # chest_xyz = self.object_initial_pos['chest'][:3].copy()
+            # chest_xyz[1] = new_y
+            # self.chest_robot.set_base_pos(self._p, position=chest_xyz)
 
         # generate goals & images
         self._generate_goal(block_poses, new_target=True)
@@ -351,6 +351,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
 
         if self.chest:
             # door joint state represents the openness and velocity of the door
+            # chest_xyz, _ = self.chest_robot.get_base_pos(self._p)
             door_joint_pos, door_joint_vel, keypoint_state = self.chest_robot.calc_robot_state()
             state = state + [[door_joint_pos], [door_joint_vel]] + keypoint_state
             policy_state = policy_state + [[door_joint_pos]] + keypoint_state
