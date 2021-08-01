@@ -239,9 +239,10 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
 
             for _ in range(self.num_block):
                 desired_goal.append(chest_center_xyz)
-                if self.grip_informed_goal:
-                    desired_goal.append(current_gripper_tip_xyz.copy())
-                    desired_goal.append([0.03])
+
+            if self.grip_informed_goal:
+                desired_goal.append(current_gripper_tip_xyz.copy())
+                desired_goal.append([0.03])
 
             if self.task_decomposition:
                 self.sub_goals = []
