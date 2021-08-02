@@ -200,6 +200,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                  use_curriculum=False, num_goals_to_generate=1e5):
         self.task_decomposition = task_decomposition
         self.num_steps = num_block+1
+        self.grip_informed_goal = False
         if self.task_decomposition:
             self.grip_informed_goal = True,
             self.num_steps = num_block * 4 + 1
@@ -250,7 +251,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                 sub_goal_open_door = [[0.10]]
                 sub_goal_open_door = sub_goal_open_door + block_poses
                 sub_goal_open_door.append(current_gripper_tip_xyz.copy())
-                sub_goal_open_door.append([0.03])
+                sub_goal_open_door.append([0.0])
                 self.sub_goals.append(np.concatenate(sub_goal_open_door))
 
                 for _ in range(self.num_block):
@@ -329,8 +330,12 @@ class KukaChestPushEnv(KukaBulletMultiBlockEnv):
                  gripper_type='parallel_jaw', num_block=5, joint_control=False,
                  task_decomposition=False, abstract_demonstration=False,
                  use_curriculum=False, num_goals_to_generate=1e5):
+        self.grip_informed_goal = False
         self.task_decomposition = task_decomposition
         self.num_steps = num_block+1
+        if self.task_decomposition:
+            self.grip_informed_goal = True
+            self.num_steps = num_block*2+1
         self.abstract_demonstration = abstract_demonstration
         if self.abstract_demonstration:
             demonstrations = []
@@ -339,7 +344,7 @@ class KukaChestPushEnv(KukaBulletMultiBlockEnv):
             self.step_demonstrator = StepDemonstrator(demonstrations)
         KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward, distance_threshold=distance_threshold,
                                          image_observation=image_observation, goal_image=goal_image, depth_image=depth_image,
-                                         visualize_target=visualize_target,
+                                         visualize_target=visualize_target, grip_informed_goal=self.grip_informed_goal,
                                          camera_setup=camera_setup, observation_cam_id=observation_cam_id, goal_cam_id=goal_cam_id,
                                          gripper_type=gripper_type, end_effector_start_on_table=True,
                                          num_block=num_block, joint_control=joint_control, grasping=False, chest=True, chest_door='front_sliding',
@@ -362,16 +367,37 @@ class KukaChestPushEnv(KukaBulletMultiBlockEnv):
             for _ in range(self.num_block):
                 desired_goal.append(chest_center_xyz)
 
+            if self.grip_informed_goal:
+                desired_goal.append(self.robot.parts['iiwa_gripper_tip'].get_position())
+
             if self.task_decomposition:
                 self.sub_goals = []
-                for _ in range(self.num_steps):
-                    sub_goal = [[0.12]]
+
+                sub_goal_open_door = [[0.12]]
+                sub_goal_open_door = sub_goal_open_door + block_poses
+                sub_goal_open_door.append(self.robot.parts['iiwa_gripper_tip'].get_position())
+                self.sub_goals.append(np.concatenate(sub_goal_open_door))
+
+                for _ in range(self.num_block):
+                    sub_goal_reach = block_poses.copy()
+
                     for i in range(self.num_block):
                         if i < _:
-                            sub_goal.append(chest_center_xyz)
-                        else:
-                            sub_goal.append(block_poses[i])
-                    self.sub_goals.append(np.concatenate(sub_goal))
+                            sub_goal_reach[i] = chest_center_xyz.copy()
+                    sub_goal_reach.append(block_poses[_].copy())
+                    sub_goal_reach[-1][0] += 0.03
+                    sub_goal_reach = [[0.12]] + sub_goal_reach
+                    self.sub_goals.append(np.concatenate(sub_goal_reach))
+
+                    sub_goal_push = block_poses.copy()
+                    for i in range(self.num_block):
+                        if i < _:
+                            sub_goal_push[i] = chest_center_xyz.copy()
+                    sub_goal_push[_] = chest_center_xyz.copy()
+                    sub_goal_push.append(chest_center_xyz.copy())
+                    sub_goal_push[-1][0] += 0.12
+                    sub_goal_push = [[0.12]] + sub_goal_push
+                    self.sub_goals.append(np.concatenate(sub_goal_push))
         else:
             curriculum_level = self.np_random.choice(self.num_curriculum, p=self.curriculum_prob)
             self.curriculum_goal_step = curriculum_level * 25 + self.base_curriculum_episode_steps

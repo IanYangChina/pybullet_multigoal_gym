@@ -255,7 +255,10 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                 )
             self._update_block_target(block_target_pos)
             if self.grip_informed_goal:
-                self._update_gripper_target(self.desired_goal[-4:-1])
+                if self.grasping:
+                    self._update_gripper_target(self.desired_goal[-4:-1])
+                else:
+                    self._update_gripper_target(self.desired_goal[-3:])
         return self.desired_goal
 
     def _generate_goal(self, block_poses, new_target=True):
@@ -364,7 +367,8 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         if self.grip_informed_goal:
             # gripper informed goals in addition indicates that goal states of the gripper (coordinates & finger width)
             achieved_goal.append(gripper_xyz)
-            achieved_goal.append(gripper_finger_closeness)
+            if self.grasping:
+                achieved_goal.append(gripper_finger_closeness)
 
         state = np.clip(np.concatenate(state), -5.0, 5.0)
         policy_state = np.clip(np.concatenate(policy_state), -5.0, 5.0)
