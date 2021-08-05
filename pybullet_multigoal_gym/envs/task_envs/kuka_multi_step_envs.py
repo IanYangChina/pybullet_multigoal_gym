@@ -395,7 +395,7 @@ class KukaChestPushEnv(KukaBulletMultiBlockEnv):
                             sub_goal_push[i] = chest_center_xyz.copy()
                     sub_goal_push[_] = chest_center_xyz.copy()
                     sub_goal_push.append(chest_center_xyz.copy())
-                    sub_goal_push[-1][0] += 0.12
+                    sub_goal_push[-1][0] += 0.03
                     sub_goal_push = [[0.12]] + sub_goal_push
                     self.sub_goals.append(np.concatenate(sub_goal_push))
         else:
