@@ -4,7 +4,7 @@ from pybullet_multigoal_gym.envs.base_envs.kuka_multi_step_base_env import KukaB
 
 
 class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
-    def __init__(self, render=True, binary_reward=True, distance_threshold=0.05, random_order=False,
+    def __init__(self, render=True, binary_reward=True, distance_threshold=0.05, random_order=True,
                  image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
                  camera_setup=None, observation_cam_id=0, goal_cam_id=0,
                  gripper_type='parallel_jaw', num_block=5, joint_control=False,
