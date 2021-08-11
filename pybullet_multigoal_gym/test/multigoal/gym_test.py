@@ -4,9 +4,9 @@ import time
 import pybullet_multigoal_gym as pmg
 
 num_episodes = 300
-env = pmg.make_env(task='block_stack',
+env = pmg.make_env(task='chest_pick_and_place',
                    gripper='parallel_jaw',
-                   num_block=2,
+                   num_block=1,
                    render=True,
                    visualize_target=True,
                    binary_reward=True,
@@ -24,23 +24,24 @@ obs = env.reset(test=True)
 time_done = False
 while not time_done:
     time.sleep(0.1)
-    # action = env.action_space.sample() * 0
-    # obs, reward, time_done, info = env.step(action)
-    # if time_done:
-    #     env.reset(test=False)
-    #     time_done = False
-    env.set_sub_goal(0)
-    print(env.desired_goal)
-    env.set_sub_goal(1)
-    print(env.desired_goal)
-    env.set_sub_goal(2)
-    print(env.desired_goal)
-    env.set_sub_goal(3)
-    print(env.desired_goal)
+    action = env.action_space.sample() * 0
+    action[-1] = -1
+    obs, reward, time_done, info = env.step(action)
+    if time_done:
+        env.reset(test=False)
+        time_done = False
+    # env.set_sub_goal(0)
+    # print(env.desired_goal)
+    # env.set_sub_goal(1)
+    # print(env.desired_goal)
+    # env.set_sub_goal(2)
+    # print(env.desired_goal)
+    # env.set_sub_goal(3)
+    # print(env.desired_goal)
     # env.set_sub_goal(4)
     # print(env.desired_goal)
     # env.set_sub_goal(5)
     # print(env.desired_goal)
     # env.set_sub_goal(6)
     # print(env.desired_goal)
-    env.reset(test=False)
+    env.reset(test=True)

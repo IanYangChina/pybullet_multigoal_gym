@@ -201,6 +201,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
         self.task_decomposition = task_decomposition
         self.num_steps = num_block+1
         self.grip_informed_goal = False
+        self.random_pickup_chance = 0.75
         if self.task_decomposition:
             self.grip_informed_goal = True,
             self.num_steps = num_block * 4 + 1
@@ -274,7 +275,12 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                     for i in range(self.num_block):
                         if i < _:
                             sub_goal_lift_block[i] = chest_center_xyz.copy()
-                    sub_goal_lift_block[_][-1] = chest_top_xyz[-1]
+                    if self.np_random.uniform() <= self.random_pickup_chance:
+                        noise = self.np_random.uniform(low=[-0.1, -0.1, 0.0],
+                                                       high=[0.05, 0.1, 0.15])
+                        sub_goal_lift_block[_] += noise
+                    else:
+                        sub_goal_lift_block[_][-1] = chest_top_xyz[-1]
                     sub_goal_lift_block.append(sub_goal_lift_block[_].copy())
                     sub_goal_lift_block.append([0.03])
                     sub_goal_lift_block = [[0.10]] + sub_goal_lift_block
@@ -296,7 +302,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                             sub_goal_drop[i] = chest_center_xyz.copy()
                     sub_goal_drop[_] = chest_center_xyz.copy()
                     sub_goal_drop.append(chest_top_xyz.copy())
-                    sub_goal_drop.append([0.05])
+                    sub_goal_drop.append([0.06])
                     sub_goal_drop = [[0.10]] + sub_goal_drop
                     self.sub_goals.append(np.concatenate(sub_goal_drop))
         else:

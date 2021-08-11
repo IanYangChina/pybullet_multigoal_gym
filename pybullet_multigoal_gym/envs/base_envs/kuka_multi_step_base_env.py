@@ -198,6 +198,12 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             # chest_xyz[1] = new_y
             # self.chest_robot.set_base_pos(self._p, position=chest_xyz)
 
+        # random pickup block chance for the chest-pick-and-place task
+        if test:
+            self.random_pickup_chance = 0.0
+        else:
+            # only apply random pickup during training
+            self.random_pickup_chance = 0.75
         # generate goals & images
         self._generate_goal(block_poses, new_target=True)
         self.sub_goal_ind = -1
