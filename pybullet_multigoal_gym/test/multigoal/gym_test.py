@@ -4,7 +4,7 @@ import time
 import pybullet_multigoal_gym as pmg
 
 num_episodes = 300
-env = pmg.make_env(task='block_stack',
+env = pmg.make_env(task='chest_pick_and_place',
                    gripper='parallel_jaw',
                    num_block=2,
                    render=True,
