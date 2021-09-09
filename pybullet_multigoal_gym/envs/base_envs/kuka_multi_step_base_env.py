@@ -17,6 +17,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                  num_block=3, joint_control=False, grasping=False, chest=False, chest_door='front_sliding',
                  obj_range=0.15, target_range=0.15, distance_threshold=0.05,
                  use_curriculum=False, num_curriculum=5, base_curriculum_episode_steps=50, num_goals_to_generate=1e5):
+        self.test = False
         self.binary_reward = binary_reward
         self.grip_informed_goal = grip_informed_goal
         self.image_observation = image_observation
@@ -122,6 +123,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                                  seed=0, timestep=0.002, frame_skip=20)
 
     def _task_reset(self, test=False):
+        self.test = test
         if not self.objects_urdf_loaded:
             # don't reload object urdf
             self.objects_urdf_loaded = True

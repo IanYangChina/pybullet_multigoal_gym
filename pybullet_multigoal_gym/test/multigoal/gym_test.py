@@ -20,7 +20,7 @@ env = pmg.make_env(task='chest_pick_and_place',
 
 # env = pmg.make('KukaParallelGripBlockStackRenderSparseEnv-v0')
 # env.activate_curriculum_update()
-obs = env.reset(test=True)
+obs = env.reset(test=False)
 time_done = False
 while not time_done:
     # time.sleep(0.1)
@@ -38,10 +38,10 @@ while not time_done:
     print(env.desired_goal)
     env.set_sub_goal(3)
     print(env.desired_goal)
-    # env.set_sub_goal(4)
-    # print(env.desired_goal)
-    # env.set_sub_goal(5)
-    # print(env.desired_goal)
+    env.set_sub_goal(4)
+    print(env.desired_goal)
+    env.set_sub_goal(5)
+    print(env.desired_goal)
     # env.set_sub_goal(6)
     # print(env.desired_goal)
-    env.reset(test=True)
+    env.reset(test=False)

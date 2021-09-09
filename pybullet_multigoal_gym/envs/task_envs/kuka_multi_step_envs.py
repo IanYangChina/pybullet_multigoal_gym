@@ -15,7 +15,7 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
         self.num_steps = num_block
         if self.task_decomposition:
             self.grip_informed_goal = True
-            self.num_steps = (num_block-1) * 2
+            self.num_steps = (num_block-1) * 3
         self.abstract_demonstration = abstract_demonstration
         if self.abstract_demonstration:
             demonstrations = []
@@ -102,6 +102,30 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
                     sub_goal_pick.append(block_poses[_].copy())
                     sub_goal_pick.append([0.03])
                     self.sub_goals.append(np.concatenate(sub_goal_pick))
+
+                    sub_goal_pickup = [target_xyzs[0]] + [None for _ in range(self.num_block-1)]
+                    for i in range(self.num_block):
+                        if i == 0:
+                            continue
+                        if i < _:
+                            sub_goal_pickup[i] = target_xyzs[i].copy()
+                        elif i == _:
+                            while True:
+                                pickup_xyz = self.np_random.uniform(self.robot.target_bound_lower,
+                                                                    self.robot.target_bound_upper)
+                                target_not_overlap = []
+                                for pos in block_poses:
+                                    target_not_overlap.append((np.linalg.norm(pickup_xyz[:-1] - pos[:-1]) > 0.08))
+                                if all(target_not_overlap):
+                                    break
+                            if self.np_random.uniform(0, 1) >= 0.5:
+                                pickup_xyz[-1] = 0.175
+                            sub_goal_pickup[i] = pickup_xyz.copy()
+                        else:
+                            sub_goal_pickup[i] = block_poses[i].copy()
+                    sub_goal_pickup.append(block_poses[_].copy())
+                    sub_goal_pickup.append([0.03])
+                    self.sub_goals.append(np.concatenate(sub_goal_pickup))
 
                     sub_goal_place = [target_xyzs[0]] + [None for _ in range(self.num_block-1)]
                     for i in range(self.num_block):
@@ -285,10 +309,19 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                     for i in range(self.num_block):
                         if i < _:
                             sub_goal_lift_block[i] = chest_center_xyz.copy()
+
                     if self.np_random.uniform() <= self.random_pickup_chance:
-                        noise = self.np_random.uniform(low=[-0.1, -0.1, 0.0],
-                                                       high=[0.05, 0.1, 0.15])
-                        sub_goal_lift_block[_] += noise
+                        while True:
+                            lift_xyz = self.np_random.uniform(self.robot.target_bound_lower+np.array([0.14, 0, 0]),
+                                                              self.robot.target_bound_upper)
+                            target_not_overlap = []
+                            for pos in block_poses:
+                                target_not_overlap.append((np.linalg.norm(lift_xyz[:-1] - pos[:-1]) > 0.08))
+                            if all(target_not_overlap):
+                                break
+                        if self.np_random.uniform(0, 1) >= 0.5:
+                            lift_xyz[-1] = 0.175
+                        sub_goal_lift_block[_] = lift_xyz.copy()
                     else:
                         sub_goal_lift_block[_][-1] = chest_top_xyz[-1]
                     sub_goal_lift_block.append(sub_goal_lift_block[_].copy())
