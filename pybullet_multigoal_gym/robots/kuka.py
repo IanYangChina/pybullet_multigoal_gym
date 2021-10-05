@@ -199,7 +199,7 @@ class Kuka(URDFBasedRobot):
                                                 controlMode=bullet_client.POSITION_CONTROL,
                                                 targetPositions=joint_poses,
                                                 targetVelocities=np.zeros((7,)),
-                                                forces=np.ones((7,)) * 15,
+                                                forces=np.ones((7,)) * 200,
                                                 positionGains=np.ones((7,)) * 0.03,
                                                 velocityGains=np.ones((7,)))
 
