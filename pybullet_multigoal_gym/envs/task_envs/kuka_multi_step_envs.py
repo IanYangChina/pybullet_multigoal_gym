@@ -5,7 +5,7 @@ from pybullet_multigoal_gym.envs.base_envs.kuka_multi_step_base_env import KukaB
 
 class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
     def __init__(self, render=True, binary_reward=True, distance_threshold=0.05,
-                 # random_order=False,
+                 random_order=True,
                  image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
                  camera_setup=None, observation_cam_id=0, goal_cam_id=0,
                  gripper_type='parallel_jaw', num_block=5, joint_control=False,
@@ -16,14 +16,14 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
         self.pickup_target = None
         if self.task_decomposition:
             self.grip_informed_goal = True
-            self.num_steps = (num_block-1) * 3
+            self.num_steps = num_block * 2
         self.abstract_demonstration = abstract_demonstration
         if self.abstract_demonstration:
             demonstrations = []
             for i in range(self.num_steps):
                 demonstrations.append([_ for _ in range(i+1)])
             self.step_demonstrator = StepDemonstrator(demonstrations)
-        # self.random_order = random_order
+        self.random_order = random_order
         self.last_order = None
         self.last_target_poses = None
         KukaBulletMultiBlockEnv.__init__(self, render=render, binary_reward=binary_reward, distance_threshold=distance_threshold,
@@ -44,25 +44,25 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
 
         if new_target:
             # generate a random order of blocks to be stacked
-            # new_order = np.arange(self.num_block, dtype=np.int)
-            # if self.random_order:
-            #     self.np_random.shuffle(new_order)
-            # new_order = new_order.tolist()
+            new_order = np.arange(self.num_block, dtype=np.int)
+            if self.random_order:
+                self.np_random.shuffle(new_order)
+            new_order = new_order.tolist()
 
+            # base_target_xyz = block_poses[0].copy()
             # generate a random base block position
-            base_target_xyz = block_poses[0].copy()
-            # base_target_xyz = None
-            # done = False
-            # while not done:
-            #     base_target_xy = self.np_random.uniform(self.robot.target_bound_lower[:-1],
-            #                                             self.robot.target_bound_upper[:-1])
-            #     target_not_overlap = []
-            #     for pos in block_poses:
-            #         target_not_overlap.append((np.linalg.norm(base_target_xy - pos[:-1]) > 0.08))
-            #     if all(target_not_overlap):
-            #         # put the block is on the table surface
-            #         base_target_xyz = np.concatenate((base_target_xy, [0.175]))
-            #         done = True
+            base_target_xyz = None
+            done = False
+            while not done:
+                base_target_xy = self.np_random.uniform(self.robot.target_bound_lower[:-1],
+                                                        self.robot.target_bound_upper[:-1])
+                target_not_overlap = []
+                for pos in block_poses:
+                    target_not_overlap.append((np.linalg.norm(base_target_xy - pos[:-1]) > 0.08))
+                if all(target_not_overlap):
+                    # put the block is on the table surface
+                    base_target_xyz = np.concatenate((base_target_xy, [0.175]))
+                    done = True
 
             # generate the stacked target poses
             target_xyzs = [base_target_xyz]
@@ -71,17 +71,17 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
                 next_target_xyz[-1] = 0.175 + self.block_size * (_ + 1)
                 target_xyzs.append(next_target_xyz.copy())
 
-            # self.last_order = new_order
+            self.last_order = new_order
             self.last_target_poses = target_xyzs
         else:
-            # new_order = self.last_order
+            new_order = self.last_order
             target_xyzs = self.last_target_poses
 
         if not self.curriculum:
             # generate goal and set target poses according to the order
-            desired_goal = [] + target_xyzs
-            # for _ in range(self.num_block):
-            #     desired_goal[new_order[_]] = target_xyzs[_]
+            desired_goal = [None for _ in range(self.num_block)]
+            for _ in range(self.num_block):
+                desired_goal[new_order[_]] = target_xyzs[_]
             if self.grip_informed_goal:
                 desired_goal.append(target_xyzs[-1].copy())
                 desired_goal.append([0.03])
@@ -89,57 +89,22 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
             if self.task_decomposition:
                 self.sub_goals = []
                 for _ in range(self.num_block):
-                    if _ == 0:
-                        continue
-
-                    sub_goal_pick = [target_xyzs[0]] + [None for _ in range(self.num_block-1)]
+                    sub_goal_pick = [None for _ in range(self.num_block)]
                     for i in range(self.num_block):
-                        if i == 0:
-                            continue
-                        if i <= (_-1):
-                            sub_goal_pick[i] = target_xyzs[i].copy()
+                        if i < _:
+                            sub_goal_pick[new_order[i]] = target_xyzs[i].copy()
                         else:
-                            sub_goal_pick[i] = block_poses[i].copy()
-                    sub_goal_pick.append(block_poses[_].copy())
+                            sub_goal_pick[new_order[i]] = block_poses[new_order[i]].copy()
+                    sub_goal_pick.append(block_poses[new_order[_]].copy())
                     sub_goal_pick.append([0.03])
                     self.sub_goals.append(np.concatenate(sub_goal_pick))
 
-                    sub_goal_pickup = [target_xyzs[0]] + [None for _ in range(self.num_block-1)]
+                    sub_goal_place = [None for _ in range(self.num_block)]
                     for i in range(self.num_block):
-                        if i == 0:
-                            continue
-                        if i < _:
-                            sub_goal_pickup[i] = target_xyzs[i].copy()
-                        elif i == _:
-                            if new_target:
-                                while True:
-                                    pickup_xyz = self.np_random.uniform(self.robot.target_bound_lower,
-                                                                        self.robot.target_bound_upper)
-                                    target_not_overlap = []
-                                    for pos in block_poses:
-                                        target_not_overlap.append((np.linalg.norm(pickup_xyz[:-1] - pos[:-1]) > 0.08))
-                                    if all(target_not_overlap):
-                                        break
-                                if self.np_random.uniform(0, 1) >= 0.5:
-                                    pickup_xyz[-1] = 0.175
-                                self.pickup_target = pickup_xyz.copy()
-
-                            assert self.pickup_target is not None
-                            sub_goal_pickup[i] = self.pickup_target.copy()
-                        else:
-                            sub_goal_pickup[i] = block_poses[i].copy()
-                    sub_goal_pickup.append(block_poses[_].copy())
-                    sub_goal_pickup.append([0.03])
-                    self.sub_goals.append(np.concatenate(sub_goal_pickup))
-
-                    sub_goal_place = [target_xyzs[0]] + [None for _ in range(self.num_block-1)]
-                    for i in range(self.num_block):
-                        if i == 0:
-                            continue
                         if i <= _:
-                            sub_goal_place[i] = target_xyzs[i].copy()
+                            sub_goal_place[new_order[i]] = target_xyzs[i].copy()
                         else:
-                            sub_goal_place[i] = block_poses[i].copy()
+                            sub_goal_place[new_order[i]] = block_poses[new_order[i]].copy()
                     sub_goal_place.append(target_xyzs[_].copy())
                     sub_goal_place.append([0.03])
                     self.sub_goals.append(np.concatenate(sub_goal_place))
@@ -244,7 +209,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
         self.pickup_target = None
         if self.task_decomposition:
             self.grip_informed_goal = True,
-            self.num_steps = num_block * 4 + 1
+            self.num_steps = num_block * 3 + 1
         self.abstract_demonstration = abstract_demonstration
         if self.abstract_demonstration:
             demonstrations = []
@@ -298,47 +263,47 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
                 for _ in range(self.num_block):
                     # # block positions
                     sub_goal_pick = block_poses.copy()
-                    # # previous blocks should already be within the chest
-                    for i in range(self.num_block):
-                        if i < _:
-                            sub_goal_pick[i] = chest_center_xyz.copy()
-                    # # gripper position
-                    sub_goal_pick.append(block_poses[_].copy())
-                    # # finger width
-                    sub_goal_pick.append([0.03])
-                    # # chest door joint state
-                    sub_goal_pick = [[0.10]] + sub_goal_pick
-                    self.sub_goals.append(np.concatenate(sub_goal_pick))
-
-                    sub_goal_lift_block = block_poses.copy()
                     # previous blocks should already be within the chest
                     for i in range(self.num_block):
                         if i < _:
-                            sub_goal_lift_block[i] = chest_center_xyz.copy()
+                            sub_goal_pick[i] = chest_center_xyz.copy()
+                    # gripper position
+                    sub_goal_pick.append(block_poses[_].copy())
+                    # finger width
+                    sub_goal_pick.append([0.03])
+                    # chest door joint state
+                    sub_goal_pick = [[0.10]] + sub_goal_pick
+                    self.sub_goals.append(np.concatenate(sub_goal_pick))
 
-                    if new_target:
-                        if self.np_random.uniform() <= self.random_pickup_chance:
-                            while True:
-                                lift_xyz = self.np_random.uniform(self.robot.target_bound_lower+np.array([0.14, 0, 0]),
-                                                                  self.robot.target_bound_upper)
-                                target_not_overlap = []
-                                for pos in block_poses:
-                                    target_not_overlap.append((np.linalg.norm(lift_xyz[:-1] - pos[:-1]) > 0.08))
-                                if all(target_not_overlap):
-                                    break
-                            if self.np_random.uniform(0, 1) >= 0.5:
-                                lift_xyz[-1] = 0.175
-                            sub_goal_lift_block[_] = lift_xyz.copy()
-                        else:
-                            sub_goal_lift_block[_][-1] = chest_top_xyz[-1]
-                        self.pickup_target = sub_goal_lift_block[_].copy()
-                    else:
-                        assert self.pickup_target is not None
-                        sub_goal_lift_block[_] = self.pickup_target.copy()
-                    sub_goal_lift_block.append(sub_goal_lift_block[_].copy())
-                    sub_goal_lift_block.append([0.03])
-                    sub_goal_lift_block = [[0.10]] + sub_goal_lift_block
-                    self.sub_goals.append(np.concatenate(sub_goal_lift_block))
+                    # sub_goal_lift_block = block_poses.copy()
+                    # # previous blocks should already be within the chest
+                    # for i in range(self.num_block):
+                    #     if i < _:
+                    #         sub_goal_lift_block[i] = chest_center_xyz.copy()
+                    # sub_goal_lift_block[_][-1] = chest_top_xyz[-1]
+                    # # if new_target:
+                    # #     if self.np_random.uniform() <= self.random_pickup_chance:
+                    # #         while True:
+                    # #             lift_xyz = self.np_random.uniform(self.robot.target_bound_lower+np.array([0.14, 0, 0]),
+                    # #                                               self.robot.target_bound_upper)
+                    # #             target_not_overlap = []
+                    # #             for pos in block_poses:
+                    # #                 target_not_overlap.append((np.linalg.norm(lift_xyz[:-1] - pos[:-1]) > 0.08))
+                    # #             if all(target_not_overlap):
+                    # #                 break
+                    # #         if self.np_random.uniform(0, 1) >= 0.5:
+                    # #             lift_xyz[-1] = 0.175
+                    # #         sub_goal_lift_block[_] = lift_xyz.copy()
+                    # #     else:
+                    # #         sub_goal_lift_block[_][-1] = chest_top_xyz[-1]
+                    # #     self.pickup_target = sub_goal_lift_block[_].copy()
+                    # # else:
+                    # #     assert self.pickup_target is not None
+                    # #     sub_goal_lift_block[_] = self.pickup_target.copy()
+                    # sub_goal_lift_block.append(sub_goal_lift_block[_].copy())
+                    # sub_goal_lift_block.append([0.03])
+                    # sub_goal_lift_block = [[0.10]] + sub_goal_lift_block
+                    # self.sub_goals.append(np.concatenate(sub_goal_lift_block))
 
                     sub_goal_move_to_chest_top = block_poses.copy()
                     for i in range(self.num_block):
@@ -377,8 +342,6 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
 
         if self.visualize_target:
             self._update_block_target(desired_goal, index_offset=1)
-            # if self.grip_informed_goal:
-            #     self._update_gripper_target(desired_goal[-2])
 
         self.desired_goal = np.concatenate(desired_goal)
 
