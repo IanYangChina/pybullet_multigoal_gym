@@ -1,5 +1,5 @@
 import numpy as np
+import warnings
 
-a = np.random.choice(np.arange(4), size=0)
-a_ = np.sort(a).tolist()
-print(a_)
+
+print("hello")

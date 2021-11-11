@@ -41,7 +41,8 @@ def print_id():
 
 
 def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, binary_reward=True,
-             task_decomposition=False, abstract_demonstration=False,
+             grip_informed_goal=False,
+             task_decomposition=False,
              joint_control=False, max_episode_steps=50, distance_threshold=0.05,
              image_observation=False, depth_image=False, goal_image=False, visualize_target=True,
              camera_setup=None, observation_cam_id=0, goal_cam_id=0,
@@ -129,8 +130,6 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
                     max_episode_steps=max_episode_steps,
                 )
         else:
-            # if task == 'block_stack':
-            #     assert num_block >= 2, "need at least 2 blocks to stack"
             assert num_block <= 5, "only support up to 5 blocks"
             register(
                     id=env_id,
@@ -141,7 +140,6 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
                         'joint_control': joint_control,
                         'distance_threshold': distance_threshold,
                         'task_decomposition': task_decomposition,
-                        'abstract_demonstration': abstract_demonstration,
                         'image_observation': image_observation,
                         'depth_image': depth_image,
                         'goal_image': goal_image,
@@ -150,6 +148,7 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
                         'observation_cam_id': observation_cam_id,
                         'goal_cam_id': goal_cam_id,
                         'gripper_type': gripper,
+                        'grip_informed_goal': grip_informed_goal,
                         'num_block': num_block,
                         'use_curriculum': use_curriculum,
                         'num_goals_to_generate': int(num_goals_to_generate)

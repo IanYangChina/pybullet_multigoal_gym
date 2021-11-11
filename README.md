@@ -14,7 +14,8 @@ Expired mujoco license got me here. I will also retrain those agents and pose pe
 
 This package also provides some harder tasks for long-horizon sparse reward robotic arm manipulation tasks
 on this package as well. All the environments have been summarised in a paper.
-There are still on-going updates for this package, the [v1.0 release] is the one published on Taros 2021 and [ArXiv](https://arxiv.org/abs/2105.05985).
+The newest release is the most recommended. There are still on-going updates for this package, the [v1.0 release] was the version published on Taros 2021 and 
+[ArXiv](https://arxiv.org/abs/2105.05985).
 
 ```
 @article{xyangPMG,
@@ -64,6 +65,9 @@ See examples below.
 
 ### Try it out
 
+See the [examples folder](https://github.com/IanYangChina/pybullet_multigoal_gym/tree/master/pybullet_multigoal_gym/examples)
+for more scripts to play with.
+
 ```python
 # Single-stage manipulation environments
 # Reach, Push, PickAndPlace, Slide
@@ -91,12 +95,12 @@ camera_setup = [
 env = pmg.make_env(
     # task args ['reach', 'push', 'slide', 'pick_and_place', 
     #            'block_stack', 'block_rearrange', 'chest_pick_and_place', 'chest_push']
-    task='block_rearrange',
+    task='block_stack',
     gripper='parallel_jaw',
-    num_block=4,  # only meaningful for multi-block tasks
-    render=False,
+    num_block=4,  # only meaningful for multi-block tasks, up to 5 blocks
+    render=True,
     binary_reward=True,
-    max_episode_steps=5,
+    max_episode_steps=50,
     # image observation args
     image_observation=True,
     depth_image=False,
@@ -104,15 +108,10 @@ env = pmg.make_env(
     visualize_target=True,
     camera_setup=camera_setup,
     observation_cam_id=0,
-    goal_cam_id=1,
-    # curriculum args
-    use_curriculum=True,
-    num_goals_to_generate=90)
+    goal_cam_id=1)
 
 obs = env.reset()
-t = 0
 while True:
-    t += 1
     action = env.action_space.sample()
     obs, reward, done, info = env.step(action)
     print('state: ', obs['state'], '\n',
@@ -120,7 +119,7 @@ while True:
           'achieved_goal: ', obs['achieved_goal'], '\n',
           'reward: ', reward, '\n')
     plt.imshow(obs['observation'])
-    plt.pause(0.00001)      
+    plt.pause(0.00001)  
     if done:
         env.reset()
 ```
@@ -131,7 +130,7 @@ while True:
 
 <img src="/src/MultiStepBenchmark.png" width="800"/>
 
-### Updates
+### Update log
 
 2020.12.26 --- Add hierarchical environments for a pick and place task, with image observation and goal supported. 
 See the above example.
@@ -149,3 +148,5 @@ See the above example.
 2021.03.17 --- Joint space control support
 
 2021.03.18 --- Finish curriculum; add on-hand camera observation
+
+2021.11.11 --- Finish task decomposition, subgoal generation codes and some compatibility issues, new release

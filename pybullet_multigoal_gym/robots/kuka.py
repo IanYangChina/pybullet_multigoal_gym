@@ -249,3 +249,11 @@ class Kuka(URDFBasedRobot):
             vel = np.zeros(pos.shape[0])
         for i in range(pos.shape[0]):
             self.jdict[self.gripper_joint_name[i]].reset_position(pos[i], vel[i])
+
+    def get_finger_closeness(self):
+        # calculate distance between the gripper finger tabs
+        gripper_finger1_tab_xyz = np.array(self.parts['iiwa_gripper_finger1_finger_tab_link'].get_position())
+        gripper_finger2_tab_xyz = np.array(self.parts['iiwa_gripper_finger2_finger_tab_link'].get_position())
+        gripper_finger_closeness = np.sqrt(
+            np.sum(np.square(gripper_finger1_tab_xyz - gripper_finger2_tab_xyz))).ravel()
+        return gripper_finger_closeness

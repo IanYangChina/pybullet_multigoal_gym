@@ -3,23 +3,22 @@ import numpy as np
 import time
 import pybullet_multigoal_gym as pmg
 
-num_episodes = 300
-env = pmg.make_env(task='chest_pick_and_place',
+num_episodes = 32
+env = pmg.make_env(task='block_rearrange',
                    gripper='parallel_jaw',
-                   num_block=2,
+                   grip_informed_goal=False,
+                   num_block=4,
                    render=True,
                    visualize_target=True,
                    binary_reward=True,
                    joint_control=False,
-                   task_decomposition=True,
-                   abstract_demonstration=True,
                    max_episode_steps=10000,
                    image_observation=False,
-                   use_curriculum=False,
+                   use_curriculum=True,
+                   task_decomposition=False,
                    num_goals_to_generate=num_episodes)
 
-# env = pmg.make('KukaParallelGripBlockStackRenderSparseEnv-v0')
-# env.activate_curriculum_update()
+env.activate_curriculum_update()
 obs = env.reset(test=False)
 time_done = False
 while not time_done:
@@ -30,20 +29,20 @@ while not time_done:
     # if time_done:
     #     env.reset(test=False)
     #     time_done = False
-    env.set_sub_goal(0)
-    print(env.desired_goal)
-    env.set_sub_goal(1)
-    print(env.desired_goal)
-    env.set_sub_goal(2)
-    print(env.desired_goal)
-    env.set_sub_goal(3)
-    print(env.desired_goal)
-    env.set_sub_goal(4)
-    print(env.desired_goal)
-    env.set_sub_goal(5)
-    print(env.desired_goal)
-    env.set_sub_goal(6)
-    print(env.desired_goal)
+    # env.set_sub_goal(0)
+    # print(env.desired_goal)
+    # env.set_sub_goal(1)
+    # print(env.desired_goal)
+    # env.set_sub_goal(2)
+    # print(env.desired_goal)
+    # env.set_sub_goal(3)
+    # print(env.desired_goal)
+    # env.set_sub_goal(4)
+    # print(env.desired_goal)
+    # env.set_sub_goal(5)
+    # print(env.desired_goal)
+    # env.set_sub_goal(6)
+    # print(env.desired_goal)
     # env.set_sub_goal(7)
     # print(env.desired_goal)
     env.reset(test=False)

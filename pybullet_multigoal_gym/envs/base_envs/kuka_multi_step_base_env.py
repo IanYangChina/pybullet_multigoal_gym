@@ -1,5 +1,7 @@
 import os
 import numpy as np
+from warnings import warn
+from pybullet_multigoal_gym.utils.demonstrator import StepDemonstrator
 from pybullet_multigoal_gym.envs.base_envs.base_env import BaseBulletMGEnv
 from pybullet_multigoal_gym.robots.kuka import Kuka
 from pybullet_multigoal_gym.robots.chest import Chest
@@ -16,7 +18,8 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                  gripper_type='parallel_jaw', end_effector_start_on_table=False,
                  num_block=3, joint_control=False, grasping=False, chest=False, chest_door='front_sliding',
                  obj_range=0.15, target_range=0.15, distance_threshold=0.05,
-                 use_curriculum=False, num_curriculum=5, base_curriculum_episode_steps=50, num_goals_to_generate=1e5):
+                 use_curriculum=False, task_decomposition=False,
+                 num_curriculum=5, base_curriculum_episode_steps=50, num_goals_to_generate=1e5):
         self.test = False
         self.binary_reward = binary_reward
         self.grip_informed_goal = grip_informed_goal
@@ -103,24 +106,77 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             else:
                 self.chest_door_opened_state = 0.12
 
+        self.task_decomposition = task_decomposition
         self.curriculum = use_curriculum
-        self.curriculum_update = False
-        self.num_curriculum = num_curriculum
-        # start with the easiest goal being the only possible goal
-        self.curriculum_prob = np.concatenate([[1.0], np.zeros(self.num_curriculum-1)])
-        self.base_curriculum_episode_steps = base_curriculum_episode_steps
-        # the number of episode steps increases as goals become harder to achieve
-        self.curriculum_goal_step = 0 * 25 + self.base_curriculum_episode_steps
-        # the number of goals to generate for each curriculum
-        #       commonly equal to the total number of episodes / the number of curriculum
-        self.num_goals_per_curriculum = num_goals_to_generate / self.num_curriculum
-        # record the number of generated goals per curriculum
-        self.num_generated_goals_per_curriculum = np.zeros(self.num_curriculum)
+        if self.task_decomposition:
+            assert not self.curriculum, 'if using task decomposition, curriculum should be False, vice versa'
+
+            demonstrations = []
+            for i in range(self.num_steps):
+                demonstrations.append([_ for _ in range(i + 1)])
+            self.step_demonstrator = StepDemonstrator(demonstrations)
+
+        if self.curriculum:
+            assert not self.task_decomposition, 'if using curriculum, task decomposition should be False, vice versa'
+            self.last_curriculum_level = None  # used by the BlockStack & ChestPush tasks
+            self.last_ind_block_to_move = None  # used by the ChestPush & ChestPickAndPlace task
+
+            warn("You will need to call env.activate_curriculum_update() before your training phase, "
+                 "and env.deactivate_curriculum_update() before your evaluation phase.")
+
+            self.curriculum_update = False
+            self.num_curriculum = num_curriculum
+            # start with the easiest goal being the only possible goal
+            self.curriculum_prob = np.concatenate([[1.0], np.zeros(self.num_curriculum - 1)])
+            self.base_curriculum_episode_steps = base_curriculum_episode_steps
+            # the number of episode steps increases as goals become harder to achieve
+            self.curriculum_goal_step = 0 * 25 + self.base_curriculum_episode_steps
+            # the number of goals to generate for each curriculum
+            #       commonly equal to the total number of episodes / the number of curriculum
+            self.num_goals_per_curriculum = num_goals_to_generate // self.num_curriculum
+            # record the number of generated goals per curriculum
+            self.num_generated_goals_per_curriculum = np.zeros(self.num_curriculum)
 
         BaseBulletMGEnv.__init__(self, robot=robot, render=render,
                                  image_observation=image_observation, goal_image=goal_image,
                                  camera_setup=camera_setup,
                                  seed=0, timestep=0.002, frame_skip=20)
+
+    def activate_curriculum_update(self):
+        if not self.curriculum:
+            warn("This method should not be called while not using curriculum.")
+            return
+        self.curriculum_update = True
+
+    def deactivate_curriculum_update(self):
+        if not self.curriculum:
+            warn("This method should not be called while not using curriculum.")
+            return
+        self.curriculum_update = False
+
+    def set_sub_goal(self, sub_goal_ind):
+        if not self.task_decomposition:
+            warn("The set_sub_goal() method should only be called when using task decomposition,\n"
+                 "It does nothing and returns None when self.task_decomposition is False.")
+            return None
+        self.sub_goal_ind = sub_goal_ind
+        self.desired_goal = self.sub_goals[sub_goal_ind].copy()
+        if self.visualize_target:
+            index_offset = 0
+            if self.chest:
+                index_offset = 1
+            block_target_pos = []
+            for _ in range(self.num_block):
+                block_target_pos.append(
+                    self.desired_goal[index_offset + _ * 3:index_offset + _ * 3 + 3]
+                )
+            self._update_block_target(block_target_pos)
+            if self.grip_informed_goal:
+                if self.grasping:
+                    self._update_gripper_target(self.desired_goal[-4:-1])
+                else:
+                    self._update_gripper_target(self.desired_goal[-3:])
+        return self.desired_goal
 
     def _task_reset(self, test=False):
         self.test = test
@@ -148,9 +204,9 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                     baseOrientation=self.object_initial_pos[target_name][3:])
 
                 if not self.visualize_target:
-                    self.set_object_pose(self.object_bodies[target_name],
-                                         [0.0, 0.0, -3.0],
-                                         self.object_initial_pos[target_name][3:])
+                    self._set_object_pose(self.object_bodies[target_name],
+                                          [0.0, 0.0, -3.0],
+                                          self.object_initial_pos[target_name][3:])
 
             if self.grip_informed_goal:
                 self.object_bodies[self.grip_target_key] = self._p.loadURDF(
@@ -158,9 +214,9 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                     basePosition=self.object_initial_pos[self.grip_target_key][:3],
                     baseOrientation=self.object_initial_pos[self.grip_target_key][3:])
                 if not self.visualize_target:
-                    self.set_object_pose(self.object_bodies[self.grip_target_key],
-                                         [0.0, 0.0, -3.0],
-                                         self.object_initial_pos[self.grip_target_key][3:])
+                    self._set_object_pose(self.object_bodies[self.grip_target_key],
+                                          [0.0, 0.0, -3.0],
+                                          self.object_initial_pos[self.grip_target_key][3:])
 
         # randomize object positions
         block_poses = []
@@ -177,151 +233,19 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                     done = True
 
         for i in range(self.num_block):
-            self.set_object_pose(self.object_bodies[self.block_keys[i]],
-                                 block_poses[i],
-                                 self.object_initial_pos[self.block_keys[i]][3:])
+            self._set_object_pose(self.object_bodies[self.block_keys[i]],
+                                  block_poses[i],
+                                  self.object_initial_pos[self.block_keys[i]][3:])
 
         if self.chest:
-            # start the episode with a closed chest if it is during evaluation
-            # if (not test) and (self.np_random.uniform(0, 1) <= 0.5):
-            #     self.chest_robot.rest_joint_state = self.chest_door_opened_state
-            #     if self.grasping:
-            #         self.robot.set_finger_joint_state(pos=self.robot.gripper_grasp_block_state)
-            #         self.robot.set_kuka_joint_state(pos=None, vel=None, gripper_tip_pos=block_poses[0], bullet_client=self._p)
-            #     else:
-            #         grip_pos = block_poses[0].copy()
-            #         grip_pos[0] += 0.03
-            #         self.robot.set_kuka_joint_state(pos=None, vel=None, gripper_tip_pos=grip_pos, bullet_client=self._p)
-            # else:
-            #     self.chest_robot.rest_joint_state = 0
             self.chest_robot.robot_specific_reset(self._p)
-            # new_y = self.np_random.uniform(-self.chest_pos_y_range, self.chest_pos_y_range)
-            # chest_xyz = self.object_initial_pos['chest'][:3].copy()
-            # chest_xyz[1] = new_y
-            # self.chest_robot.set_base_pos(self._p, position=chest_xyz)
 
-        # random pickup block chance for the chest-pick-and-place task
-        if test:
-            self.random_pickup_chance = 0.0
-        else:
-            # only apply random pickup during training
-            self.random_pickup_chance = 0.75
         # generate goals & images
         self._generate_goal(block_poses, new_target=True)
-        self.sub_goal_ind = -1
+        if self.task_decomposition:
+            self.sub_goal_ind = -1
         if self.goal_image:
             self._generate_goal_image(block_poses)
-
-    def activate_curriculum_update(self):
-        self.curriculum_update = True
-
-    def deactivate_curriculum_update(self):
-        self.curriculum_update = False
-
-    def update_curriculum_prob(self):
-        # array of boolean masks
-        mask_finished = self.num_generated_goals_per_curriculum == self.num_goals_per_curriculum
-        mask_half = self.num_generated_goals_per_curriculum >= (self.num_goals_per_curriculum / 2)
-        # set finished curriculum prob to 0.0
-        self.curriculum_prob[mask_finished] = 0.0
-        # process the first curriculum separately
-        if mask_half[0] and not mask_finished[0]:
-            self.curriculum_prob[0] = 0.5
-            self.curriculum_prob[1] = 0.5
-
-        # process the second to the second-last curriculums
-        for i in range(1, self.num_curriculum-1):
-            if mask_finished[i-1] and not mask_finished[i]:
-
-                if mask_half[i]:
-                    # set the next curriculum prob to 0.5
-                    #       if the current one has been trained for half the total number
-                    #       and the last one has been trained completely
-                    self.curriculum_prob[i] = 0.5
-                    self.curriculum_prob[i+1] = 0.5
-                else:
-                    # set the next curriculum prob to 1.0
-                    #       if the current one has not yet been trained for half the total number
-                    #       and the last one has been trained completely
-                    self.curriculum_prob[i] = 1.0
-
-        # process the last curriculum separately
-        if mask_finished[-2]:
-            self.curriculum_prob[-1] = 1.0
-
-    def set_sub_goal(self, sub_goal_ind):
-        self.sub_goal_ind = sub_goal_ind
-        self.desired_goal = self.sub_goals[sub_goal_ind].copy()
-        if self.visualize_target:
-            index_offset = 0
-            if self.chest:
-                index_offset = 1
-            block_target_pos = []
-            for _ in range(self.num_block):
-                block_target_pos.append(
-                    self.desired_goal[index_offset+_*3:index_offset+_*3+3]
-                )
-            self._update_block_target(block_target_pos)
-            if self.grip_informed_goal:
-                if self.grasping:
-                    self._update_gripper_target(self.desired_goal[-4:-1])
-                else:
-                    self._update_gripper_target(self.desired_goal[-3:])
-        return self.desired_goal
-
-    def _generate_goal(self, block_poses, new_target=True):
-        raise NotImplementedError
-
-    def _update_block_target(self, desired_goal, index_offset=0):
-        for _ in range(self.num_block):
-            self.set_object_pose(self.object_bodies[self.target_keys[_]],
-                                 desired_goal[_+index_offset],
-                                 self.object_initial_pos[self.target_keys[_]][3:])
-
-    def _update_gripper_target(self, pos):
-        self.set_object_pose(self.object_bodies[self.grip_target_key],
-                             pos,
-                             self.object_initial_pos[self.grip_target_key][3:])
-
-    def _generate_goal_image(self, block_poses):
-        target_obj_pos = self.desired_goal.copy()
-        if self.chest:
-            # this is tricky...
-            self.desired_goal_image = self.render(mode=self.render_mode, camera_id=self.goal_cam_id)
-        elif self.grasping:
-            # block stacking
-            self.robot.set_finger_joint_state(self.robot.gripper_grasp_block_state)
-            target_gripper_pos = self.desired_goal[-3:].copy()
-            target_gripper_pos[-1] = 0.175 + self.block_size * (self.num_block - 1)
-            target_kuka_joint_pos = self.robot.compute_ik(self._p, target_gripper_pos)
-            self.robot.set_kuka_joint_state(target_kuka_joint_pos)
-
-            for i in range(self.num_block):
-                self.set_object_pose(self.object_bodies[self.block_keys[i]],
-                                     target_obj_pos[i * 3:i * 3 + 3],
-                                     self.object_initial_pos[self.block_keys[i]][3:])
-
-            self.desired_goal_image = self.render(mode=self.render_mode, camera_id=self.goal_cam_id)
-
-            for i in range(self.num_block):
-                self.set_object_pose(self.object_bodies[self.block_keys[i]],
-                                     block_poses[i],
-                                     self.object_initial_pos[self.block_keys[i]][3:])
-
-            self.robot.set_kuka_joint_state(self.robot.kuka_rest_pose, np.zeros(7))
-            self.robot.set_finger_joint_state(self.robot.gripper_abs_joint_limit)
-        else:
-            for i in range(self.num_block):
-                self.set_object_pose(self.object_bodies[self.block_keys[i]],
-                                     target_obj_pos[i * 3:i * 3 + 3],
-                                     self.object_initial_pos[self.block_keys[i]][3:])
-
-            self.desired_goal_image = self.render(mode=self.render_mode, camera_id=self.goal_cam_id)
-
-            for i in range(self.num_block):
-                self.set_object_pose(self.object_bodies[self.block_keys[i]],
-                                     block_poses[i],
-                                     self.object_initial_pos[self.block_keys[i]][3:])
 
     def _step_callback(self):
         pass
@@ -362,13 +286,12 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
 
         if self.chest:
             # door joint state represents the openness and velocity of the door
-            # chest_xyz, _ = self.chest_robot.get_base_pos(self._p)
             door_joint_pos, door_joint_vel, keypoint_state = self.chest_robot.calc_robot_state()
             state = state + [[door_joint_pos], [door_joint_vel]] + keypoint_state
             policy_state = policy_state + [[door_joint_pos]] + keypoint_state
             achieved_goal.insert(0, [door_joint_pos])
 
-            # keep the door opened if the robot have somehow opened it
+            # keep the door opened if the robot has somehow opened it
             if np.abs(self.chest_door_opened_state - door_joint_pos) <= 0.01:
                 self.chest_robot.apply_action([self.chest_door_opened_state], self._p)
 
@@ -382,8 +305,10 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         policy_state = np.clip(np.concatenate(policy_state), -5.0, 5.0)
         achieved_goal = np.concatenate(achieved_goal)
 
+        # update goals based on new block positions
         self._generate_goal(block_poses=block_xyzs, new_target=False)
-        self.set_sub_goal(sub_goal_ind=self.sub_goal_ind)
+        if self.task_decomposition:
+            self.set_sub_goal(sub_goal_ind=self.sub_goal_ind)
 
         assert achieved_goal.shape == self.desired_goal.shape
 
@@ -396,14 +321,15 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             }
         elif not self.goal_image:
             return {
-                'observation': self.render(mode=self.render_mode, camera_id=self.observation_cam_id),
+                'observation': self.render(mode=self.render_mode, camera_id=self.observation_cam_id).copy(),
                 'state': state.copy(),
                 'policy_state': policy_state.copy(),
                 'achieved_goal': achieved_goal.copy(),
                 'desired_goal': self.desired_goal.copy(),
             }
         else:
-            observation = self.render(mode=self.render_mode, camera_id=self.observation_cam_id)
+            observation = self.render(mode=self.render_mode, camera_id=self.observation_cam_id).copy()
+            self._generate_goal_image(block_poses=block_xyzs)
             return {
                 'observation': observation.copy(),
                 'state': state.copy(),
@@ -423,7 +349,103 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
         else:
             return -d, ~not_achieved
 
-    def set_object_pose(self, body_id, position, orientation=None):
+    def _generate_goal(self, block_poses, new_target=True):
+        raise NotImplementedError
+
+    def _update_curriculum_prob(self):
+        # array of boolean masks
+        mask_finished = self.num_generated_goals_per_curriculum >= self.num_goals_per_curriculum
+        mask_half = self.num_generated_goals_per_curriculum >= (self.num_goals_per_curriculum / 2)
+        # set finished curriculum prob to 0.0
+        self.curriculum_prob[mask_finished] = 0.0
+        # process the first curriculum separately
+        if mask_half[0] and not mask_finished[0]:
+            self.curriculum_prob[0] = 0.5
+            self.curriculum_prob[1] = 0.5
+
+        # process the second to the second-last curriculums
+        for i in range(1, self.num_curriculum - 1):
+            if mask_finished[i - 1] and not mask_finished[i]:
+
+                if mask_half[i]:
+                    # set the next curriculum prob to 0.5
+                    #       if the current one has been trained for half the total number
+                    #       and the last one has been trained completely
+                    self.curriculum_prob[i] = 0.5
+                    self.curriculum_prob[i + 1] = 0.5
+                else:
+                    # set the next curriculum prob to 1.0
+                    #       if the current one has not yet been trained for half the total number
+                    #       and the last one has been trained completely
+                    self.curriculum_prob[i] = 1.0
+
+        # process the last curriculum separately
+        if mask_finished[-2]:
+            self.curriculum_prob[-1] = 1.0
+
+    def _set_object_pose(self, body_id, position, orientation=None):
         if orientation is None:
             orientation = self.object_initial_pos['table'][3:]
         self._p.resetBasePositionAndOrientation(body_id, position, orientation)
+
+    def _update_block_target(self, desired_goal, index_offset=0):
+        for _ in range(self.num_block):
+            self._set_object_pose(self.object_bodies[self.target_keys[_]],
+                                  desired_goal[_ + index_offset],
+                                  self.object_initial_pos[self.target_keys[_]][3:])
+
+    def _update_gripper_target(self, pos):
+        self._set_object_pose(self.object_bodies[self.grip_target_key],
+                              pos,
+                              self.object_initial_pos[self.grip_target_key][3:])
+
+    def _generate_goal_image(self, block_poses):
+        target_obj_pos = self.desired_goal.copy()
+        if self.chest:
+            warn("Tasks with a chest does not support goal image generation.")
+            self.desired_goal_image = self.render(mode=self.render_mode, camera_id=self.goal_cam_id)
+        elif self.grasping:
+            joint_poses, joint_vels = self.robot.get_kuka_joint_state()
+            finger_joint_pos, finger_joint_vel = self.robot.get_finger_joint_state()
+            # block stacking
+            if self.grip_informed_goal:
+                self.robot.set_finger_joint_state(self.robot.gripper_grasp_block_state)
+                target_gripper_pos = self.desired_goal[-4:-1]
+            else:
+                self.robot.set_finger_joint_state(self.robot.gripper_grasp_block_state)
+                target_gripper_pos = self.last_target_poses[0].copy()
+                if self.task_decomposition:
+                    target_gripper_pos[-1] = 0.175 + self.block_size * (self.sub_goal_ind)
+                elif self.curriculum:
+                    target_gripper_pos[-1] = 0.175 + self.block_size * self.last_curriculum_level
+                else:
+                    target_gripper_pos[-1] = 0.175 + self.block_size * (self.num_block - 1)
+            target_kuka_joint_pos = self.robot.compute_ik(self._p, target_gripper_pos)
+            self.robot.set_kuka_joint_state(target_kuka_joint_pos)
+
+            for i in range(self.num_block):
+                self._set_object_pose(self.object_bodies[self.block_keys[i]],
+                                      target_obj_pos[i * 3:i * 3 + 3],
+                                      self.object_initial_pos[self.block_keys[i]][3:])
+
+            self.desired_goal_image = self.render(mode=self.render_mode, camera_id=self.goal_cam_id)
+
+            for i in range(self.num_block):
+                self._set_object_pose(self.object_bodies[self.block_keys[i]],
+                                      block_poses[i],
+                                      self.object_initial_pos[self.block_keys[i]][3:])
+
+            self.robot.set_kuka_joint_state(joint_poses, joint_vels)
+            self.robot.set_finger_joint_state(finger_joint_pos, finger_joint_vel)
+        else:
+            for i in range(self.num_block):
+                self._set_object_pose(self.object_bodies[self.block_keys[i]],
+                                      target_obj_pos[i * 3:i * 3 + 3],
+                                      self.object_initial_pos[self.block_keys[i]][3:])
+
+            self.desired_goal_image = self.render(mode=self.render_mode, camera_id=self.goal_cam_id)
+
+            for i in range(self.num_block):
+                self._set_object_pose(self.object_bodies[self.block_keys[i]],
+                                      block_poses[i],
+                                      self.object_initial_pos[self.block_keys[i]][3:])
