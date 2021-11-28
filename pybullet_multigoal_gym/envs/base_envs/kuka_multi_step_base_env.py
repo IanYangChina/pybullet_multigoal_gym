@@ -420,7 +420,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                     target_gripper_pos[-1] = 0.175 + self.block_size * self.last_curriculum_level
                 else:
                     target_gripper_pos[-1] = 0.175 + self.block_size * (self.num_block - 1)
-            target_kuka_joint_pos = self.robot.compute_ik(self._p, target_gripper_pos)
+            target_kuka_joint_pos = self.robot.compute_ik(target_gripper_pos)
             self.robot.set_kuka_joint_state(target_kuka_joint_pos)
 
             for i in range(self.num_block):

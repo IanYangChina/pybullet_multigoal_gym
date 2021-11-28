@@ -149,7 +149,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
         if current_obj_pos is None:
             # no object cases
             target_gripper_pos = self.desired_goal.copy()
-            target_kuka_joint_pos = self.robot.compute_ik(self._p, target_gripper_pos)
+            target_kuka_joint_pos = self.robot.compute_ik(target_gripper_pos)
             self.robot.set_kuka_joint_state(target_kuka_joint_pos)
             self.desired_goal_image = self.render(mode=self.render_mode, camera_id=self.goal_cam_id)
             self.robot.set_kuka_joint_state(self.robot.kuka_rest_pose, np.zeros(7))
@@ -168,7 +168,7 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             # PickAndPlace task
             self.robot.set_finger_joint_state(self.robot.gripper_grasp_block_state)
             target_gripper_pos = self.desired_goal.copy()
-            target_kuka_joint_pos = self.robot.compute_ik(self._p, target_gripper_pos)
+            target_kuka_joint_pos = self.robot.compute_ik(target_gripper_pos)
             self.robot.set_kuka_joint_state(target_kuka_joint_pos)
 
             original_obj_pos = current_obj_pos.copy()

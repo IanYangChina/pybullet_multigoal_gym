@@ -44,7 +44,9 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
              grip_informed_goal=False,
              task_decomposition=False,
              joint_control=False, max_episode_steps=50, distance_threshold=0.05,
-             image_observation=False, depth_image=False, goal_image=False, visualize_target=True,
+             primitive=None,
+             image_observation=False, depth_image=False, goal_image=False, point_cloud=False,
+             visualize_target=True,
              camera_setup=None, observation_cam_id=0, goal_cam_id=0,
              use_curriculum=False, num_goals_to_generate=1e6):
     tasks = ['push', 'reach', 'slide', 'pick_and_place',
@@ -76,6 +78,9 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
     elif task == 'chest_push':
         task_tag = 'ChestPush'
         entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_multi_step_envs:KukaChestPushEnv'
+    elif task == 'shape_assemble':
+        task_tag = 'ShapeAssemble'
+        entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_shape_assemble_envs:KukaPushAssembleEnv'
     else:
         raise ValueError('invalid task name: {}, only support: {}'.format(task, tasks))
     env_id = 'Kuka' + task_tag
@@ -129,7 +134,7 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
                     },
                     max_episode_steps=max_episode_steps,
                 )
-        else:
+        elif task in ['block_stack', 'block_rearrange', 'chest_pick_and_place', 'chest_push']:
             assert num_block <= 5, "only support up to 5 blocks"
             register(
                     id=env_id,
@@ -155,5 +160,27 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
                     },
                     max_episode_steps=max_episode_steps,
                 )
+        else:
+            assert task in ['shape_assemble']
+            register(
+                id=env_id,
+                entry_point=entry,
+                kwargs={
+                    'render': render,
+                    'binary_reward': binary_reward,
+                    'distance_threshold': distance_threshold,
+                    'image_observation': image_observation,
+                    'depth_image': depth_image,
+                    'pcd': point_cloud,
+                    'goal_image': goal_image,
+                    'visualize_target': visualize_target,
+                    'camera_setup': camera_setup,
+                    'observation_cam_id': observation_cam_id,
+                    'goal_cam_id': goal_cam_id,
+                    'gripper_type': gripper,
+                    'primitive': primitive
+                },
+                max_episode_steps=max_episode_steps,
+            )
 
     return make(env_id)

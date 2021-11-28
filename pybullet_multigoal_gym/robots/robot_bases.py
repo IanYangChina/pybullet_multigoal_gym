@@ -5,7 +5,8 @@ import os
 class XmlBasedRobot(object):
     """Base class for .xml based agents."""
 
-    def __init__(self, robot_name, self_collision=True):
+    def __init__(self, bullet_client, robot_name, self_collision=True):
+        self._p = bullet_client
         self.robot_name = robot_name
         self.objects = None
         self.parts = {}
@@ -13,26 +14,26 @@ class XmlBasedRobot(object):
         self.ordered_joint_names = []
         self.self_collision = self_collision
 
-    def addToScene(self, bullet_client, bodies):
-        p = bullet_client
+    def addToScene(self, bodies):
         if np.isscalar(bodies):  # streamline the case where bodies is actually just one body
             bodies = [bodies]
         for i in range(len(bodies)):
-            for j in range(p.getNumJoints(bodies[i])):
-                joint_info = p.getJointInfo(bodies[i], j)
+            for j in range(self._p.getNumJoints(bodies[i])):
+                joint_info = self._p.getJointInfo(bodies[i], j)
                 joint_name = joint_info[1].decode("utf8")
                 self.ordered_joint_names.append(joint_name)
                 part_name = joint_info[12].decode("utf8")
-                self.parts[part_name] = BodyPart(p, part_name, bodies, i, j)
-                self.jdict[joint_name] = Joint(p, bodies, i, j, joint_info)
+                self.parts[part_name] = BodyPart(self._p, part_name, bodies, i, j)
+                self.jdict[joint_name] = Joint(self._p, bodies, i, j, joint_info)
 
 
 class URDFBasedRobot(XmlBasedRobot):
     """Base class for URDF .xml based robots."""
 
-    def __init__(self, model_urdf, robot_name, base_position=None,
+    def __init__(self, bullet_client, model_urdf, robot_name, base_position=None,
                  base_orientation=None, fixed_base=False, self_collision=False):
         XmlBasedRobot.__init__(self,
+                               bullet_client=bullet_client,
                                robot_name=robot_name,
                                self_collision=self_collision)
         if base_position is None:
@@ -44,28 +45,45 @@ class URDFBasedRobot(XmlBasedRobot):
         self.base_orientation = base_orientation
         self.fixed_base = fixed_base
         self.robot_urdf_loaded = False
+        self.target_keys = ['target_red', 'target_blue', 'target_green', 'target_purple']
+        self.target_bodies = {
+            'target_red': None,
+            'target_blue': None,
+            'target_green': None,
+            'target_purple': None
+        }
+        self.target_initial_pos = {
+            'target_red': [-0.54, 0.0, 0.035, 0.0, 0.0, 0.0, 1.0],
+            'target_blue': [-0.54, 0.0, 0.035, 0.0, 0.0, 0.0, 1.0],
+            'target_green': [-0.54, 0.0, 0.035, 0.0, 0.0, 0.0, 1.0],
+            'target_purple': [-0.54, 0.0, 0.035, 0.0, 0.0, 0.0, 1.0]
+        }
 
-    def reset(self, bullet_client):
-        p = bullet_client
+    def reset(self):
         # load urdf if it's the first time that reset() gets called
         if not self.robot_urdf_loaded:
             full_path = os.path.join(os.path.dirname(__file__), "..", "assets", self.model_urdf)
             self.robot_urdf_loaded = True
             if self.self_collision:
-                self.addToScene(p, p.loadURDF(full_path,
-                                              basePosition=self.base_position,
-                                              baseOrientation=self.base_orientation,
-                                              useFixedBase=self.fixed_base,
-                                              flags=p.URDF_USE_SELF_COLLISION))
+                self.addToScene(self._p.loadURDF(full_path,
+                                                 basePosition=self.base_position,
+                                                 baseOrientation=self.base_orientation,
+                                                 useFixedBase=self.fixed_base,
+                                                 flags=self._p.URDF_USE_SELF_COLLISION))
             else:
-                self.addToScene(p, p.loadURDF(full_path,
-                                              basePosition=self.base_position,
-                                              baseOrientation=self.base_orientation,
-                                              useFixedBase=self.fixed_base))
+                self.addToScene(self._p.loadURDF(full_path,
+                                                 basePosition=self.base_position,
+                                                 baseOrientation=self.base_orientation,
+                                                 useFixedBase=self.fixed_base))
+            # for target_name in self.target_keys:
+            #     self.target_bodies[target_name] = self._p.loadURDF(
+            #         os.path.join(os.path.dirname(__file__), "..", "assets", "robots", target_name + ".urdf"),
+            #         basePosition=self.target_initial_pos[target_name][:3],
+            #         baseOrientation=self.target_initial_pos[target_name][3:])
         # reset robot-specific configuration
-        self.robot_specific_reset(p)
+        self.robot_specific_reset()
 
-    def robot_specific_reset(self, bullet_client):
+    def robot_specific_reset(self):
         # method to override, purposed to reset robot-specific configuration
         raise NotImplementedError
 
@@ -73,7 +91,7 @@ class URDFBasedRobot(XmlBasedRobot):
         # method to override, purposed to obtain robot-specific states
         raise NotImplementedError
 
-    def apply_action(self, action, bullet_client):
+    def apply_action(self, action):
         # method to override, purposed to apply robot-specific actions
         raise NotImplementedError
 

@@ -48,12 +48,12 @@ class KukaReachEnv(KukaBulletMGEnv):
 
 class KukaSlideEnv(KukaBulletMGEnv):
     def __init__(self, render=True, binary_reward=True, joint_control=False, distance_threshold=0.05,
+                 visualize_target=True, gripper_type='parallel_jaw',
                  # unused args, just to make it compatible with the make_env() method
-                 image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
-                 camera_setup=None, observation_cam_id=0, goal_cam_id=0,
-                 gripper_type='parallel_jaw'):
+                 image_observation=False, goal_image=False, depth_image=False,
+                 camera_setup=None, observation_cam_id=0, goal_cam_id=0):
         KukaBulletMGEnv.__init__(self, render=render, binary_reward=binary_reward, distance_threshold=distance_threshold,
-                                 image_observation=False,
+                                 image_observation=False, visualize_target=visualize_target,
                                  gripper_type=gripper_type, obj_range=0.1, target_range=0.2,
                                  table_type='long_table', target_in_the_air=False, end_effector_start_on_table=True,
                                  grasping=False, joint_control=joint_control, has_obj=True)
