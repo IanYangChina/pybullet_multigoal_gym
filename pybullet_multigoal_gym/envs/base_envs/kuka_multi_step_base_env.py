@@ -137,7 +137,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
             # record the number of generated goals per curriculum
             self.num_generated_goals_per_curriculum = np.zeros(self.num_curriculum)
 
-        BaseBulletMGEnv.__init__(self, robot=robot, render=render,
+        BaseBulletMGEnv.__init__(self, robot=robot, chest=chest, render=render,
                                  image_observation=image_observation, goal_image=goal_image,
                                  camera_setup=camera_setup,
                                  seed=0, timestep=0.002, frame_skip=20)
@@ -188,7 +188,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                 basePosition=self.object_initial_pos['table'][:3],
                 baseOrientation=self.object_initial_pos['table'][3:])
             if self.chest:
-                self.chest_robot.reset(bullet_client=self._p)
+                self.chest_robot.reset()
 
             for n in range(self.num_block):
                 block_name = self.block_keys[n]
@@ -238,7 +238,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                                   self.object_initial_pos[self.block_keys[i]][3:])
 
         if self.chest:
-            self.chest_robot.robot_specific_reset(self._p)
+            self.chest_robot.robot_specific_reset()
 
         # generate goals & images
         self._generate_goal(block_poses, new_target=True)
@@ -293,7 +293,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
 
             # keep the door opened if the robot has somehow opened it
             if np.abs(self.chest_door_opened_state - door_joint_pos) <= 0.01:
-                self.chest_robot.apply_action([self.chest_door_opened_state], self._p)
+                self.chest_robot.apply_action([self.chest_door_opened_state])
 
         if self.grip_informed_goal:
             # gripper informed goals in addition indicates that goal states of the gripper (coordinates & finger width)
@@ -415,7 +415,7 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                 self.robot.set_finger_joint_state(self.robot.gripper_grasp_block_state)
                 target_gripper_pos = self.last_target_poses[0].copy()
                 if self.task_decomposition:
-                    target_gripper_pos[-1] = 0.175 + self.block_size * (self.sub_goal_ind)
+                    target_gripper_pos[-1] = 0.175 + self.block_size * self.sub_goal_ind
                 elif self.curriculum:
                     target_gripper_pos[-1] = 0.175 + self.block_size * self.last_curriculum_level
                 else:

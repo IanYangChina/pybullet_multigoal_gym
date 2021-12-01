@@ -12,7 +12,7 @@ class BaseBulletMGEnv(gym.Env):
     Base class for non-hierarchical multi-goal RL task, based on PyBullet and Gym.
     """
 
-    def __init__(self, robot,
+    def __init__(self, robot, chest=False,
                  render=False, image_observation=False, goal_image=False, camera_setup=None,
                  seed=0, gravity=9.81, timestep=0.002, frame_skip=20):
         self.robot = robot
@@ -40,6 +40,9 @@ class BaseBulletMGEnv(gym.Env):
         self._configure_bullet_client()
         self.robot._p = self._p
         self.robot.reset()
+        if chest:
+            self.chest_robot._p = self._p
+            self.chest_robot.reset()
         # observation camera setup
         if camera_setup is None:
             # default camera

@@ -29,10 +29,10 @@ env = pmg.make_env(
     binary_reward=True,
     distance_threshold=0.05,
     image_observation=True,
-    depth_image=False,
+    depth_image=True,
     goal_image=True,
     point_cloud=True,
-    visualize_target=True,
+    visualize_target=False,
     camera_setup=camera_setup,
     observation_cam_id=0,
     goal_cam_id=0,
@@ -41,19 +41,21 @@ env = pmg.make_env(
 
 obs = env.reset()
 time_done = False
-f, axarr = plt.subplots(1, 2)
+f, axarr = plt.subplots(2, 2)
 # env.set_sub_goal(0)
 # print(env.desired_goal)
 # t = 0
-while not time_done:
+while True:
     action = env.action_space.sample()
-    action[0] = 20
-    action[1] = 74
-    action[2] = 99
+    # action[0] = 20
+    # action[1] = 74
+    # action[2] = 99
     obs, reward, time_done, info = env.step(action)
-    # axarr[0].imshow(obs['desired_goal_img'])
-    # axarr[1].imshow(obs['achieved_goal_img'])
-    # plt.pause(0.00001)
+    axarr[0][0].imshow(obs['desired_goal_img'][:, :, :3])
+    axarr[0][1].imshow(obs['desired_goal_img'][:, :, 3])
+    axarr[1][0].imshow(obs['achieved_goal_img'][:, :, :3])
+    axarr[1][1].imshow(obs['achieved_goal_img'][:, :, 3])
+    plt.pause(0.00001)
     # pcd_raw = o3d.geometry.PointCloud(points=o3d.utility.Vector3dVector(obs['pcd']))
     # o3d.visualization.draw_geometries([pcd_raw])
     # t += 1
@@ -65,4 +67,5 @@ while not time_done:
     #     env.set_sub_goal(3)
     # if t == 12:
     #     env.set_sub_goal(4)
-    # obs = env.reset()
+    if time_done:
+        obs = env.reset()

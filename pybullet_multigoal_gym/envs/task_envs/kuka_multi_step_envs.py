@@ -255,7 +255,7 @@ class KukaChestPickAndPlaceEnv(KukaBulletMultiBlockEnv):
 
     def _generate_goal(self, block_poses, new_target=True):
         # all blocks should go into the sphere of 0.05 radius centred at the chest centre
-        chest_center_xyz, _ = self.chest_robot.get_base_pos(self._p)
+        chest_center_xyz, _ = self.chest_robot.get_base_pos()
         chest_center_xyz = np.array(chest_center_xyz)
         chest_center_xyz[0] += 0.05
         chest_center_xyz[2] = 0.175
@@ -404,7 +404,7 @@ class KukaChestPushEnv(KukaBulletMultiBlockEnv):
 
     def _generate_goal(self, block_poses, new_target=True):
         # all blocks should go into the sphere of 0.05 radius centred at the chest bottom centre
-        chest_center_xyz, _ = self.chest_robot.get_base_pos(self._p)
+        chest_center_xyz, _ = self.chest_robot.get_base_pos()
         chest_center_xyz = np.array(chest_center_xyz)
         chest_center_xyz[0] += 0.05
         chest_center_xyz[2] = 0.175

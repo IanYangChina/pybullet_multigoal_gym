@@ -5,7 +5,7 @@ import numpy as np
 
 class Kuka(URDFBasedRobot):
     def __init__(self, bullet_client=None, gripper_type='parallel_jaw', joint_control=False, grasping=False,
-                 primitive=None, workspace_range=None,
+                 primitive=None, workspace_range=None, resolution=0.002,
                  end_effector_start_on_table=False, table_surface_z=0.175,
                  obj_range=0.15, target_range=0.15):
         self.gripper_type = gripper_type
@@ -23,6 +23,7 @@ class Kuka(URDFBasedRobot):
         self.kuka_joint_index = None
         # initial robot joint states
         self.kuka_rest_pose = [0, -0.5592432, 0, 1.733180, 0, -0.8501557, 0]
+        self.kuka_away_pose = [0, 0.5467089, 0, 4.518901, 0, 0.828478, 0]
         self.joint_state_target = None
         self.end_effector_tip_joint_index = None
         self.end_effector_target = None
@@ -81,7 +82,7 @@ class Kuka(URDFBasedRobot):
 
             if self.primitive == 'discrete_push':
                 self.num_angles = 20
-                self.resolution = 0.002  # meters per pixel
+                self.resolution = resolution  # meters per pixel
                 # plus 0.0001 to bypass numpy precision issues
                 self.action_map_width = int((self.workspace_range_range[0]+0.0001) // self.resolution)
                 self.action_map_height = int((self.workspace_range_range[1]+0.0001) // self.resolution)

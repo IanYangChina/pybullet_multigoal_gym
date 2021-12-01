@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import quaternion as quat
 from pybullet_multigoal_gym.envs.base_envs.base_env import BaseBulletMGEnv
 from pybullet_multigoal_gym.robots.kuka import Kuka
 
@@ -40,13 +41,16 @@ class KukaBulletShapeAssembleEnv(BaseBulletMGEnv):
         self.object_bodies = {
             'workspace': None,
             'cube': None,
+            'slot': None,
             'target': None
         }
         self.object_initial_pos = {
             'workspace': [-0.55, 0.0, 0.01, 0.0, 0.0, 0.0, 1.0],
             'cube': [-0.60, 0.0, 0.035, 0.0, 0.0, 0.0, 1.0],
+            'slot': [-0.50, 0.0, 0.035, 0.0, 0.0, 0.0, 1.0],
             'target': [-0.55, 0.0, 0.035, 0.0, 0.0, 0.0, 1.0]
         }
+        self.manipulated_object_keys = ['cube', 'slot']
 
         self.desired_goal = None
         self.desired_goal_image = None
@@ -78,87 +82,97 @@ class KukaBulletShapeAssembleEnv(BaseBulletMGEnv):
                 os.path.join(self.object_assets_path, "cube.urdf"),
                 basePosition=self.object_initial_pos['cube'][:3],
                 baseOrientation=self.object_initial_pos['cube'][3:])
+            self.object_bodies['slot'] = self._p.loadURDF(
+                os.path.join(self.object_assets_path, "slot.urdf"),
+                basePosition=self.object_initial_pos['slot'][:3],
+                baseOrientation=self.object_initial_pos['slot'][3:])
             if not self.visualize_target:
                 self.set_object_pose(self.object_bodies['target'],
                                      [0.0, 0.0, -3.0],
                                      self.object_initial_pos['target'][3:])
 
         # randomize object positions
-        end_effector_tip_initial_position = self.robot.end_effector_tip_initial_position.copy()
-        object_xy_1 = end_effector_tip_initial_position[:2]
-        while np.linalg.norm(object_xy_1 - end_effector_tip_initial_position[:2]) < 0.1:
-            object_xy_1 = self.np_random.uniform(self.robot.object_bound_lower[:-1],
-                                                 self.robot.object_bound_upper[:-1])
+        object_poses = []
+        object_quats = []
+        for object_key in self.manipulated_object_keys:
+            done = False
+            while not done:
+                new_object_xy = self.np_random.uniform(self.robot.object_bound_lower[:-1],
+                                                       self.robot.object_bound_upper[:-1])
+                object_not_overlap = []
+                for pos in object_poses + [self.robot.end_effector_tip_initial_position]:
+                    object_not_overlap.append((np.linalg.norm(new_object_xy - pos[:-1]) > 0.06))
+                if all(object_not_overlap):
+                    object_poses.append(np.concatenate((new_object_xy.copy(), [0.035])))
+                    done = True
 
-        object_xyz = np.concatenate((object_xy_1.copy(), [0.035]))
-        self.set_object_pose(self.object_bodies['cube'],
-                             object_xyz,
-                             self.object_initial_pos['cube'][3:])
+            orientation_euler = quat.as_euler_angles(quat.as_quat_array([1., 0., 0., 0.]))
+            orientation_euler[-1] = self.np_random.uniform(-1.0, 1.0) * np.pi
+            orientation_quat_new = quat.as_float_array(quat.from_euler_angles(orientation_euler))
+            orientation_quat_new = np.concatenate([orientation_quat_new[1:], [orientation_quat_new[0]]], axis=-1)
+            object_quats.append(orientation_quat_new.copy())
+
+            self.set_object_pose(self.object_bodies[object_key],
+                                 object_poses[-1],
+                                 orientation_quat_new)
 
         # generate goals & images
-        self._generate_goal(current_obj_pos=object_xyz)
+        self._generate_goal()
         if self.goal_image:
-            self._generate_goal_image(current_obj_pos=object_xyz)
+            self._generate_goal_image()
 
-    def _generate_goal(self, current_obj_pos=None):
-        if current_obj_pos is None:
-            # generate a goal around the gripper if no object is involved
-            center = self.robot.end_effector_tip_initial_position.copy()
-        else:
-            center = current_obj_pos
+    def _generate_goal(self):
+        (x, y, z), (a, b, c, w), _, _, _, _ = self._p.getLinkState(self.object_bodies['slot'], 2)
+        orientation_euler = quat.as_euler_angles(quat.as_quat_array([w, a, b, c]))
 
-        # generate the 3DoF goal within a 3D bounding box such that,
-        #       it is at least 0.02m away from the gripper or the object
-        while True:
-            self.desired_goal = self.np_random.uniform(self.robot.target_bound_lower,
-                                                       self.robot.target_bound_upper)
-            if np.linalg.norm(self.desired_goal - center) > 0.1:
-                break
-
-        self.desired_goal[2] = self.object_initial_pos['cube'][2]
+        self.desired_goal = np.concatenate([np.array([x, y, z]), orientation_euler], axis=-1)
 
         if self.visualize_target:
             self.set_object_pose(self.object_bodies['target'],
-                                 self.desired_goal,
-                                 self.object_initial_pos['target'][3:])
+                                 self.desired_goal[:3],
+                                 self.desired_goal[3:])
 
-    def _generate_goal_image(self, current_obj_pos=None):
-        away_pos = self.robot.compute_ik(np.array([0.0, -0.52, 0.045]))
-        self.robot.set_kuka_joint_state(away_pos)
+    def _generate_goal_image(self):
+        self.robot.set_kuka_joint_state(self.robot.kuka_away_pose)
 
         # Push task
-        original_obj_pos = current_obj_pos.copy()
-        target_obj_pos = self.desired_goal.copy()
+        original_obj_pos, original_obj_quat = self._p.getBasePositionAndOrientation(self.object_bodies['cube'])
+        target_obj_pos = self.desired_goal.copy()[:3]
+        target_obj_euler = self.desired_goal.copy()
+        target_obj_quat = quat.as_float_array(quat.from_euler_angles(target_obj_euler))
+        target_obj_quat = np.concatenate([target_obj_quat[1:], [target_obj_quat[0]]], axis=-1)
         self.set_object_pose(self.object_bodies['cube'],
                              target_obj_pos,
-                             self.object_initial_pos['cube'][3:])
+                             target_obj_quat)
         self.desired_goal_image = self.render(mode=self.render_mode, camera_id=self.goal_cam_id)
         self.set_object_pose(self.object_bodies['cube'],
                              original_obj_pos,
-                             self.object_initial_pos['cube'][3:])
+                             original_obj_quat)
 
         self.robot.set_kuka_joint_state(self.robot.kuka_rest_pose)
 
     def _step_callback(self):
-        self.robot.set_kuka_joint_state(self.robot.kuka_rest_pose)
+        pass
 
     def _get_obs(self):
+        # re-generate goals & images
+        self._generate_goal()
+        if self.goal_image:
+            self._generate_goal_image()
 
-        # robot state contains gripper xyz coordinates, orientation (and finger width)
-        gripper_xyz, gripper_rpy, gripper_finger_closeness, gripper_vel_xyz, gripper_vel_rpy, gripper_finger_vel, joint_poses = self.robot.calc_robot_state()
         assert self.desired_goal is not None
 
-        block_xyz, _ = self._p.getBasePositionAndOrientation(self.object_bodies['cube'])
-        block_rel_xyz = gripper_xyz - np.array(block_xyz)
-        block_vel_xyz, block_vel_rpy = self._p.getBaseVelocity(self.object_bodies['cube'])
-        block_rel_vel_xyz = gripper_vel_xyz - np.array(block_vel_xyz)
-        block_rel_vel_rpy = gripper_vel_rpy - np.array(block_vel_rpy)
-        achieved_goal = np.array(block_xyz).copy()
-        # the HER paper use different state observations for the policy and critic network
-        # critic further takes the velocities as input
-        state = np.concatenate((gripper_xyz, block_xyz, gripper_finger_closeness, block_rel_xyz,
-                                gripper_vel_xyz, gripper_finger_vel, block_rel_vel_xyz, block_rel_vel_rpy))
-        policy_state = np.concatenate((gripper_xyz, gripper_finger_closeness, block_rel_xyz))
+        # slot state: (x, y, z), (a, b, c, w)
+        slot_xyz, slot_quat = self._p.getBasePositionAndOrientation(self.object_bodies['slot'])
+        slot_euler = quat.as_euler_angles(quat.as_quat_array(slot_quat))
+        # cube state: (x, y, z), (a, b, c, w)
+        cube_xyz, cube_quat = self._p.getBasePositionAndOrientation(self.object_bodies['cube'])
+        cube_euler = quat.as_euler_angles(quat.as_quat_array(cube_quat))
+
+        achieved_goal = np.concatenate([cube_xyz, cube_euler])
+
+        state = np.concatenate((cube_xyz, cube_euler, slot_xyz, slot_euler))
+        policy_state = np.concatenate((cube_xyz, cube_euler, slot_xyz, slot_euler))
 
         obs_dict = {
             'observation': state.copy(),
@@ -168,8 +182,7 @@ class KukaBulletShapeAssembleEnv(BaseBulletMGEnv):
         }
 
         if self.image_observation:
-            away_pos = self.robot.compute_ik(np.array([0.0, -0.52, 0.045]))
-            self.robot.set_kuka_joint_state(away_pos)
+            self.robot.set_kuka_joint_state(self.robot.kuka_away_pose)
 
             observation = self.render(mode=self.render_mode, camera_id=self.observation_cam_id)
             obs_dict['observation'] = observation.copy()
