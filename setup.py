@@ -17,6 +17,8 @@ setup(name='pybullet-multigoal-gym',
       package_dir={'pybullet_multigoal_gym': 'pybullet_multigoal_gym'},
       package_data={'pybullet_multigoal_gym': [
           'assets/objects/*.urdf',
+          'assets/objects/assembling_shape/*.urdf',
+          'assets/robots/*.urdf',
           'assets/robots/kuka/*.urdf',
           'assets/robots/kuka/meshes/iiwa14/collision/*.stl',
           'assets/robots/kuka/meshes/iiwa14/visual/*.stl',
