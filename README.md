@@ -18,11 +18,14 @@ The newest release is the most recommended. There are still on-going updates for
 [ArXiv](https://arxiv.org/abs/2105.05985).
 
 ```
-@article{xyangPMG,
-  title={An Open-Source Multi-Goal Reinforcement Learning Environment for Robotic Manipulation with Pybullet},
-  author={Xintong Yang, Ze Ji, Jing Wu, Yu-Kun Lai},
-  journal={arXiv preprint arXiv:2105.05985},
-  year={2021}
+@InProceedings{yang2021pmg,
+author="Yang, Xintong and Ji, Ze and Wu, Jing and Lai, Yu-Kun",
+title="An Open-Source Multi-goal Reinforcement Learning Environment for Robotic Manipulation with Pybullet",
+booktitle="Towards Autonomous Robotic Systems",
+year="2021",
+publisher="Springer International Publishing",
+pages="14--24",
+isbn="978-3-030-89177-0"
 }
 ```
 
@@ -150,3 +153,5 @@ See the above example.
 2021.03.18 --- Finish curriculum; add on-hand camera observation
 
 2021.11.11 --- Finish task decomposition, subgoal generation codes and some compatibility issues, new release
+
+2021.12.03 --- Add shape assembly task with push primitive support (discrete & continuous) in further testing

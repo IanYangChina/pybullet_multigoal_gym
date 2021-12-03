@@ -1,4 +1,6 @@
 setuptools~=50.3.0
 pybullet~=3.0.6
 gym~=0.17.3
-numpy~=1.19.2
+numpy~=1.19.4
+numba
+numpy-quaternion~=2020.11.2.17.0.49
