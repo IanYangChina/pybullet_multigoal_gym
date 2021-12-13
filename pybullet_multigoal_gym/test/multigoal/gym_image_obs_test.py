@@ -23,7 +23,7 @@ camera_setup = [
 ]
 
 env = pmg.make_env(
-    task='shape_assemble',
+    task='primitive_push_reach',
     render=True,
     primitive='discrete_push',
     binary_reward=True,
@@ -32,16 +32,16 @@ env = pmg.make_env(
     depth_image=True,
     goal_image=True,
     point_cloud=True,
-    visualize_target=False,
+    visualize_target=True,
     camera_setup=camera_setup,
-    observation_cam_id=0,
+    observation_cam_id=1,
     goal_cam_id=0,
     gripper='parallel_jaw',
     max_episode_steps=10000)
 
 obs = env.reset()
 time_done = False
-f, axarr = plt.subplots(2, 2)
+f, axarr = plt.subplots(3, 2)
 # env.set_sub_goal(0)
 # print(env.desired_goal)
 # t = 0
@@ -55,9 +55,13 @@ while True:
     axarr[0][1].imshow(obs['desired_goal_img'][:, :, 3])
     axarr[1][0].imshow(obs['achieved_goal_img'][:, :, :3])
     axarr[1][1].imshow(obs['achieved_goal_img'][:, :, 3])
+    axarr[2][0].imshow(obs['observation'][:, :, :3])
+    axarr[2][1].imshow(obs['observation'][:, :, 3])
     plt.pause(0.00001)
+    # new_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.05)
     # pcd_raw = o3d.geometry.PointCloud(points=o3d.utility.Vector3dVector(obs['pcd']))
-    # o3d.visualization.draw_geometries([pcd_raw])
+    # o3d.visualization.draw_geometries([pcd_raw, new_frame])
+    # obs = env.reset()
     # t += 1
     # if t == 3:
     #     env.set_sub_goal(1)

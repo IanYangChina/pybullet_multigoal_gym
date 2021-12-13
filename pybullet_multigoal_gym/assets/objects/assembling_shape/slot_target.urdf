@@ -1,23 +1,16 @@
 <?xml version="1.0" ?>
 
-<robot name="slot">
-    <material name="slot">
-        <color rgba="0 0.8 0.8 1"/>
-    </material>
+<robot name="slot_target">
     <material name="slot_target">
+        <color rgba="0 0.8 0.8 0.5"/>
+    </material>
+    <material name="slot_fit_target">
         <color rgba="0 0.8 0.8 0.0"/>
     </material>
     <link name="base">
-        <contact>
-            <lateral_friction value="1.0"/>
-            <rolling_friction value="0.0"/>
-            <inertia_scaling value="3.0"/>
-            <contact_cfm value="0.0"/>
-            <contact_erp value="1.0"/>
-        </contact>
         <inertial>
             <origin rpy="0 0 0" xyz="0 0 0"/>
-            <mass value="100"/>
+            <mass value="0"/>
             <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
         </inertial>
         <visual>
@@ -25,14 +18,8 @@
             <geometry>
                 <box size="0.03 0.09 0.03"/>
             </geometry>
-            <material name="slot"/>
+            <material name="slot_target"/>
         </visual>
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <geometry>
-                <box size="0.03 0.09 0.03"/>
-            </geometry>
-        </collision>
     </link>
     <joint name="base_left_joint" type="fixed">
         <origin rpy="0 0 0" xyz="-0.03 0.03 0"/>
@@ -40,16 +27,9 @@
         <child link="left"/>
     </joint>
     <link name="left">
-        <contact>
-            <lateral_friction value="1.0"/>
-            <rolling_friction value="0.0"/>
-            <inertia_scaling value="3.0"/>
-            <contact_cfm value="0.0"/>
-            <contact_erp value="1.0"/>
-        </contact>
         <inertial>
             <origin rpy="0 0 0" xyz="0 0 0"/>
-            <mass value="100"/>
+            <mass value="0"/>
             <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
         </inertial>
         <visual>
@@ -57,14 +37,8 @@
             <geometry>
                 <box size="0.03 0.03 0.03"/>
             </geometry>
-            <material name="slot"/>
+            <material name="slot_target"/>
         </visual>
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <geometry>
-                <box size="0.03 0.03 0.03"/>
-            </geometry>
-        </collision>
     </link>
     <joint name="base_right_joint" type="fixed">
         <origin rpy="0 0 0" xyz="-0.03 -0.03 0"/>
@@ -72,16 +46,9 @@
         <child link="right"/>
     </joint>
     <link name="right">
-        <contact>
-            <lateral_friction value="1.0"/>
-            <rolling_friction value="0.0"/>
-            <inertia_scaling value="3.0"/>
-            <contact_cfm value="0.0"/>
-            <contact_erp value="1.0"/>
-        </contact>
         <inertial>
             <origin rpy="0 0 0" xyz="0 0 0"/>
-            <mass value="100"/>
+            <mass value="0"/>
             <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
         </inertial>
         <visual>
@@ -89,14 +56,8 @@
             <geometry>
                 <box size="0.03 0.03 0.03"/>
             </geometry>
-            <material name="slot"/>
+            <material name="slot_target"/>
         </visual>
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <geometry>
-                <box size="0.03 0.03 0.03"/>
-            </geometry>
-        </collision>
     </link>
     <joint name="base_target_joint" type="fixed">
         <origin rpy="0 0 0" xyz="-0.03 0 0"/>
@@ -114,7 +75,7 @@
             <geometry>
                 <sphere radius="0.0001"/>
             </geometry>
-            <material name="slot_target"/>
+            <material name="slot_fit_target"/>
         </visual>
     </link>
 </robot>
