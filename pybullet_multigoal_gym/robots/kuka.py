@@ -78,7 +78,7 @@ class Kuka(URDFBasedRobot):
             self.workspace_range_upper = np.array(workspace_range['upper_xy'])
             self.workspace_range_lower = np.array(workspace_range['lower_xy'])
             self.workspace_range_range = self.workspace_range_upper - self.workspace_range_lower
-            self.push_length = 0.07  # meters
+            self.push_length = 0.1  # meters
 
             if self.primitive == 'discrete_push':
                 self.num_angles = 20
@@ -146,6 +146,7 @@ class Kuka(URDFBasedRobot):
         self.joint_state_target, _ = self.get_kuka_joint_state()
 
     def apply_action(self, a):
+        assert self.action_space.contains(a)
         if self.grasping:
             # map action in [-1, 1] to gripper joint range
             grip_ctrl = (a[-1] + 1.0) * (self.gripper_abs_joint_limit / 2)

@@ -50,7 +50,7 @@ class KukaBulletPrimitiveEnv(BaseBulletMGEnv):
             'target': None
         }
         self.object_initial_pos = {
-            'workspace': [-0.55, 0.0, 0.01, 0.0, 0.0, 0.0, 1.0],
+            'workspace': [-0.58, 0.0, 0.01, 0.0, 0.0, 0.0, 1.0],
             'cube': [-0.60, 0.0, 0.035, 0.0, 0.0, 0.0, 1.0],
             'slot': [-0.50, 0.0, 0.035, 0.0, 0.0, 0.0, 1.0],
             'rectangle': [-0.50, 0.0, 0.035, 0.0, 0.0, 0.0, 1.0],
@@ -64,8 +64,9 @@ class KukaBulletPrimitiveEnv(BaseBulletMGEnv):
         self.desired_goal_image = None
 
         robot = Kuka(gripper_type=gripper_type, grasping=grasping,
-                     primitive=primitive, workspace_range={"upper_xy": (-0.4, 0.2),
-                                                           "lower_xy": (-0.7, -0.2)},
+                     primitive=primitive, workspace_range={"upper_xy": (-0.405, 0.175),
+                                                           "lower_xy": (-0.755, -0.175)},
+                     resolution=0.0015625,  # 0.35 / 224
                      end_effector_start_on_table=end_effector_start_on_table, table_surface_z=0.04,
                      obj_range=self.obj_range, target_range=self.target_range)
 

@@ -6,19 +6,19 @@ import matplotlib.pyplot as plt
 
 camera_setup = [
     {
-        'cameraEyePosition': [-0.55, 0.0, 0.282],
-        'cameraTargetPosition': [-0.55, 0.0, 0.02],
+        'cameraEyePosition': [-0.58, 0.0, 0.327],
+        'cameraTargetPosition': [-0.58, 0.0, 0.02],
         'cameraUpVector': [1, 0, 0],
-        # resolution: 0.002 meters per pixel for the workspace of 0.4 x 0.3 meters
-        'render_width': 200,
-        'render_height': 150
+        # resolution: 0.0015625 meters per pixel for the workspace of 0.35 x 0.35 meters
+        'render_width': 224,
+        'render_height': 224
     },
     {
         'cameraEyePosition': [-1.0, -0.25, 0.6],
         'cameraTargetPosition': [-0.6, -0.05, 0.2],
         'cameraUpVector': [0, 0, 1],
-        'render_width': 128,
-        'render_height': 128
+        'render_width': 224,
+        'render_height': 224
     }
 ]
 
@@ -41,27 +41,27 @@ env = pmg.make_env(
 
 obs = env.reset()
 time_done = False
-f, axarr = plt.subplots(3, 2)
+f, axarr = plt.subplots(2, 2)
 # env.set_sub_goal(0)
 # print(env.desired_goal)
 # t = 0
 while True:
-    action = env.action_space.sample()
-    # action[0] = 20
-    # action[1] = 74
-    # action[2] = 99
-    obs, reward, time_done, info = env.step(action)
+    # action = env.action_space.sample()
+    # action[0] = 10
+    # action[1] = 174
+    # action[2] = 0
+    # obs, reward, time_done, info = env.step(action)
     axarr[0][0].imshow(obs['desired_goal_img'][:, :, :3])
     axarr[0][1].imshow(obs['desired_goal_img'][:, :, 3])
     axarr[1][0].imshow(obs['achieved_goal_img'][:, :, :3])
     axarr[1][1].imshow(obs['achieved_goal_img'][:, :, 3])
-    axarr[2][0].imshow(obs['observation'][:, :, :3])
-    axarr[2][1].imshow(obs['observation'][:, :, 3])
+    # axarr[2][0].imshow(obs['observation'][:, :, :3])
+    # axarr[2][1].imshow(obs['observation'][:, :, 3])
     plt.pause(0.00001)
     # new_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.05)
     # pcd_raw = o3d.geometry.PointCloud(points=o3d.utility.Vector3dVector(obs['pcd']))
     # o3d.visualization.draw_geometries([pcd_raw, new_frame])
-    # obs = env.reset()
+    obs = env.reset()
     # t += 1
     # if t == 3:
     #     env.set_sub_goal(1)
@@ -71,5 +71,5 @@ while True:
     #     env.set_sub_goal(3)
     # if t == 12:
     #     env.set_sub_goal(4)
-    if time_done:
-        obs = env.reset()
+    # if time_done:
+    #     obs = env.reset()
