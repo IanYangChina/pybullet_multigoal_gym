@@ -30,7 +30,7 @@ class KukaPushAssembleEnv(KukaBulletPrimitiveEnv):
         self.desired_goal = np.concatenate([np.array([x, y, z]), orientation_euler], axis=-1)
 
         if self.visualize_target:
-            self.set_object_pose(self.object_bodies['cube_target'],
+            self.set_object_pose(self.object_bodies[self.goal_object_key+'_target'],
                                  self.desired_goal[:3],
                                  target_obj_quat)
 
@@ -38,16 +38,16 @@ class KukaPushAssembleEnv(KukaBulletPrimitiveEnv):
         self.robot.set_kuka_joint_state(self.robot.kuka_away_pose)
 
         # Push task
-        original_obj_pos, original_obj_quat = self._p.getBasePositionAndOrientation(self.object_bodies['cube'])
+        original_obj_pos, original_obj_quat = self._p.getBasePositionAndOrientation(self.object_bodies[self.goal_object_key])
         target_obj_pos = self.desired_goal.copy()[:3]
         target_obj_euler = self.desired_goal.copy()[3:]
         target_obj_quat = quat.as_float_array(quat.from_euler_angles(target_obj_euler))
         target_obj_quat = np.concatenate([target_obj_quat[1:], [target_obj_quat[0]]], axis=-1)
-        self.set_object_pose(self.object_bodies['cube'],
+        self.set_object_pose(self.object_bodies[self.goal_object_key],
                              target_obj_pos,
                              target_obj_quat)
         self.desired_goal_image = self.render(mode=self.render_mode, camera_id=self.goal_cam_id)
-        self.set_object_pose(self.object_bodies['cube'],
+        self.set_object_pose(self.object_bodies[self.goal_object_key],
                              original_obj_pos,
                              original_obj_quat)
 

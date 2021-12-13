@@ -51,7 +51,7 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
              use_curriculum=False, num_goals_to_generate=1e6):
     tasks = ['push', 'reach', 'slide', 'pick_and_place',
              'block_stack', 'block_rearrange', 'chest_pick_and_place', 'chest_push',
-             'shape_assemble', 'primitive_push_reach']
+             'primitive_push_assemble', 'primitive_push_reach']
     grippers = ['robotiq85', 'parallel_jaw']
     assert gripper in grippers, 'invalid gripper: {}, only support: {}'.format(gripper, grippers)
     if task == 'reach':
@@ -79,7 +79,7 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
     elif task == 'chest_push':
         task_tag = 'ChestPush'
         entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_multi_step_envs:KukaChestPushEnv'
-    elif task == 'shape_assemble':
+    elif task == 'primitive_push_assemble':
         task_tag = 'ShapeAssemble'
         entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_shape_assemble_envs:KukaPushAssembleEnv'
     elif task == 'primitive_push_reach':
@@ -165,7 +165,7 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
                 max_episode_steps=max_episode_steps,
             )
         else:
-            assert task in ['shape_assemble', 'primitive_push_reach']
+            assert task in ['primitive_push_assemble', 'primitive_push_reach']
             assert primitive in ['discrete_push', 'continuous_push']
             register(
                 id=env_id,

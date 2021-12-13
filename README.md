@@ -154,4 +154,4 @@ See the above example.
 
 2021.11.11 --- Finish task decomposition, subgoal generation codes and some compatibility issues, new release
 
-2021.12.03 --- Add shape assembly task with push primitive support (discrete & continuous) in further testing
+2021.12.03 --- Add shape assembly task with push primitive support (discrete & continuous); under development
