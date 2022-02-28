@@ -45,10 +45,12 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
              grip_informed_goal=False, task_decomposition=False,
              joint_control=False, max_episode_steps=50, distance_threshold=0.05,
              primitive=None,
-             image_observation=False, depth_image=False, goal_image=False, point_cloud=False,
+             image_observation=False, depth_image=False, goal_image=False, point_cloud=False, state_noise=False,
              visualize_target=True,
-             camera_setup=None, observation_cam_id=0, goal_cam_id=0,
+             camera_setup=None, observation_cam_id=None, goal_cam_id=0,
              use_curriculum=False, num_goals_to_generate=1e6):
+    if observation_cam_id is None:
+        observation_cam_id = [0]
     tasks = ['push', 'reach', 'slide', 'pick_and_place',
              'block_stack', 'block_rearrange', 'chest_pick_and_place', 'chest_push',
              'primitive_push_assemble', 'primitive_push_reach']
@@ -85,6 +87,9 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
     elif task == 'primitive_push_reach':
         task_tag = 'PrimPushReach'
         entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_shape_assemble_envs:KukaPushReachEnv'
+    elif task == 'insertion':
+        task_tag = 'Insertion'
+        entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_insertion_envs:KukaInsertionEnv'
     else:
         raise ValueError('invalid task name: {}, only support: {}'.format(task, tasks))
     env_id = 'Kuka' + task_tag
@@ -108,10 +113,10 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
         if goal_image:
             env_id += 'ImgGoal'
         if camera_setup is not None:
-            assert observation_cam_id <= len(camera_setup) - 1, 'invalid observation camera id'
+            assert len(observation_cam_id) <= len(camera_setup), 'invalid observation camera id'
             assert goal_cam_id <= len(camera_setup) - 1, 'invalid goal camera id'
-            print('Received %i cameras, cam %i for observation, cam %i for goal image' %
-                  (len(camera_setup), observation_cam_id, goal_cam_id))
+            print('Received %i cameras, cam {} for observation, cam %i for goal image'.format(observation_cam_id) %
+                  (len(camera_setup), goal_cam_id))
         else:
             print('Using default camera for observation and goal image')
     env_id += '-v0'
@@ -164,8 +169,7 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
                 },
                 max_episode_steps=max_episode_steps,
             )
-        else:
-            assert task in ['primitive_push_assemble', 'primitive_push_reach']
+        elif task in ['primitive_push_assemble', 'primitive_push_reach']:
             assert primitive in ['discrete_push', 'continuous_push']
             register(
                 id=env_id,
@@ -184,6 +188,28 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
                     'goal_cam_id': goal_cam_id,
                     'gripper_type': gripper,
                     'primitive': primitive
+                },
+                max_episode_steps=max_episode_steps,
+            )
+        else:
+            assert task in ['insertion']
+            register(
+                id=env_id,
+                entry_point=entry,
+                kwargs={
+                    'render': render,
+                    'binary_reward': binary_reward,
+                    'distance_threshold': distance_threshold,
+                    'image_observation': image_observation,
+                    'depth_image': depth_image,
+                    'pcd': point_cloud,
+                    'goal_image': goal_image,
+                    'state_noise': state_noise,
+                    'visualize_target': visualize_target,
+                    'camera_setup': camera_setup,
+                    'observation_cam_id': observation_cam_id,
+                    'goal_cam_id': goal_cam_id,
+                    'gripper_type': gripper,
                 },
                 max_episode_steps=max_episode_steps,
             )

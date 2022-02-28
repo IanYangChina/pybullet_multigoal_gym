@@ -14,12 +14,14 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
 
     def __init__(self, render=True, binary_reward=True, grip_informed_goal=False,
                  image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
-                 camera_setup=None, observation_cam_id=0, goal_cam_id=0,
+                 camera_setup=None, observation_cam_id=None, goal_cam_id=0,
                  gripper_type='parallel_jaw', end_effector_start_on_table=False,
                  num_block=3, joint_control=False, grasping=False, chest=False, chest_door='front_sliding',
                  obj_range=0.15, target_range=0.15, distance_threshold=0.05,
                  use_curriculum=False, task_decomposition=False,
                  num_curriculum=5, base_curriculum_episode_steps=50, num_goals_to_generate=1e5):
+        if observation_cam_id is None:
+            observation_cam_id = [0]
         self.test = False
         self.binary_reward = binary_reward
         self.grip_informed_goal = grip_informed_goal
@@ -320,19 +322,26 @@ class KukaBulletMultiBlockEnv(BaseBulletMGEnv):
                 'desired_goal': self.desired_goal.copy(),
             }
         elif not self.goal_image:
+            images = []
+            for cam_id in self.observation_cam_id:
+                images.append(self.render(mode=self.render_mode, camera_id=cam_id))
+            obs_dict['observation'] = images[0].copy()
+            obs_dict['images'] = images
+            obs_dict.update({'state': state.copy()})
+
             return {
-                'observation': self.render(mode=self.render_mode, camera_id=self.observation_cam_id).copy(),
-                'state': state.copy(),
                 'policy_state': policy_state.copy(),
                 'achieved_goal': achieved_goal.copy(),
                 'desired_goal': self.desired_goal.copy(),
             }
         else:
-            observation = self.render(mode=self.render_mode, camera_id=self.observation_cam_id).copy()
+            images = []
+            for cam_id in self.observation_cam_id:
+                images.append(self.render(mode=self.render_mode, camera_id=cam_id))
+            obs_dict['observation'] = images
+            obs_dict.update({'state': state.copy()})
             self._generate_goal_image(block_poses=block_xyzs)
             return {
-                'observation': observation.copy(),
-                'state': state.copy(),
                 'policy_state': policy_state.copy(),
                 'achieved_goal': achieved_goal.copy(),
                 'achieved_goal_img': observation.copy(),

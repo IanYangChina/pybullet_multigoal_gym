@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+
+<robot name="workspace">
+    <material name="workspace">
+        <color rgba="0.93 0.93 0.93 1"/>
+    </material>
+    <material name="range">
+        <color rgba="0.3 0.3 0.3 0.3"/>
+    </material>
+    <link name="workspace">
+        <contact>
+            <lateral_friction value="0.1"/>
+        </contact>
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0"/>
+            <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.5 0.5 0.02"/>
+            </geometry>
+            <material name="workspace"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.5 0.5 0.02"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="workspace_range_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0 0.01005"/>
+        <parent link="workspace"/>
+        <child link="range"/>
+    </joint>
+    <link name="range">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="0"/>
+            <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.35 0.35 0.001"/>
+            </geometry>
+            <material name="range"/>
+        </visual>
+    </link>
+</robot>

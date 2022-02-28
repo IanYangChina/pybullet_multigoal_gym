@@ -173,7 +173,7 @@ class Joint:
         self._p.resetJointState(self.bodies[self.bodyIndex], self.jointIndex, x, vx)
 
     def current_relative_position(self):
-        pos, vel = self.get_state()
+        pos, vel, _ = self.get_state()
         if self.jointHasLimits:
             pos_mid = 0.5 * (self.lowerLimit + self.upperLimit)
             pos = 2 * (pos - pos_mid) / (self.upperLimit - self.lowerLimit)
@@ -195,20 +195,24 @@ class Joint:
         #   jointVelocity: The velocity value of this joint
         #   jointReactionForces
         #   appliedJointMotorTorque
-        x, vx, _, _ = self._p.getJointState(self.bodies[self.bodyIndex], self.jointIndex)
-        return x, vx
+        x, vx, fx, _ = self._p.getJointState(self.bodies[self.bodyIndex], self.jointIndex)
+        return x, vx, fx
 
     def get_position(self):
-        x, _ = self.get_state()
+        x, _, _ = self.get_state()
         return x
 
     def get_orientation(self):
-        _, r = self.get_state()
+        _, r, _ = self.get_state()
         return r
 
     def get_velocity(self):
-        _, vx = self.get_state()
+        _, vx, _ = self.get_state()
         return vx
+
+    def get_force(self):
+        _, _, fx = self.get_state()
+        return fx
 
     def set_position(self, position):
         self._p.setJointMotorControl2(self.bodies[self.bodyIndex], self.jointIndex, self._p.POSITION_CONTROL,

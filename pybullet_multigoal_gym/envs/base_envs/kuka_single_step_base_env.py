@@ -11,10 +11,12 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
 
     def __init__(self, render=True, binary_reward=True,
                  image_observation=False, goal_image=False, depth_image=False, visualize_target=True,
-                 camera_setup=None, observation_cam_id=0, goal_cam_id=0,
+                 camera_setup=None, observation_cam_id=None, goal_cam_id=0,
                  gripper_type='parallel_jaw', table_type='table', obj_range=0.15, target_range=0.15,
                  target_in_the_air=True, end_effector_start_on_table=False,
                  distance_threshold=0.05, joint_control=False, grasping=False, has_obj=False):
+        if observation_cam_id is None:
+            observation_cam_id = [0]
         self.binary_reward = binary_reward
         self.image_observation = image_observation
         self.goal_image = goal_image
@@ -221,18 +223,24 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
                 'desired_goal': self.desired_goal.copy(),
             }
         elif not self.goal_image:
+            images = []
+            for cam_id in self.observation_cam_id:
+                images.append(self.render(mode=self.render_mode, camera_id=cam_id))
+            obs_dict['observation'] = images[0].copy()
+            obs_dict['images'] = images
+            obs_dict.update({'state': state.copy()})
             return {
-                'observation': self.render(mode=self.render_mode, camera_id=self.observation_cam_id),
-                'state': state.copy(),
                 'policy_state': policy_state.copy(),
                 'achieved_goal': achieved_goal.copy(),
                 'desired_goal': self.desired_goal.copy(),
             }
         else:
-            observation = self.render(mode=self.render_mode, camera_id=self.observation_cam_id)
+            images = []
+            for cam_id in self.observation_cam_id:
+                images.append(self.render(mode=self.render_mode, camera_id=cam_id))
+            obs_dict['observation'] = images
+            obs_dict.update({'state': state.copy()})
             return {
-                'observation': observation.copy(),
-                'state': state.copy(),
                 'policy_state': policy_state.copy(),
                 'achieved_goal': achieved_goal.copy(),
                 'achieved_goal_img': observation.copy(),

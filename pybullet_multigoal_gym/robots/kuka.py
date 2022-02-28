@@ -4,7 +4,8 @@ import numpy as np
 
 
 class Kuka(URDFBasedRobot):
-    def __init__(self, bullet_client=None, gripper_type='parallel_jaw', joint_control=False, grasping=False,
+    def __init__(self, bullet_client=None, gripper_type='parallel_jaw',
+                 joint_control=False, grasping=False, end_effector_force_sensor=False,
                  primitive=None, workspace_range=None, resolution=0.002,
                  end_effector_start_on_table=False, table_surface_z=0.175,
                  obj_range=0.15, target_range=0.15):
@@ -25,6 +26,8 @@ class Kuka(URDFBasedRobot):
         self.kuka_rest_pose = [0, -0.5592432, 0, 1.733180, 0, -0.8501557, 0]
         self.kuka_away_pose = [0, 0.5467089, 0, 4.518901, 0, 0.828478, 0]
         self.joint_state_target = None
+        self.end_effector_force_sensor = end_effector_force_sensor
+        self.end_effector_force_sensor_enabled = False
         self.end_effector_tip_joint_index = None
         self.end_effector_target = None
         self.end_effector_tip_initial_position = np.array([-0.52, 0.0, 0.25])
@@ -84,8 +87,8 @@ class Kuka(URDFBasedRobot):
                 self.num_angles = 20
                 self.resolution = resolution  # meters per pixel
                 # plus 0.0001 to bypass numpy precision issues
-                self.action_map_width = int((self.workspace_range_range[0]+0.0001) // self.resolution)
-                self.action_map_height = int((self.workspace_range_range[1]+0.0001) // self.resolution)
+                self.action_map_width = int((self.workspace_range_range[0] + 0.0001) // self.resolution)
+                self.action_map_height = int((self.workspace_range_range[1] + 0.0001) // self.resolution)
                 self.action_space = spaces.MultiDiscrete([self.num_angles,
                                                           self.action_map_width,
                                                           self.action_map_height])
@@ -136,6 +139,12 @@ class Kuka(URDFBasedRobot):
                     self.jdict['iiwa_gripper_finger1_joint'].jointIndex,
                     self.jdict['iiwa_gripper_finger2_joint'].jointIndex,
                 ]
+        if not self.end_effector_force_sensor_enabled:
+            self._p.enableJointForceTorqueSensor(bodyUniqueId=self.kuka_body_index,
+                                                 jointIndex=self.jdict['iiwa_joint_7'].jointIndex,
+                                                 enableSensor=self.end_effector_force_sensor)
+            self.end_effector_force_sensor_enabled = True
+
         # reset arm poses
         self.set_kuka_joint_state(self.kuka_rest_pose)
         self.kuka_rest_pose = self.compute_ik(self.end_effector_tip_initial_position)
@@ -187,7 +196,7 @@ class Kuka(URDFBasedRobot):
                 joint_poses = self.joint_state_target.copy()
             else:
                 # actions alter the ee target pose
-                self.end_effector_target += (a[:3] * 0.05)
+                self.end_effector_target += (a[:3] * 0.01)
                 self.end_effector_target = np.clip(self.end_effector_target,
                                                    self.end_effector_xyz_lower,
                                                    self.end_effector_xyz_upper)
@@ -218,11 +227,16 @@ class Kuka(URDFBasedRobot):
             # symmetric gripper
             gripper_finger_closeness = np.array([0.0])
             gripper_finger_vel = np.array([0.0])
-        if self.joint_control:
-            joint_poses, _ = self.get_kuka_joint_state()
+
+        joint_poses, _ = self.get_kuka_joint_state()
+
+        if self.end_effector_force_sensor:
+            (fx, fy, fz, mx, my, mz) = self.jdict['iiwa_joint_7'].get_force()
+            # fz += 22.10853  # compensate gravity force
+            ee_joint_fx = np.clip(np.array([fx, fy, fz]), -50.0, 50.0)
+            return gripper_xyz, gripper_rpy, gripper_finger_closeness, gripper_vel_xyz, gripper_vel_rpy, gripper_finger_vel, joint_poses, ee_joint_fx
         else:
-            joint_poses = None
-        return gripper_xyz, gripper_rpy, gripper_finger_closeness, gripper_vel_xyz, gripper_vel_rpy, gripper_finger_vel, joint_poses
+            return gripper_xyz, gripper_rpy, gripper_finger_closeness, gripper_vel_xyz, gripper_vel_rpy, gripper_finger_vel, joint_poses
 
     def compute_ik(self, target_ee_pos, target_ee_quat=None):
         assert target_ee_pos.shape == (3,)
@@ -250,24 +264,24 @@ class Kuka(URDFBasedRobot):
 
     def move_arm(self, joint_poses):
         self._p.setJointMotorControlArray(bodyUniqueId=self.kuka_body_index,
-                                                jointIndices=self.kuka_joint_index,
-                                                controlMode=self._p.POSITION_CONTROL,
-                                                targetPositions=joint_poses,
-                                                targetVelocities=np.zeros((7,)),
-                                                forces=np.ones((7,)) * 200,
-                                                positionGains=np.ones((7,)) * 0.03,
-                                                velocityGains=np.ones((7,)))
+                                          jointIndices=self.kuka_joint_index,
+                                          controlMode=self._p.POSITION_CONTROL,
+                                          targetPositions=joint_poses,
+                                          targetVelocities=np.zeros((7,)),
+                                          forces=np.ones((7,)) * 200,
+                                          positionGains=np.ones((7,)) * 0.03,
+                                          velocityGains=np.ones((7,)))
 
     def move_finger(self, grip_ctrl):
         target_joint_poses = self.gripper_mmic_joint_multiplier * grip_ctrl
         self._p.setJointMotorControlArray(bodyUniqueId=self.kuka_body_index,
-                                                jointIndices=self.gripper_joint_index,
-                                                controlMode=self._p.POSITION_CONTROL,
-                                                targetPositions=target_joint_poses,
-                                                targetVelocities=np.zeros((self.gripper_num_joint,)),
-                                                forces=np.ones((self.gripper_num_joint,)) * 50,
-                                                positionGains=np.ones((self.gripper_num_joint,)) * 0.03,
-                                                velocityGains=np.ones((self.gripper_num_joint,)))
+                                          jointIndices=self.gripper_joint_index,
+                                          controlMode=self._p.POSITION_CONTROL,
+                                          targetPositions=target_joint_poses,
+                                          targetVelocities=np.zeros((self.gripper_num_joint,)),
+                                          forces=np.ones((self.gripper_num_joint,)) * 50,
+                                          positionGains=np.ones((self.gripper_num_joint,)) * 0.03,
+                                          velocityGains=np.ones((self.gripper_num_joint,)))
 
     def execute_primitive(self, ee_waypoints):
         # execute primitive
@@ -289,7 +303,7 @@ class Kuka(URDFBasedRobot):
         kuka_joint_pos = []
         kuka_joint_vel = []
         for i in range(len(self.kuka_joint_index)):
-            x, vx = self.jdict['iiwa_joint_' + str(self.kuka_joint_index[i])].get_state()
+            x, vx, _ = self.jdict['iiwa_joint_' + str(self.kuka_joint_index[i])].get_state()
             kuka_joint_pos.append(x)
             kuka_joint_vel.append(vx)
         return kuka_joint_pos, kuka_joint_vel
