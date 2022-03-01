@@ -107,8 +107,8 @@ class BodyPart:
         self.initialOrientation = self.get_orientation()
 
     def get_pose(self):
-        (x, y, z), (a, b, c, d), _, _, _, _ = self._p.getLinkState(self.bodies[self.bodyIndex], self.bodyPartIndex)
-        return np.array([x, y, z, a, b, c, d])
+        (x, y, z), (a, b, c, w), _, _, _, _ = self._p.getLinkState(self.bodies[self.bodyIndex], self.bodyPartIndex)
+        return np.array([x, y, z, a, b, c, w])
 
     def get_orientation(self):
         # return orientation in quaternion

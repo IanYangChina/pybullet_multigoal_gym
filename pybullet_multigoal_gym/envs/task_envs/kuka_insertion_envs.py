@@ -35,9 +35,8 @@ class KukaInsertionEnv(KukaBulletInsertionEnv):
                                  target_obj_quat)
 
     def _generate_goal_image(self):
-        self.robot.set_kuka_joint_state(self.robot.kuka_away_pose)
+        # self.robot.set_kuka_joint_state(self.robot.kuka_away_pose)
 
-        # Push task
         original_obj_pos, original_obj_quat = self._p.getBasePositionAndOrientation(self.object_bodies[self.goal_object_key])
         target_obj_pos = self.desired_goal.copy()[:3]
         target_obj_euler = self.desired_goal.copy()[3:]
@@ -51,4 +50,4 @@ class KukaInsertionEnv(KukaBulletInsertionEnv):
                              original_obj_pos,
                              original_obj_quat)
 
-        self.robot.set_kuka_joint_state(self.robot.kuka_rest_pose)
+        # self.robot.set_kuka_joint_state(self.robot.kuka_rest_pose)

@@ -65,7 +65,7 @@ class KukaBulletInsertionEnv(BaseBulletMGEnv):
         self.desired_goal_image = None
 
         robot = Kuka(grasping=grasping,
-                     joint_control=False,
+                     joint_control=False, end_effector_rotation_control=True,
                      gripper_type=gripper_type, end_effector_force_sensor=True,
                      end_effector_start_on_table=end_effector_start_on_table, table_surface_z=0.04,
                      obj_range=self.obj_range, target_range=self.target_range)
@@ -208,30 +208,49 @@ class KukaBulletInsertionEnv(BaseBulletMGEnv):
         return obs_dict
 
     def _compute_subtask_reward(self, gripper_xyz):
-        goal_object_xyz, _ = self._p.getBasePositionAndOrientation(self.object_bodies['rectangle'])
+        goal_object_xyz, (a, b, c, w) = self._p.getBasePositionAndOrientation(self.object_bodies['rectangle'])
+        goal_object_euler = quat.as_euler_angles(quat.as_quat_array([w, a, b, c]))
         grasp_target_xyz, _, _, _, _, _ = self._p.getLinkState(self.object_bodies['rectangle'], 0)
         grasp_target_xyz = np.array(grasp_target_xyz)
-        slot_target_xyz, _, _, _, _, _ = self._p.getLinkState(self.object_bodies['slot'], 3)
+        slot_target_xyz, (a, b, c, w), _, _, _, _ = self._p.getLinkState(self.object_bodies['slot'], 3)
+        slot_target_euler = quat.as_euler_angles(quat.as_quat_array([w, a, b, c]))
         slot_target_xyz = np.array(slot_target_xyz)
 
         # pick-up reward
-        d_goal_obj_grip = np.linalg.norm(grasp_target_xyz - gripper_xyz, axis=-1)
-        reward_pick_up = - np.abs(0.15 - goal_object_xyz[-1]) - d_goal_obj_grip
+        # this reward specifies grasping point & goal object height
+        d_goal_obj_grip = np.linalg.norm(grasp_target_xyz - gripper_xyz, axis=-1) + np.abs(0.15 - goal_object_xyz[-1])
+        # this reward only specifies goal object height
+        # d_goal_obj_grip = np.abs(0.15 - goal_object_xyz[-1])
+        reward_pick_up = -d_goal_obj_grip
+        achieved_pick_up = (d_goal_obj_grip < self.distance_threshold)
         # reach reward
         reach_target_xyz = slot_target_xyz.copy()
         reach_target_xyz[-1] += 0.06
-        d_goal_obj_reach_slot = np.linalg.norm(goal_object_xyz - reach_target_xyz, axis=-1)
+        d_goal_obj_reach_slot = np.linalg.norm(goal_object_xyz - reach_target_xyz, axis=-1) + \
+                                np.linalg.norm(goal_object_euler - slot_target_euler.copy(), axis=-1)
         reward_reach = -d_goal_obj_reach_slot
+        achieved_reach = (d_goal_obj_reach_slot < self.distance_threshold)
         # insert reward
         insert_target_xyz = slot_target_xyz.copy()
         insert_target_xyz[-1] += 0.03
-        d_goal_obj_insert_slot = np.linalg.norm(goal_object_xyz - insert_target_xyz, axis=-1)
+        d_goal_obj_insert_slot = np.linalg.norm(goal_object_xyz - insert_target_xyz, axis=-1) + \
+                                 np.linalg.norm(goal_object_euler - slot_target_euler.copy(), axis=-1)
         reward_insert = -d_goal_obj_insert_slot
+        achieved_insert = (d_goal_obj_insert_slot < self.distance_threshold)
 
         return {
             'pick_up': np.clip(reward_pick_up, -15.0, 0.0),
+            'pick_up_done': achieved_pick_up,
+            'pick_up_desired_goal': np.concatenate([grasp_target_xyz, [0.15]]),
+            'pick_up_achieved_goal': np.concatenate([gripper_xyz, [goal_object_xyz[-1]]]),
             'reach': np.clip(reward_reach, -15.0, 0.0),
-            'insert': np.clip(reward_insert, -15.0, 0.0)
+            'reach_done': achieved_reach,
+            'reach_desired_goal': np.concatenate([reach_target_xyz, slot_target_euler]),
+            'reach_achieved_goal': np.concatenate([goal_object_xyz, goal_object_euler]),
+            'insert': np.clip(reward_insert, -15.0, 0.0),
+            'insert_done': achieved_insert,
+            'insert_desired_goal': np.concatenate([insert_target_xyz, slot_target_euler]),
+            'insert_achieved_goal': np.concatenate([goal_object_xyz, goal_object_euler])
         }
 
     def _compute_reward(self, achieved_goal, desired_goal):

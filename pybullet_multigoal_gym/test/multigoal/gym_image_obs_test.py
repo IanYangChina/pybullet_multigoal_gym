@@ -34,8 +34,8 @@ env = pmg.make_env(
     state_noise=True,
     visualize_target=False,
     camera_setup=camera_setup,
-    observation_cam_id=[-1, 0, 1],
-    goal_cam_id=1,
+    observation_cam_id=[1],
+    goal_cam_id=-1,
     gripper='parallel_jaw',
     max_episode_steps=10000)
 
@@ -48,8 +48,8 @@ f, axarr = plt.subplots(2, 2)
 while True:
     action = env.action_space.sample()
     obs, reward, time_done, info = env.step(action)
-    axarr[0][0].imshow(obs['achieved_goal_img'][:, :, :3])
-    axarr[0][1].imshow(obs['achieved_goal_img'][:, :, 3])
+    axarr[0][0].imshow(obs['desired_goal_img'][:, :, :3])
+    axarr[0][1].imshow(obs['desired_goal_img'][:, :, 3])
     # axarr[1][0].imshow(obs['achieved_goal_img'][:, :, :3])
     # axarr[1][1].imshow(obs['achieved_goal_img'][:, :, 3])
     axarr[1][0].imshow(obs['observation'][:, :, :3])

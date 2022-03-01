@@ -1,11 +1,12 @@
 from pybullet_multigoal_gym.robots.robot_bases import URDFBasedRobot
 from gym import spaces
 import numpy as np
+import quaternion as quat
 
 
 class Kuka(URDFBasedRobot):
     def __init__(self, bullet_client=None, gripper_type='parallel_jaw',
-                 joint_control=False, grasping=False, end_effector_force_sensor=False,
+                 joint_control=False, grasping=False, end_effector_rotation_control=False, end_effector_force_sensor=False,
                  primitive=None, workspace_range=None, resolution=0.002,
                  end_effector_start_on_table=False, table_surface_z=0.175,
                  obj_range=0.15, target_range=0.15):
@@ -30,6 +31,7 @@ class Kuka(URDFBasedRobot):
         self.end_effector_force_sensor_enabled = False
         self.end_effector_tip_joint_index = None
         self.end_effector_target = None
+        self.end_effector_target_rot = None
         self.end_effector_tip_initial_position = np.array([-0.52, 0.0, 0.25])
         self.table_surface_z = table_surface_z
         if end_effector_start_on_table:
@@ -76,6 +78,7 @@ class Kuka(URDFBasedRobot):
         self.primitive = primitive
         self.joint_control = joint_control
         self.grasping = grasping
+        self.end_effector_rotation_control = end_effector_rotation_control
         if self.primitive is not None:
             assert workspace_range is not None, "please define workspace range"
             self.workspace_range_upper = np.array(workspace_range['upper_xy'])
@@ -104,9 +107,15 @@ class Kuka(URDFBasedRobot):
                 self.action_space = spaces.Box(-np.ones([7]), np.ones([7]))
         else:
             if self.grasping:
-                self.action_space = spaces.Box(-np.ones([4]), np.ones([4]))
+                if self.end_effector_rotation_control:
+                    self.action_space = spaces.Box(-np.ones([7]), np.ones([7]))
+                else:
+                    self.action_space = spaces.Box(-np.ones([4]), np.ones([4]))
             else:
-                self.action_space = spaces.Box(-np.ones([3]), np.ones([3]))
+                if self.end_effector_rotation_control:
+                    self.action_space = spaces.Box(-np.ones([6]), np.ones([6]))
+                else:
+                    self.action_space = spaces.Box(-np.ones([3]), np.ones([3]))
 
     def robot_specific_reset(self):
         if self.kuka_body_index is None:
@@ -152,6 +161,7 @@ class Kuka(URDFBasedRobot):
         self.set_finger_joint_state(self.gripper_abs_joint_limit)
         self.move_finger(grip_ctrl=self.gripper_abs_joint_limit)
         self.end_effector_target = self.parts['iiwa_gripper_tip'].get_position()
+        self.end_effector_target_rot = self.parts['iiwa_gripper_tip'].get_orientation_eular()
         self.joint_state_target, _ = self.get_kuka_joint_state()
 
     def apply_action(self, a):
@@ -200,7 +210,14 @@ class Kuka(URDFBasedRobot):
                 self.end_effector_target = np.clip(self.end_effector_target,
                                                    self.end_effector_xyz_lower,
                                                    self.end_effector_xyz_upper)
-                joint_poses = self.compute_ik(target_ee_pos=self.end_effector_target)
+                if not self.end_effector_rotation_control:
+                    joint_poses = self.compute_ik(target_ee_pos=self.end_effector_target)
+                else:
+                    self.end_effector_target_rot += (a[3:6] * 0.05)
+                    # quat.from_euler_angles --> (a, b, c, w)
+                    target_ee_quat = quat.as_float_array(quat.from_euler_angles(self.end_effector_target_rot))
+                    joint_poses = self.compute_ik(target_ee_pos=self.end_effector_target,
+                                                  target_ee_quat=target_ee_quat)
 
             self.move_arm(joint_poses=joint_poses)
             for _ in range(5):
