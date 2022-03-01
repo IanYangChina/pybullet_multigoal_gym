@@ -229,9 +229,9 @@ class KukaBulletInsertionEnv(BaseBulletMGEnv):
         reward_insert = -d_goal_obj_insert_slot
 
         return {
-            'pick_up': reward_pick_up,
-            'reach': reward_reach,
-            'insert': reward_insert
+            'pick_up': np.clip(reward_pick_up, -15.0, 0.0),
+            'reach': np.clip(reward_reach, -15.0, 0.0),
+            'insert': np.clip(reward_insert, -15.0, 0.0)
         }
 
     def _compute_reward(self, achieved_goal, desired_goal):
