@@ -71,12 +71,10 @@ class BaseBulletMGEnv(gym.Env):
             'cameraEyePosition': self.robot.parts['iiwa_hand_cam_origin'].get_position(),
             'cameraTargetPosition': self.robot.parts['iiwa_gripper_tip'].get_position(),
             'cameraUpVector': [0, 0, 1],
-            'render_width': 128,
-            'render_height': 128
+            'render_width': 224,
+            'render_height': 224
         })
         self.camera_matrices = self._get_camera_matrix()
-        self._render_width = 128
-        self._render_height = 128
 
         self.metadata = {
             'render.modes': ['human', 'rgb_array'],
@@ -238,15 +236,11 @@ class BaseBulletMGEnv(gym.Env):
         return cam_matrices
 
     def _update_hand_camera_matrix(self):
+        self.camera_setup[-1]['cameraEyePosition'] = self.robot.parts['iiwa_hand_cam_origin'].get_position()
         cam_target = self.robot.parts['iiwa_gripper_tip'].get_position()
-        cam_target[-1] -= 0.05
-        self.camera_setup[-1] = {
-            'cameraEyePosition': self.robot.parts['iiwa_hand_cam_origin'].get_position(),
-            'cameraTargetPosition': self.robot.parts['iiwa_gripper_tip'].get_position(),
-            'cameraUpVector': [0, 0, 1],
-            'render_width': 128,
-            'render_height': 128
-        }
+        cam_target[-1] -= 0.1
+        self.camera_setup[-1]['cameraTargetPosition'] = cam_target
+
         view_matrix = self._p.computeViewMatrix(
             cameraEyePosition=self.camera_setup[-1]['cameraEyePosition'],
             cameraTargetPosition=self.camera_setup[-1]['cameraTargetPosition'],

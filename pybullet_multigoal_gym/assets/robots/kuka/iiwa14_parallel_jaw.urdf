@@ -12,7 +12,7 @@
     <color rgba="0.0 0.8 0.0 1.0"/>
   </material>
   <material name="TransGreen">
-    <color rgba="0.0 0.8 0.0 0.3"/>
+    <color rgba="0.0 0.8 0.0 0"/>
   </material>
   <material name="Grey">
     <color rgba="0.4 0.4 0.4 1.0"/>
@@ -332,7 +332,7 @@
   <joint name="iiwa_hand_cam_joint" type="fixed">
     <parent link="iiwa_link_7"/>
     <child link="iiwa_hand_cam_origin"/>
-    <origin rpy="0.0 0.0 0.0" xyz="0.22 0.0 -0.1"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.2 0.0 0.0"/>
   </joint>
   <link name="iiwa_hand_cam_origin">
     <inertial>

@@ -2,7 +2,7 @@
 
 <robot name="rectangle">
     <material name="rectangle">
-        <color rgba="0 0.5 1 0.5"/>
+        <color rgba="0 0.5 1 1"/>
     </material>
     <link name="rectangle">
         <contact>

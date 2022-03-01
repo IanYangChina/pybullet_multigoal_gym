@@ -18,7 +18,7 @@ class KukaInsertionEnv(KukaBulletInsertionEnv):
                                         goal_cam_id=goal_cam_id,
                                         gripper_type=gripper_type, obj_range=0.1, target_range=0.15,
                                         end_effector_start_on_table=False,
-                                        grasping=False,
+                                        grasping=True,
                                         manipulated_object_keys=['slot', 'rectangle'], goal_object_key='rectangle',
                                         orientation_informed_goal=True)
 

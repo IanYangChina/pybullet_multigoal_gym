@@ -172,6 +172,7 @@ class KukaBulletInsertionEnv(BaseBulletMGEnv):
                 achieved_goal.append(obj_xyz)
                 if self.orientation_informed_goal:
                     achieved_goal.append(obj_euler)
+
         auxiliary_task_state = np.concatenate(object_state)
         achieved_goal = np.concatenate(achieved_goal)
         assert achieved_goal.shape == self.desired_goal.shape

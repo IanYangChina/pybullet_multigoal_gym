@@ -113,7 +113,7 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
         if goal_image:
             env_id += 'ImgGoal'
         if camera_setup is not None:
-            assert len(observation_cam_id) <= len(camera_setup), 'invalid observation camera id'
+            assert len(observation_cam_id) <= len(camera_setup) + 1, 'invalid observation camera id'
             assert goal_cam_id <= len(camera_setup) - 1, 'invalid goal camera id'
             print('Received %i cameras, cam {} for observation, cam %i for goal image'.format(observation_cam_id) %
                   (len(camera_setup), goal_cam_id))
