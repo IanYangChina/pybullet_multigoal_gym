@@ -1,3 +1,11 @@
+#### Warning (2022.05.06): 
+```diff
+@@ I will stop further development on this repo as Mujoco is now free. @@
+@@ However I will keep maintaining the repo and respond to issues. @@
+@@ Feel free to keep using the package and contact me whenever necessary. @@
+@@ Thanks for you interests! @@
+```
+
 ### Pybullet-implementation of the multi-goal robotics environment originally from Open AI Gym.
 
 This version uses a kuka iiwa14 7DoF arm, equipped with a robotiq85 two finger gripper or a simple parallel jaw.
