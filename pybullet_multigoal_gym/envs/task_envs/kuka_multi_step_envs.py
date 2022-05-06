@@ -34,7 +34,7 @@ class KukaBlockStackEnv(KukaBulletMultiBlockEnv):
     def _generate_goal(self, block_poses, new_target=True):
         if new_target:
             # generate a random order of blocks to be stacked
-            new_order = np.arange(self.num_block, dtype=np.int)
+            new_order = np.arange(self.num_block, dtype=int)
             if self.random_order:
                 self.np_random.shuffle(new_order)
             new_order = new_order.tolist()

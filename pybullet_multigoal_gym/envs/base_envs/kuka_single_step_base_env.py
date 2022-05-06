@@ -215,38 +215,24 @@ class KukaBulletMGEnv(BaseBulletMGEnv):
             state = np.concatenate((joint_poses, state))
             policy_state = np.concatenate((joint_poses, policy_state))
 
-        if not self.image_observation:
-            return {
-                'observation': state.copy(),
-                'policy_state': policy_state.copy(),
-                'achieved_goal': achieved_goal.copy(),
-                'desired_goal': self.desired_goal.copy(),
-            }
-        elif not self.goal_image:
+        obs_dict = {'observation': state.copy(),
+                    'policy_state': policy_state.copy(),
+                    'achieved_goal': achieved_goal.copy(),
+                    'desired_goal': self.desired_goal.copy()}
+        if self.image_observation:
             images = []
             for cam_id in self.observation_cam_id:
                 images.append(self.render(mode=self.render_mode, camera_id=cam_id))
             obs_dict['observation'] = images[0].copy()
             obs_dict['images'] = images
             obs_dict.update({'state': state.copy()})
-            return {
-                'policy_state': policy_state.copy(),
-                'achieved_goal': achieved_goal.copy(),
-                'desired_goal': self.desired_goal.copy(),
-            }
-        else:
-            images = []
-            for cam_id in self.observation_cam_id:
-                images.append(self.render(mode=self.render_mode, camera_id=cam_id))
-            obs_dict['observation'] = images
-            obs_dict.update({'state': state.copy()})
-            return {
-                'policy_state': policy_state.copy(),
-                'achieved_goal': achieved_goal.copy(),
-                'achieved_goal_img': observation.copy(),
-                'desired_goal': self.desired_goal.copy(),
-                'desired_goal_img': self.desired_goal_image.copy(),
-            }
+            if self.goal_image:
+                achieved_goal_img = self.render(mode=self.render_mode, camera_id=self.goal_cam_id)
+                obs_dict.update({
+                    'achieved_goal_img': achieved_goal_img.copy(),
+                    'desired_goal_img': self.desired_goal_image.copy(),
+                })
+        return obs_dict
 
     def _compute_reward(self, achieved_goal, desired_goal):
         assert achieved_goal.shape == desired_goal.shape

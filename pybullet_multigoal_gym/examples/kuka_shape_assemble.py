@@ -23,7 +23,8 @@ camera_setup = [
 ]
 
 env = pmg.make_env(
-    task='insertion',
+    task='primitive_push_reach',
+    primitive='discrete_push',
     render=True,
     binary_reward=True,
     distance_threshold=0.05,

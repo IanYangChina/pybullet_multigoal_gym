@@ -1,45 +1,5 @@
 from gym.envs.registration import register, make, registry
 
-ids = []
-# multi-goal envs
-renders = [True, False]
-for i in range(2):
-    if renders[i]:
-        tag = 'Render'
-    else:
-        tag = ''
-
-    ids.append('KukaParallelGripHierPickAndPlace' + tag + 'SparseEnv-v0')
-    register(
-        id='KukaParallelGripHierPickAndPlace' + tag + 'SparseEnv-v0',
-        entry_point='pybullet_multigoal_gym.envs.kuka.kuka_hierarchical_pick_and_place:HierarchicalKukaPickAndPlaceEnv',
-        kwargs={
-            'render': renders[i],
-            'binary_reward': True,
-            'image_observation': False,
-            'gripper_type': 'parallel_jaw'
-        },
-        max_episode_steps=50,
-    )
-
-    ids.append('KukaParallelGripHierPickAndPlace' + tag + 'SparseImageObsEnv-v0')
-    register(
-        id='KukaParallelGripHierPickAndPlace' + tag + 'SparseImageObsEnv-v0',
-        entry_point='pybullet_multigoal_gym.envs.kuka.kuka_hierarchical_pick_and_place:HierarchicalKukaPickAndPlaceEnv',
-        kwargs={
-            'render': renders[i],
-            'binary_reward': True,
-            'image_observation': True,
-            'gripper_type': 'parallel_jaw'
-        },
-        max_episode_steps=50,
-    )
-
-
-def print_id():
-    for env_id in ids:
-        print(env_id)
-
 
 def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, binary_reward=True,
              grip_informed_goal=False, task_decomposition=False,
@@ -53,7 +13,7 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
         observation_cam_id = [0]
     tasks = ['push', 'reach', 'slide', 'pick_and_place',
              'block_stack', 'block_rearrange', 'chest_pick_and_place', 'chest_push',
-             'primitive_push_assemble', 'primitive_push_reach']
+             'primitive_push_assemble', 'primitive_push_reach', 'insertion']
     grippers = ['robotiq85', 'parallel_jaw']
     assert gripper in grippers, 'invalid gripper: {}, only support: {}'.format(gripper, grippers)
     if task == 'reach':
@@ -67,6 +27,7 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
         entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_single_step_envs:KukaPickAndPlaceEnv'
     elif task == 'slide':
         task_tag = 'Slide'
+        assert not image_observation, "slide task doesn't support image observation well."
         image_observation = depth_image = goal_image = False
         entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_single_step_envs:KukaSlideEnv'
     elif task == 'block_stack':
@@ -113,7 +74,7 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
         if goal_image:
             env_id += 'ImgGoal'
         if camera_setup is not None:
-            assert len(observation_cam_id) <= len(camera_setup) + 1, 'invalid observation camera id'
+            assert len(observation_cam_id) <= len(camera_setup) + 1, 'invalid observation camera id list'
             assert goal_cam_id <= len(camera_setup) - 1, 'invalid goal camera id'
             print('Received %i cameras, cam {} for observation, cam %i for goal image'.format(observation_cam_id) %
                   (len(camera_setup), goal_cam_id))

@@ -14,8 +14,15 @@ Expired mujoco license got me here. I will also retrain those agents and pose pe
 
 This package also provides some harder tasks for long-horizon sparse reward robotic arm manipulation tasks
 on this package as well. All the environments have been summarised in a paper.
-The newest release is the most recommended. There are still on-going updates for this package, the [v1.0 release] was the version published on Taros 2021 and 
-[ArXiv](https://arxiv.org/abs/2105.05985).
+The newest release is the most recommended. There are still on-going updates for this package, the [v1.0 release] was 
+the version published on Taros 2021 and [ArXiv](https://arxiv.org/abs/2105.05985).
+Due to further development, the description in this paper may not be exactly the same with the master branch.
+
+The following tasks are supported in the v1.3 branch:
+1. Reach, push, pick-and-place, slide as the gym-robotics tasks;
+2. Four Multi-step tasks described in the [Taros paper](https://arxiv.org/abs/2105.05985)
+3. Two shape-assemble tasks (block-fitting & reaching) with pushing primitive actions (continuous & discrete)
+4. An insertion task with 6 DoF gripper frame control
 
 ```
 @InProceedings{yang2021pmg,
@@ -42,21 +49,7 @@ pip install .
 
 Observation, state, action, goal and reward are all setup to be the same as the original environment.
 
-Observation is a dictionary, containing the state, desired goal and achieved goal.
-
-Since no rotation is involved, states contain the end-effector Cartesian position, 
-linear and angular velocities; and block Cartesian position, linear and angular velocities 
-(if the task involves a block).
-
-Goals are either EE or block Cartesian positions, in the world frame.
-
-Actions are 3 dimensional for the Reach, Push and Slide tasks, which are xyz movements in the 
-EE space. For the Pick and Place task, there is an extra dimension related to the closing and opening
-of the gripper fingers. All of them are within [-1, 1].
-
-Rewards are set to negatively proportional to the goal distance. For sparse, 
-it's -1 and 0 rewards, where 0 stands for goal being achieved. For dense reward,
-it equals to the negative goal distance (achieved & desired goals).
+Observation is a dictionary, containing the state, desired goal, achieved goal and other sensory data.
 
 Use the `make_env(...)` method to make your environments. Due to backend differences, the `render()` method 
 should not need to be called by users. 
@@ -80,19 +73,19 @@ import matplotlib.pyplot as plt
 
 camera_setup = [
     {
-        'cameraEyePosition': [-1.0, 0.25, 0.6],
-        'cameraTargetPosition': [-0.6, 0.05, 0.2],
+        'cameraEyePosition': [-0.9, -0.0, 0.4],
+        'cameraTargetPosition': [-0.45, -0.0, 0.0],
         'cameraUpVector': [0, 0, 1],
-        'render_width': 128,
-        'render_height': 128
+        'render_width': 224,
+        'render_height': 224
     },
     {
         'cameraEyePosition': [-1.0, -0.25, 0.6],
         'cameraTargetPosition': [-0.6, -0.05, 0.2],
         'cameraUpVector': [0, 0, 1],
-        'render_width': 128,
-        'render_height': 128
-    }
+        'render_width': 224,
+        'render_height': 224
+    },
 ]
 
 env = pmg.make_env(
@@ -110,9 +103,10 @@ env = pmg.make_env(
     goal_image=True,
     visualize_target=True,
     camera_setup=camera_setup,
-    observation_cam_id=0,
+    observation_cam_id=[0],
     goal_cam_id=1)
 
+f, axarr = plt.subplots(1, 2)
 obs = env.reset()
 while True:
     action = env.action_space.sample()
@@ -121,8 +115,9 @@ while True:
           'desired_goal: ', obs['desired_goal'], '\n',
           'achieved_goal: ', obs['achieved_goal'], '\n',
           'reward: ', reward, '\n')
-    plt.imshow(obs['observation'])
-    plt.pause(0.00001)  
+    axarr[0].imshow(obs['desired_goal_img'])
+    axarr[1].imshow(obs['achieved_goal_img'])
+    plt.pause(0.00001)
     if done:
         env.reset()
 ```
@@ -132,6 +127,8 @@ while True:
 <img src="src/HERBenchmark.png" width="800"/>
 
 <img src="/src/MultiStepBenchmark.png" width="800"/>
+
+<img src="/src/AssembleTasks.png" width="800"/>
 
 ### Update log
 
@@ -154,4 +151,6 @@ See the above example.
 
 2021.11.11 --- Finish task decomposition, subgoal generation codes and some compatibility issues, new release
 
-2021.12.03 --- Add shape assembly task with push primitive support (discrete & continuous); under development
+2021.12.03 --- Add shape assembly task with push primitive support (discrete & continuous)
+
+2022.05.06 --- Clean up stuff; add insertion task; remove hierarchical env codes.
