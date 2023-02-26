@@ -19,6 +19,9 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
     if task == 'reach':
         task_tag = 'Reach'
         entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_single_step_envs:KukaReachEnv'
+    elif task == 'tip_over':
+        task_tag = 'TipOver'
+        entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_single_step_envs:KukaTipOverEnv'
     elif task == 'push':
         task_tag = 'Push'
         entry = 'pybullet_multigoal_gym.envs.task_envs.kuka_single_step_envs:KukaPushEnv'
@@ -84,7 +87,7 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
     print('Task id: %s' % env_id)
     if env_id not in registry.env_specs:
         # register and make env instance
-        if task in ['push', 'reach', 'slide', 'pick_and_place']:
+        if task in ['push', 'reach', 'tip_over', 'slide', 'pick_and_place']:
             register(
                 id=env_id,
                 entry_point=entry,
