@@ -123,7 +123,7 @@ class KukaBullet3Env(BaseBulletMGEnv):
             self.set_object_pose(self.object_bodies['target'],
                                  self.desired_goal,
                                  self.object_initial_pos['target'][3:])
-        self.desired_joint_goal = self.robot.compute_ik(self.desired_goal)
+        self.desired_joint_goal = np.array(self.robot.compute_ik(self.desired_goal))
 
 
     def _step_callback(self):
@@ -201,9 +201,9 @@ class KukaBullet3Env(BaseBulletMGEnv):
         # Calculate the center of mass of the robot_id
         com_position = [0, 0, 0]
         joint_poses, joint_vels = self.robot.get_kuka_joint_state()
-        for link_idx in range(joint_poses):
-            link_mass = list(self._p.getDynamicsInfo(self.robot.robot_id, link_idx, physicsClientId=2))[0]
-            link_com = self._p.getLinkState(self.robot.robot_id, link_idx, physicsClientId=2)[0]
+        for link_idx in range(len(joint_poses)):
+            link_mass = list(self._p.getDynamicsInfo(self.robot.robot_id, link_idx))[0]
+            link_com = self._p.getLinkState(self.robot.robot_id, link_idx)[0]
             link_com_position = [link_com[i] for i in range(3)]
             link_com_offset = [(link_mass/self.robot.total_mass) * link_com_position[i] for i in range(3)]
             com_position = [com_position[i] + link_com_offset[i] for i in range(3)]
