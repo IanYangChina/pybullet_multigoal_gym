@@ -1,8 +1,8 @@
 from pybullet_multigoal_gym.robots.robot_bases import URDFBasedRobot, MultiURDFBasedRobot
 from gym import spaces
 import numpy as np
+from pybullet_multigoal_gym.utils.cube_path import CUBE_PATH
 import quaternion as quat
-
 
 class KukaBox(MultiURDFBasedRobot):
     def __init__(self, bullet_client=None, gripper_type='parallel_jaw',
@@ -12,7 +12,7 @@ class KukaBox(MultiURDFBasedRobot):
                  obj_range=0.15, target_range=0.15):
         self.gripper_type = gripper_type
         model_urdfs = []
-        model_urdfs += [pybullet_data.getDataPath()+'/cube.urdf']
+        model_urdfs += [CUBE_PATH]
         if self.gripper_type == 'robotiq85':
             model_urdfs += ['robots/kuka/iiwa14_robotiq85.urdf']
         else:
