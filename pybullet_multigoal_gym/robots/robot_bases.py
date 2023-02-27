@@ -1,12 +1,15 @@
 import numpy as np
 import os
+import pybullet
 
 
 class XmlBasedRobot(object):
     """Base class for .xml based agents."""
 
     def __init__(self, bullet_client, robot_name, self_collision=True):
-        self._p = bullet_client
+        self._p = pybullet
+        # workaround for types to work
+        self.__setattr__("_p", bullet_client)
         self.robot_name = robot_name
         self.objects = None
         self.parts = {}
