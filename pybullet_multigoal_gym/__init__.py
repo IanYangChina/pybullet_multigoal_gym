@@ -14,7 +14,7 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
     tasks = ['push', 'reach', 'slide', 'pick_and_place',
              'block_stack', 'block_rearrange', 'chest_pick_and_place', 'chest_push',
              'primitive_push_assemble', 'primitive_push_reach', 'insertion']
-    grippers = ['robotiq85', 'parallel_jaw']
+    grippers = ['robotiq85', 'parallel_jaw', 'parallel_jaw_cube']
     assert gripper in grippers, 'invalid gripper: {}, only support: {}'.format(gripper, grippers)
     if task == 'reach':
         task_tag = 'Reach'
@@ -59,6 +59,8 @@ def make_env(task='reach', gripper='parallel_jaw', num_block=5, render=False, bi
     env_id = 'Kuka' + task_tag
     if gripper == 'parallel_jaw':
         env_id += 'ParallelGrip'
+    elif gripper == 'parallel_jaw_cube':
+        env_id += 'ParallelGripCube'
     else:
         env_id += 'Robotiq85Grip'
     if render:

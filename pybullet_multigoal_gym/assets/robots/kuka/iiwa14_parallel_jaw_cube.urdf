@@ -1,0 +1,551 @@
+<?xml version="1.0" ?>
+
+<robot name="iiwa14">
+  <!-- Custom materials (colours) -->
+  <material name="Black">
+    <color rgba="0.2 0.2 0.2 1.0"/>
+  </material>
+  <material name="Blue">
+    <color rgba="0.0 0.0 0.8 1.0"/>
+  </material>
+  <material name="Green">
+    <color rgba="0.0 0.8 0.0 1.0"/>
+  </material>
+  <material name="TransGreen">
+    <color rgba="0.0 0.8 0.0 0"/>
+  </material>
+  <material name="Grey">
+    <color rgba="0.4 0.4 0.4 1.0"/>
+  </material>
+  <material name="Orange">
+    <color rgba="1.0 0.423529411765 0.0392156862745 1.0"/>
+  </material>
+  <material name="Floor">
+    <color rgba="0.5 0.5 0.5 1.0"/>
+  </material>
+  <material name="Red">
+    <color rgba="0.8 0.0 0.0 1.0"/>
+  </material>
+  <material name="White">
+    <color rgba="1.0 1.0 1.0 1.0"/>
+  </material>
+  <material name="Transparent">
+    <color rgba="0.0 0.0 0.0 0.0"/>
+  </material>
+
+  <!-- A plane 
+  <link name="plane">
+    <contact>
+      <lateral_friction value="1"/>
+    </contact>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value=".0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="5 5 0.002"/>
+      </geometry>
+      <material name="Floor"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="5 5 0.002"/>
+      </geometry>
+    </collision>
+  </link> -->
+ 
+  <link name="iiwa_link_0">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.1 0 0.07"/>
+      <mass value="5"/>
+      <inertia ixx="0.05" ixy="0" ixz="0" iyy="0.06" iyz="0" izz="0.03"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/iiwa14/visual/link_0.stl"/>
+      </geometry>
+      <material name="Grey"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/iiwa14/collision/link_0.stl"/>
+      </geometry>
+      <material name="Grey"/>
+    </collision>
+    <self_collision_checking>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <capsule length="0.25" radius="0.15"/>
+      </geometry>
+    </self_collision_checking>
+  </link> 
+  <!-- joint between plane and link_0 -->
+  <joint name="cube_iiwa_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 -0.5"/>
+    <parent link="iiwa_link_0"/>
+    <child link="base_cube"/>
+  </joint>
+  <!--Base cube-->
+  <link name="base_cube">
+    <contact>
+      <lateral_friction value="1.0"/>
+      <rolling_friction value="0.0"/>
+      <contact_cfm value="0.0"/>
+      <contact_erp value="1.0"/>
+    </contact>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 -1.0"/>
+       <mass value="1.0"/>
+       <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+				<mesh filename="cube.obj" scale="1 1 1"/>
+      </geometry>
+       <material name="White"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+	 	<box size="1 1 1"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- joint between link_0 and link_1 -->
+  <joint name="iiwa_joint_1" type="revolute">
+    <parent link="iiwa_link_0"/>
+    <child link="iiwa_link_1"/>
+    <origin rpy="0 0 0" xyz="0 0 0.1575"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="300" lower="-2.96705972839" upper="2.96705972839" velocity="10"/>
+    <safety_controller k_position="100" k_velocity="2" soft_lower_limit="-2.93215314335" soft_upper_limit="2.93215314335"/>
+    <dynamics damping="0.5"/>
+  </joint>
+  <link name="iiwa_link_1">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 -0.03 0.12"/>
+      <mass value="4"/>
+      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.09" iyz="0" izz="0.02"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/iiwa14/visual/link_1.stl"/>
+      </geometry>
+      <material name="Orange"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/iiwa14/collision/link_1.stl"/>
+      </geometry>
+      <material name="Orange"/>
+    </collision>
+  </link>
+  <!-- joint between link_1 and link_2 -->
+  <joint name="iiwa_joint_2" type="revolute">
+    <parent link="iiwa_link_1"/>
+    <child link="iiwa_link_2"/>
+    <origin rpy="1.57079632679   0 3.14159265359" xyz="0 0 0.2025"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="300" lower="-2.09439510239" upper="2.09439510239" velocity="10"/>
+    <safety_controller k_position="100" k_velocity="2" soft_lower_limit="-2.05948851735" soft_upper_limit="2.05948851735"/>
+    <dynamics damping="0.5"/>
+  </joint>
+  <link name="iiwa_link_2">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0003 0.059 0.042"/>
+      <mass value="4"/>
+      <inertia ixx="0.05" ixy="0" ixz="0" iyy="0.018" iyz="0" izz="0.044"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/iiwa14/visual/link_2.stl"/>
+      </geometry>
+      <material name="Orange"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/iiwa14/collision/link_2.stl"/>
+      </geometry>
+      <material name="Orange"/>
+    </collision>
+  </link>
+  <!-- joint between link_2 and link_3 -->
+  <joint name="iiwa_joint_3" type="revolute">
+    <parent link="iiwa_link_2"/>
+    <child link="iiwa_link_3"/>
+    <origin rpy="1.57079632679 0 3.14159265359" xyz="0 0.2045 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="300" lower="-2.96705972839" upper="2.96705972839" velocity="10"/>
+    <safety_controller k_position="100" k_velocity="2" soft_lower_limit="-2.93215314335" soft_upper_limit="2.93215314335"/>
+    <dynamics damping="0.5"/>
+  </joint>
+  <link name="iiwa_link_3">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0.03 0.13"/>
+      <mass value="3"/>
+      <inertia ixx="0.08" ixy="0" ixz="0" iyy="0.075" iyz="0" izz="0.01"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/iiwa14/visual/link_3.stl"/>
+      </geometry>
+      <material name="Orange"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/iiwa14/collision/link_3.stl"/>
+      </geometry>
+      <material name="Orange"/>
+    </collision>
+  </link>
+  <!-- joint between link_3 and link_4 -->
+  <joint name="iiwa_joint_4" type="revolute">
+    <parent link="iiwa_link_3"/>
+    <child link="iiwa_link_4"/>
+    <origin rpy="1.57079632679 0 0" xyz="0 0 0.2155"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="300" lower="-2.09439510239" upper="2.09439510239" velocity="10"/>
+    <safety_controller k_position="100" k_velocity="2" soft_lower_limit="-2.05948851735" soft_upper_limit="2.05948851735"/>
+    <dynamics damping="0.5"/>
+  </joint>
+  <link name="iiwa_link_4">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0.067 0.034"/>
+      <mass value="2.7"/>
+      <inertia ixx="0.03" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.029"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/iiwa14/visual/link_4.stl"/>
+      </geometry>
+      <material name="Orange"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/iiwa14/collision/link_4.stl"/>
+      </geometry>
+      <material name="Orange"/>
+    </collision>
+  </link>
+  <!-- joint between link_4 and link_5 -->
+  <joint name="iiwa_joint_5" type="revolute">
+    <parent link="iiwa_link_4"/>
+    <child link="iiwa_link_5"/>
+    <origin rpy="-1.57079632679 3.14159265359 0" xyz="0 0.1845 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="300" lower="-2.96705972839" upper="2.96705972839" velocity="10"/>
+    <safety_controller k_position="100" k_velocity="2" soft_lower_limit="-2.93215314335" soft_upper_limit="2.93215314335"/>
+    <dynamics damping="0.5"/>
+  </joint>
+  <link name="iiwa_link_5">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0001 0.021 0.076"/>
+      <mass value="1.7"/>
+      <inertia ixx="0.02" ixy="0" ixz="0" iyy="0.018" iyz="0" izz="0.005"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/iiwa14/visual/link_5.stl"/>
+      </geometry>
+      <material name="Orange"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/iiwa14/collision/link_5.stl"/>
+      </geometry>
+      <material name="Orange"/>
+    </collision>
+  </link>
+  <!-- joint between link_5 and link_6 -->
+  <joint name="iiwa_joint_6" type="revolute">
+    <parent link="iiwa_link_5"/>
+    <child link="iiwa_link_6"/>
+    <origin rpy="1.57079632679 0 0" xyz="0 0 0.2155"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="300" lower="-2.09439510239" upper="2.09439510239" velocity="10"/>
+    <safety_controller k_position="100" k_velocity="2" soft_lower_limit="-2.05948851735" soft_upper_limit="2.05948851735"/>
+    <dynamics damping="0.5"/>
+  </joint>
+  <link name="iiwa_link_6">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0.0006 0.0004"/>
+      <mass value="1.8"/>
+      <inertia ixx="0.005" ixy="0" ixz="0" iyy="0.0036" iyz="0" izz="0.0047"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/iiwa14/visual/link_6.stl"/>
+      </geometry>
+      <material name="Orange"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/iiwa14/collision/link_6.stl"/>
+      </geometry>
+      <material name="Orange"/>
+    </collision>
+  </link>
+  <!-- joint between link_6 and link_7 -->
+  <joint name="iiwa_joint_7" type="revolute">
+    <parent link="iiwa_link_6"/>
+    <child link="iiwa_link_7"/>
+    <origin rpy="-1.57079632679 3.14159265359 0" xyz="0 0.081 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="300" lower="-3.05432619099" upper="3.05432619099" velocity="10"/>
+    <safety_controller k_position="100" k_velocity="2" soft_lower_limit="-3.01941960595" soft_upper_limit="3.01941960595"/>
+    <dynamics damping="0.5"/>
+  </joint>
+  <link name="iiwa_link_7">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0.02"/>
+      <mass value="0.3"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/iiwa14/visual/link_7.stl"/>
+      </geometry>
+      <material name="White"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/iiwa14/collision/link_7.stl"/>
+      </geometry>
+      <material name="Grey"/>
+    </collision>
+  </link>
+  <!-- joint between link_7 and ee_tip -->
+  <joint name="iiwa_gripper_tip_joint" type="fixed">
+    <parent link="iiwa_link_7"/>
+    <child link="iiwa_gripper_tip"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.12"/>
+  </joint>
+  <link name="iiwa_gripper_tip">
+     <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+       <mass value="0.0"/>
+       <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="0.005 0.005 0.005"/>
+      </geometry>
+      <material name="TransGreen"/>
+    </visual>
+  </link>
+
+  <!-- joint between link_7 and hand_cam_origin -->
+  <joint name="iiwa_hand_cam_joint" type="fixed">
+    <parent link="iiwa_link_7"/>
+    <child link="iiwa_hand_cam_origin"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.2 0.0 0.0"/>
+  </joint>
+  <link name="iiwa_hand_cam_origin">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.0"/>
+      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+      <material name="Transparent"/>
+    </visual>
+  </link>
+
+  <!-- joint for visualising gripper tip -->
+  <joint name="iiwa_gripper_mocap_joint1" type="fixed">
+    <parent link="iiwa_gripper_tip"/>
+    <child link="iiwa_mocap_link_1"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+  </joint>
+  <link name="iiwa_mocap_link_1">
+     <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+       <mass value="0.0"/>
+       <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="1.0 0.005 0.005"/>
+      </geometry>
+      <material name="TransGreen"/>
+    </visual>
+  </link>
+  <joint name="iiwa_gripper_mocap_joint2" type="fixed">
+    <parent link="iiwa_gripper_tip"/>
+    <child link="iiwa_mocap_link_2"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+  </joint>
+  <link name="iiwa_mocap_link_2">
+     <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+       <mass value="0.0"/>
+       <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="0.005 1.0 0.005"/>
+      </geometry>
+      <material name="TransGreen"/>
+    </visual>
+  </link>
+
+  <!-- gripper tags -->
+  <!-- joint between link_ee and gripper -->
+  <joint name="iiwa_gripper_base_joint" type="fixed">
+    <parent link="iiwa_link_7"/>
+    <child link="iiwa_gripper_base_link"/>
+    <origin rpy="0 0 0" xyz="0 0 0.055"/>
+  </joint>
+  <link name="iiwa_gripper_base_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.05" length="0.04"/>
+      </geometry>
+      <material name="Black"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.05" length="0.04"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.636951"/>
+      <origin xyz="0.0 0.0 0.0"/>
+      <inertia ixx="0.000380" ixy="0.000000" ixz="0.000000" iyx="0.000000" iyy="0.001110" iyz="0.000000" izx="0.000000" izy="0.000000" izz="0.001171"/>
+    </inertial>
+  </link>
+
+  <joint name="iiwa_gripper_finger1_joint" type="prismatic">
+    <parent link="iiwa_gripper_base_link"/>
+    <child link="iiwa_gripper_finger1"/>
+    <origin rpy="0 0 0" xyz="0 0.04 0.04"/>
+    <axis xyz="0 -1 0"/>
+    <limit effort="20" lower="0.0" upper="0.035" velocity="0.2"/>
+  </joint>
+  <link name="iiwa_gripper_finger1">
+    <contact>
+      <lateral_friction value="1.0"/>
+      <rolling_friction value="0.0"/>
+      <inertia_scaling value="3.0"/>
+      <contact_cfm value="0.0"/>
+      <contact_erp value="1.0"/>
+    </contact>
+    <visual>
+      <geometry>
+        <box size="0.025, 0.01, 0.08"/>
+      </geometry>
+      <material name="Black"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.025, 0.01, 0.08"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.636951"/>
+      <origin xyz="0.0 0.0 0.0"/>
+      <inertia ixx="0.000380" ixy="0.000000" ixz="0.000000" iyx="0.000000" iyy="0.001110" iyz="0.000000" izx="0.000000" izy="0.000000" izz="0.001171"/>
+    </inertial>
+  </link>
+  <joint name="iiwa_gripper_finger2_joint" type="prismatic">
+    <parent link="iiwa_gripper_base_link"/>
+    <child link="iiwa_gripper_finger2"/>
+    <origin rpy="0 0 0" xyz="0 -0.04 0.04"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="20" lower="0.0" upper="0.035" velocity="0.2"/>
+  </joint>
+  <link name="iiwa_gripper_finger2">
+    <contact>
+      <lateral_friction value="1.0"/>
+      <rolling_friction value="0.0"/>
+      <inertia_scaling value="3.0"/>
+      <contact_cfm value="0.0"/>
+      <contact_erp value="1.0"/>
+    </contact>
+    <visual>
+      <geometry>
+        <box size="0.025, 0.01, 0.08"/>
+      </geometry>
+      <material name="Black"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.025, 0.01, 0.08"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.636951"/>
+      <origin xyz="0.0 0.0 0.0"/>
+      <inertia ixx="0.000380" ixy="0.000000" ixz="0.000000" iyx="0.000000" iyy="0.001110" iyz="0.000000" izx="0.000000" izy="0.000000" izz="0.001171"/>
+    </inertial>
+  </link>
+
+
+  <!-- joints & links used to calculate distance between two finger tabs -->
+  <joint name="iiwa_gripper_finger1_finger_tab_joint" type="fixed">
+    <parent link="iiwa_gripper_finger1"/>
+    <child link="iiwa_gripper_finger1_finger_tab_link"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 -0.005 0.0"/>
+  </joint>
+  <joint name="iiwa_gripper_finger2_finger_tab_joint" type="fixed">
+    <parent link="iiwa_gripper_finger2"/>
+    <child link="iiwa_gripper_finger2_finger_tab_link"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.005 0.0"/>
+  </joint>
+  <link name="iiwa_gripper_finger1_finger_tab_link">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.0"/>
+      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="0.005 0.005 0.005"/>
+      </geometry>
+      <material name="Transparent"/>
+    </visual>
+  </link>
+  <link name="iiwa_gripper_finger2_finger_tab_link">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.0"/>
+      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="0.005 0.005 0.005"/>
+      </geometry>
+      <material name="Transparent"/>
+    </visual>
+  </link>
+</robot>
