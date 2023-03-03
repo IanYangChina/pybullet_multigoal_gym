@@ -1,4 +1,3 @@
-import pybullet_multigoal_gym
 import pybullet_multigoal_gym as pmg
 import matplotlib.pyplot as plt
 
