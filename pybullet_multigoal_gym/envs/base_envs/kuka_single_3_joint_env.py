@@ -1,9 +1,11 @@
-from ntpath import join
 import os
 import numpy as np
 from pybullet_multigoal_gym.envs.base_envs.base_env import BaseBulletMGEnv
-from pybullet_multigoal_gym.robots.kuka import Kuka
 from pybullet_multigoal_gym.robots.kuka_with_box import KukaBox
+from pybullet_multigoal_gym.utils.assets_dir import CUBE_LINK_NAME
+
+from seer.stability_metrics.adapter.stability_metric_adapter import StabilityMetricAdapter
+from seer.stability_metrics.adapter.types import RobotConfig
 
 
 class KukaBullet3Env(BaseBulletMGEnv):
@@ -64,6 +66,9 @@ class KukaBullet3Env(BaseBulletMGEnv):
                                  image_observation=image_observation, goal_image=goal_image,
                                  camera_setup=camera_setup,
                                  seed=0, timestep=0.002, frame_skip=20)
+        self._force_angle = StabilityMetricAdapter.instance(
+            RobotConfig(cube_link_name=CUBE_LINK_NAME, urdf_path=robot.model_urdf)
+        )
 
     def _task_reset(self, test=False):
         if not self.objects_urdf_loaded:
@@ -154,13 +159,16 @@ class KukaBullet3Env(BaseBulletMGEnv):
             state = np.concatenate((joint_poses, state))
             policy_state = np.concatenate((joint_poses, policy_state))
 
+        force_angle = self.force_angle()
+
         obs_dict = {'observation': state.copy(),
                     'policy_state': policy_state.copy(),
                     'achieved_goal': achieved_goal.copy(),
                     'desired_goal': self.desired_goal.copy(),
                     'desired_joint_goal': self.desired_joint_goal.copy(),
                     'COM': self.getCenterOfMass(),
-                    'tipped_over': self.tipped_over()
+                    "force_angle": force_angle,
+                    'tipped_over': self._tipped_over(force_angle)
                     }
         if self.image_observation:
             images = []
@@ -193,9 +201,13 @@ class KukaBullet3Env(BaseBulletMGEnv):
             orientation = self.object_initial_pos['table'][3:]
         self._p.resetBasePositionAndOrientation(body_id, position, orientation)
 
-    def tipped_over(self):
-        #TODO implement tipped over
-        return False
+
+    def force_angle(self):
+        return 1
+        # TODO return self._force_angle.get()
+
+    def _tipped_over(self, force_angle: float):
+        return force_angle < 0
 
     def getCenterOfMass(self):
         # Calculate the center of mass of the robot_id

@@ -101,7 +101,7 @@ class URDFBasedRobot(XmlBasedRobot):
 class MultiURDFBasedRobot(XmlBasedRobot):
     """Base class for URDF .xml based robots."""
 
-    def __init__(self, bullet_client, model_urdfs, robot_name, base_position=None,
+    def __init__(self, bullet_client, model_urdf: str, robot_name, base_position=None,
                  base_orientation=None, fixed_base=False, self_collision=False):
         XmlBasedRobot.__init__(self,
                                bullet_client=bullet_client,
@@ -111,8 +111,7 @@ class MultiURDFBasedRobot(XmlBasedRobot):
             base_position = [0, 0, 0]
         if base_orientation is None:
             base_orientation = [0, 0, 0, 1]
-        self.box = model_urdfs[0]
-        self.model_urdf = model_urdfs[1]
+        self.model_urdf = model_urdf
         self.base_position = base_position
         self.base_orientation = base_orientation
         self.fixed_base = fixed_base
@@ -134,19 +133,16 @@ class MultiURDFBasedRobot(XmlBasedRobot):
     def reset(self):
         # load urdf if it's the first time that reset() gets called
         if not self.robot_urdf_loaded:
-            # load box as base
-            self.box_id = self._p.loadURDF(self.box, useFixedBase=self.fixed_base, globalScaling=1.0)
-            full_path = os.path.join(os.path.dirname(__file__), "..", "assets", self.model_urdf)
             self.robot_urdf_loaded = True
             
             if self.self_collision:
-                self.robot_id = self._p.loadURDF(full_path,
+                self.robot_id = self._p.loadURDF(self.model_urdf,
                                                  basePosition=self.base_position,
                                                  baseOrientation=self.base_orientation,
                                                  useFixedBase=self.fixed_base,
                                                  flags=self._p.URDF_USE_SELF_COLLISION)
             else:
-                self.robot_id = self._p.loadURDF(full_path,
+                self.robot_id = self._p.loadURDF(self.model_urdf,
                                                  basePosition=self.base_position,
                                                  baseOrientation=self.base_orientation,
                                                  useFixedBase=self.fixed_base)
@@ -156,9 +152,6 @@ class MultiURDFBasedRobot(XmlBasedRobot):
             # for jointIndex in range(self._p.getNumJoints(ob)): TODO WHY DOESNT WORK, WHY 17 JOINTS
             for jointIndex in range(len(jointPositions)):
                 self._p.resetJointState(ob, jointIndex, jointPositions[jointIndex])
-            cid = self._p.createConstraint(self.box_id, -1, self.robot_id, -1, self._p.JOINT_FIXED, [0, 0, 0], [0, 0, 0], [0., 0., -1],
-                                [0, 0, 0, 1])
-            self.addToScene(self.box_id)
             self.addToScene(self.robot_id)
             # for target_name in self.target_keys:
             #     self.target_bodies[target_name] = self._p.loadURDF(
@@ -174,8 +167,6 @@ class MultiURDFBasedRobot(XmlBasedRobot):
         for link_idx in range(self._p.getNumJoints(self.robot_id)):
             link_mass = self._p.getDynamicsInfo(self.robot_id, link_idx)[0]
             total_mass += link_mass
-        box_mass = self._p.getDynamicsInfo(self.box_id, -1)[0]
-        total_mass += box_mass
         return total_mass
     def robot_specific_reset(self):
         # method to override, purposed to reset robot-specific configuration
