@@ -1,7 +1,7 @@
 from pybullet_multigoal_gym.robots.robot_bases import URDFBasedRobot, MultiURDFBasedRobot
 from gym import spaces
 import numpy as np
-from pybullet_multigoal_gym.utils.cube_path import CUBE_PATH
+from pybullet_multigoal_gym.utils.cube_path import PLANE_PATH
 import quaternion as quat
 
 class KukaBox(MultiURDFBasedRobot):
@@ -12,9 +12,11 @@ class KukaBox(MultiURDFBasedRobot):
                  obj_range=0.15, target_range=0.15):
         self.gripper_type = gripper_type
         model_urdfs = []
-        model_urdfs += [CUBE_PATH]
+        model_urdfs += [PLANE_PATH]
         if self.gripper_type == 'robotiq85':
             model_urdfs += ['robots/kuka/iiwa14_robotiq85.urdf']
+        elif self.gripper_type == 'parallel_jaw_cube':
+            model_urdfs += ['robots/kuka/iiwa14_parallel_jaw_cube.urdf']
         else:
             model_urdfs += ['robots/kuka/iiwa14_parallel_jaw.urdf']
         MultiURDFBasedRobot.__init__(self,
@@ -121,7 +123,7 @@ class KukaBox(MultiURDFBasedRobot):
 
     def robot_specific_reset(self):
         if self.kuka_body_index is None:
-            self.kuka_body_index = self.jdict['plane_iiwa_joint'].bodies[self.jdict['plane_iiwa_joint'].bodyIndex]
+            self.kuka_body_index = self.jdict['cube_iiwa_joint'].bodies[self.jdict['cube_iiwa_joint'].bodyIndex]
         if self.kuka_joint_index is None:
             # The 0-th joint is the one that connects the world frame and the kuka base, so skip it
             self.kuka_joint_index = [
