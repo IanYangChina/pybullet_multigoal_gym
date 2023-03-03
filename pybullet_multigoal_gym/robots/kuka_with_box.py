@@ -13,7 +13,8 @@ class KukaBox(MultiURDFBasedRobot):
         self.gripper_type = gripper_type
         MultiURDFBasedRobot.__init__(self,
                                 bullet_client=bullet_client,
-                                model_urdf=str(ASSETS_DIR / 'robots' / 'kuka' / 'iiwa14_parallel_jaw.urdf'),
+                                model_urdf=str(ASSETS_DIR / 'robots' / 'kuka' / 'iiwa14_parallel_jaw_cube.urdf'),
+                                plane_urdf=str(ASSETS_DIR / "objects" / "assembling_shape" / "plane.urdf"),
                                 robot_name='iiwa14',
                                 self_collision=False,
                                 fixed_base=False)
@@ -115,7 +116,7 @@ class KukaBox(MultiURDFBasedRobot):
 
     def robot_specific_reset(self):
         if self.kuka_body_index is None:
-            self.kuka_body_index = self.jdict['plane_iiwa_joint'].bodies[self.jdict['plane_iiwa_joint'].bodyIndex]
+            self.kuka_body_index = self.jdict['cube_iiwa_joint'].bodies[self.jdict['cube_iiwa_joint'].bodyIndex]
         if self.kuka_joint_index is None:
             # The 0-th joint is the one that connects the world frame and the kuka base, so skip it
             self.kuka_joint_index = [

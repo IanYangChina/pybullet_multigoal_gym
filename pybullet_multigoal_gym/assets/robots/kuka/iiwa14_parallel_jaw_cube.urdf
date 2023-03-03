@@ -85,13 +85,13 @@
       </geometry>
     </self_collision_checking>
   </link> 
-  <!-- joint between plane and link_0 -->
+   <!-- joint between plane and link_0 -->
   <joint name="cube_iiwa_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 -0.5"/>
     <parent link="iiwa_link_0"/>
     <child link="base_cube"/>
-  </joint>
-  <!--Base cube-->
+  </joint> 
+        <!--Base cube-->
   <link name="base_cube">
     <contact>
       <lateral_friction value="1.0"/>
@@ -107,14 +107,14 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-				<mesh filename="cube.obj" scale="1 1 1"/>
+          <box size="1 1 1"/>
       </geometry>
-       <material name="White"/>
+      <material name="White"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-	 	<box size="1 1 1"/>
+        <box size="1 1 1"/>
       </geometry>
     </collision>
   </link>

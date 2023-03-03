@@ -101,7 +101,7 @@ class URDFBasedRobot(XmlBasedRobot):
 class MultiURDFBasedRobot(XmlBasedRobot):
     """Base class for URDF .xml based robots."""
 
-    def __init__(self, bullet_client, model_urdf: str, robot_name, base_position=None,
+    def __init__(self, bullet_client, model_urdf: str, plane_urdf: str, robot_name, base_position=None,
                  base_orientation=None, fixed_base=False, self_collision=False):
         XmlBasedRobot.__init__(self,
                                bullet_client=bullet_client,
@@ -112,6 +112,7 @@ class MultiURDFBasedRobot(XmlBasedRobot):
         if base_orientation is None:
             base_orientation = [0, 0, 0, 1]
         self.model_urdf = model_urdf
+        self.plane_urdf = plane_urdf
         self.base_position = base_position
         self.base_orientation = base_orientation
         self.fixed_base = fixed_base
@@ -133,25 +134,22 @@ class MultiURDFBasedRobot(XmlBasedRobot):
     def reset(self):
         # load urdf if it's the first time that reset() gets called
         if not self.robot_urdf_loaded:
+                        # load box as base
+            plane_id = self._p.loadURDF(self.plane_urdf, useFixedBase=self.fixed_base, globalScaling=1.0)
             self.robot_urdf_loaded = True
             
-            if self.self_collision:
-                self.robot_id = self._p.loadURDF(self.model_urdf,
-                                                 basePosition=self.base_position,
-                                                 baseOrientation=self.base_orientation,
-                                                 useFixedBase=self.fixed_base,
-                                                 flags=self._p.URDF_USE_SELF_COLLISION)
-            else:
-                self.robot_id = self._p.loadURDF(self.model_urdf,
-                                                 basePosition=self.base_position,
-                                                 baseOrientation=self.base_orientation,
-                                                 useFixedBase=self.fixed_base)
+            self.robot_id = self._p.loadURDF(self.model_urdf,
+                                             basePosition=self.base_position,
+                                             baseOrientation=self.base_orientation,
+                                             useFixedBase=self.fixed_base,
+                                             flags=self._p.URDF_USE_SELF_COLLISION if self.self_collision else 0)
             # set joint positions
             ob = self.robot_id
             jointPositions = [3.559609, 0.411182, 0.862129, 1.744441, 0.077299, -1.129685, 0.006001]
             # for jointIndex in range(self._p.getNumJoints(ob)): TODO WHY DOESNT WORK, WHY 17 JOINTS
             for jointIndex in range(len(jointPositions)):
                 self._p.resetJointState(ob, jointIndex, jointPositions[jointIndex])
+            self.addToScene(plane_id)
             self.addToScene(self.robot_id)
             # for target_name in self.target_keys:
             #     self.target_bodies[target_name] = self._p.loadURDF(
