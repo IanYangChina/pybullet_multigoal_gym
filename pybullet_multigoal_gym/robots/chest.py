@@ -45,7 +45,7 @@ class Chest(URDFBasedRobot):
         self.jdict[self.door_joint_name].reset_position(self.rest_joint_state, 0.0)
 
     def calc_robot_state(self):
-        door_joint_pos, door_joint_vel = self.jdict[self.door_joint_name].get_state()
+        door_joint_pos, door_joint_vel, _ = self.jdict[self.door_joint_name].get_state()
         keypoint_state = []
         for keypoint in self.keypoint_part_name:
             xyz = self.parts[keypoint].get_position()
