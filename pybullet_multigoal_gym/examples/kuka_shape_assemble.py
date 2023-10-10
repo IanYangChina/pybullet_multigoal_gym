@@ -5,21 +5,21 @@ import pybullet_multigoal_gym as pmg
 import matplotlib.pyplot as plt
 
 camera_setup = [
-    {
-        'cameraEyePosition': [-0.58, 0.0, 0.327],
-        'cameraTargetPosition': [-0.58, 0.0, 0.02],
-        'cameraUpVector': [1, 0, 0],
-        # resolution: 0.0015625 meters per pixel for the workspace of 0.35 x 0.35 meters
-        'render_width': 224,
-        'render_height': 224
-    },
-    {
-        'cameraEyePosition': [-0.9, -0.0, 0.4],
-        'cameraTargetPosition': [-0.45, -0.0, 0.0],
-        'cameraUpVector': [0, 0, 1],
-        'render_width': 224,
-        'render_height': 224
-    }
+    # {
+    #     'cameraEyePosition': [-0.58, 0.0, 0.327],
+    #     'cameraTargetPosition': [-0.58, 0.0, 0.02],
+    #     'cameraUpVector': [1, 0, 0],
+    #     # resolution: 0.0015625 meters per pixel for the workspace of 0.35 x 0.35 meters
+    #     'render_width': 224,
+    #     'render_height': 224
+    # },
+    # {
+    #     'cameraEyePosition': [-0.9, -0.0, 0.4],
+    #     'cameraTargetPosition': [-0.45, -0.0, 0.0],
+    #     'cameraUpVector': [0, 0, 1],
+    #     'render_width': 224,
+    #     'render_height': 224
+    # }
 ]
 
 env = pmg.make_env(
@@ -38,7 +38,7 @@ env = pmg.make_env(
     observation_cam_id=[1],
     goal_cam_id=-1,
     gripper='parallel_jaw',
-    max_episode_steps=50)
+    max_episode_steps=500)
 
 obs = env.reset()
 time_done = False

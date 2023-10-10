@@ -29,7 +29,9 @@ class BaseBulletMGEnv(gym.Env):
         # bullet client setup
         self.physicsClientId = -1
         self.ownsPhysicsClient = 0
-        self._p = None
+        self._p = pybullet
+        # workaround to make types work
+        self.__setattr__("_p", None)
         # debug viewer camera
         self._debug_cam_dist = 1.2
         self._debug_cam_yaw = -90
@@ -130,7 +132,7 @@ class BaseBulletMGEnv(gym.Env):
     def step(self, action):
         self.robot.apply_action(action)
         obs = self._get_obs()
-        reward, goal_achieved = self._compute_reward(obs['achieved_goal'], obs['desired_goal'])
+        reward, goal_achieved  = self._compute_reward(obs['achieved_goal'], obs['desired_goal'], obs['tipped_over'])
         self._step_callback()
         info = {
             'goal_achieved': goal_achieved
@@ -204,13 +206,15 @@ class BaseBulletMGEnv(gym.Env):
         if self.physicsClientId < 0:
             self.ownsPhysicsClient = True
             if self.isRender:
-                self._p = bullet_client.BulletClient(connection_mode=pybullet.GUI)
+                # workaround to make types work
+                self.__setattr__("_p", bullet_client.BulletClient(connection_mode=pybullet.GUI))
                 self._p.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0, lightPosition=[0.0, 0.0, 4])
                 self._p.resetDebugVisualizerCamera(self._debug_cam_dist,
                                                    self._debug_cam_yaw - 30,
                                                    self._debug_cam_pitch + 10, [0, 0, 0.3])
             else:
-                self._p = bullet_client.BulletClient()
+                # workaround to make types work
+                self.__setattr__("_p", bullet_client.BulletClient())
             self.physicsClientId = self._p._client
             self._p.setGravity(0, 0, -self._gravity)
             self._p.setDefaultContactERP(0.9)

@@ -1,12 +1,15 @@
 import numpy as np
 import os
+import pybullet
 
 
 class XmlBasedRobot(object):
     """Base class for .xml based agents."""
 
     def __init__(self, bullet_client, robot_name, self_collision=True):
-        self._p = bullet_client
+        self._p = pybullet
+        # workaround for types to work
+        self.__setattr__("_p", bullet_client)
         self.robot_name = robot_name
         self.objects = None
         self.parts = {}
@@ -83,6 +86,86 @@ class URDFBasedRobot(XmlBasedRobot):
         # reset robot-specific configuration
         self.robot_specific_reset()
 
+    def robot_specific_reset(self):
+        # method to override, purposed to reset robot-specific configuration
+        raise NotImplementedError
+
+    def calc_robot_state(self):
+        # method to override, purposed to obtain robot-specific states
+        raise NotImplementedError
+
+    def apply_action(self, action):
+        # method to override, purposed to apply robot-specific actions
+        raise NotImplementedError
+
+class MultiURDFBasedRobot(XmlBasedRobot):
+    """Base class for URDF .xml based robots."""
+
+    def __init__(self, bullet_client, model_urdf: str, plane_urdf: str, robot_name, base_position=None,
+                 base_orientation=None, fixed_base=False, self_collision=False):
+        XmlBasedRobot.__init__(self,
+                               bullet_client=bullet_client,
+                               robot_name=robot_name,
+                               self_collision=self_collision)
+        if base_position is None:
+            base_position = [0, 0, 0]
+        if base_orientation is None:
+            base_orientation = [0, 0, 0, 1]
+        self.model_urdf = model_urdf
+        self.plane_urdf = plane_urdf
+        self.base_position = base_position
+        self.base_orientation = base_orientation
+        self.fixed_base = fixed_base
+        self.robot_urdf_loaded = False
+        self.target_keys = ['target_red', 'target_blue', 'target_green', 'target_purple']
+        self.target_bodies = {
+            'target_red': None,
+            'target_blue': None,
+            'target_green': None,
+            'target_purple': None
+        }
+        self.target_initial_pos = {
+            'target_red': [-0.54, 0.0, 0.035, 0.0, 0.0, 0.0, 1.0],
+            'target_blue': [-0.54, 0.0, 0.035, 0.0, 0.0, 0.0, 1.0],
+            'target_green': [-0.54, 0.0, 0.035, 0.0, 0.0, 0.0, 1.0],
+            'target_purple': [-0.54, 0.0, 0.035, 0.0, 0.0, 0.0, 1.0]
+        }
+
+    def reset(self):
+        # load urdf if it's the first time that reset() gets called
+        if not self.robot_urdf_loaded:
+                        # load box as base
+            plane_id = self._p.loadURDF(self.plane_urdf, useFixedBase=self.fixed_base, globalScaling=1.0)
+            self.robot_urdf_loaded = True
+            
+            self.robot_id = self._p.loadURDF(self.model_urdf,
+                                             basePosition=self.base_position,
+                                             baseOrientation=self.base_orientation,
+                                             useFixedBase=self.fixed_base,
+                                             flags=self._p.URDF_USE_SELF_COLLISION if self.self_collision else 0)
+            # set joint positions
+            ob = self.robot_id
+            jointPositions = [3.559609, 0.411182, 0.862129, 1.744441, 0.077299, -1.129685, 0.006001]
+            # for jointIndex in range(self._p.getNumJoints(ob)): TODO WHY DOESNT WORK, WHY 17 JOINTS
+            for jointIndex in range(len(jointPositions)):
+                self._p.resetJointState(ob, jointIndex, jointPositions[jointIndex])
+            self.addToScene(plane_id)
+            self.addToScene(self.robot_id)
+            # for target_name in self.target_keys:
+            #     self.target_bodies[target_name] = self._p.loadURDF(
+            #         os.path.join(os.path.dirname(__file__), "..", "assets", "robots", target_name + ".urdf"),
+            #         basePosition=self.target_initial_pos[target_name][:3],
+            #         baseOrientation=self.target_initial_pos[target_name][3:])
+        # reset robot-specific configuration
+        self.total_mass = self.calculateTotalMass()
+        self.robot_specific_reset()
+
+    def calculateTotalMass(self):
+        total_mass = 0
+        for link_idx in range(self._p.getNumJoints(self.robot_id)):
+            link_mass = self._p.getDynamicsInfo(self.robot_id, link_idx)[0]
+            total_mass += link_mass
+        return total_mass
     def robot_specific_reset(self):
         # method to override, purposed to reset robot-specific configuration
         raise NotImplementedError
